@@ -1,4 +1,3 @@
-import React from "react";
 import { useKakaoAuth } from "../hooks/useKakaoAuth";
 
 export const LoginPage = () => {

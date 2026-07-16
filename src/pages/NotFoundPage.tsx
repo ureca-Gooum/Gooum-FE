@@ -28,7 +28,7 @@ export const NotFoundPage = () => {
         style={{
           marginTop: "20px",
           padding: "10px 20px",
-          backgroundColor: "#ff4d4f", // 경고/로그아웃 느낌의 빨간색
+          backgroundColor: "#ff4d4f",
           color: "white",
           border: "none",
           borderRadius: "5px",

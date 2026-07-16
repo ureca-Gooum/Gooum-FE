@@ -24,15 +24,13 @@ export const useDarkMode = () => {
     }
   }, [isDarkMode]);
 
+  //  스위치 토글
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
+  return { isDarkMode, toggleDarkMode };
+};
 
-  
-  // 3. 스위치 똑딱이 함수
-//   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
-
-//   return { isDarkMode, toggleDarkMode };
-// };
-
+/* 다크모드 스위치 */
 // import { useDarkMode } from '@/hooks/useDarkMode';
 
 // export const SettingPage = () => {
@@ -42,17 +40,17 @@ export const useDarkMode = () => {
 //     // Tailwind의 'dark:~~' 클래스가 다크모드일 때 적용될 디자인입니다.
 //     // 지금은 임시로 흰색/검은색만 넣어둡니다.
 //     <div className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-300">
-      
+
 //       <div className="p-10">
 //         <h1 className="text-2xl font-bold mb-5">설정 페이지</h1>
-        
+
 //         <button
 //           onClick={toggleDarkMode}
 //           className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 font-bold"
 //         >
 //           {isDarkMode ? '🌞 라이트 모드로 전환' : '🌙 다크 모드로 전환'}
 //         </button>
-        
+
 //         <p className="mt-5">
 //           버튼을 누르면 html 태그에 dark 클래스가 생기고 배경이 까맣게 변합니다!
 //         </p>

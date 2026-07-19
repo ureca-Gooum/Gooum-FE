@@ -1,29 +1,14 @@
-// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
 
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import tailwindcss from '@tailwindcss/vite';
-
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'], // 추가
     alias: {
-      '@': path.resolve('./src'), // 추가
-    },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+      // @ 경로 설정만 남기고 리액트 강제 고정 부분은 삭제합니다.
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 });
-
-// '@' 별칭을 사용하면 'import Header from '@/organism/Header'처럼 사용 가능
-// proxy 설정으로 '/api/~~' 요청이 http://localhost:3000/~~ 로 전달됨

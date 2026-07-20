@@ -142,12 +142,12 @@ export const DocsPage = () => {
         StarterKit.configure({ undoRedo: false }),
         ...(docState
           ? [
-              Collaboration.configure({ document: docState.ydoc }),
-              CollaborationCaret.configure({
-                provider: docState.provider,
-                user: currentUser,
-              }),
-            ]
+            Collaboration.configure({ document: docState.ydoc }),
+            CollaborationCaret.configure({
+              provider: docState.provider,
+              user: currentUser,
+            }),
+          ]
           : []),
         Placeholder.configure({ placeholder: "입력하기 시작하세요..." }),
       ],
@@ -322,20 +322,18 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.id}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                    isActive
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive
                       ? "bg-white shadow-sm"
                       : "hover:bg-white/50"
-                  }`}
+                    }`}
                   onClick={() => {
                     if (!isEditing) setActiveFileId(file.id);
                   }}
                 >
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
-                      isActive ? "bg-blue-500" : "bg-transparent"
-                    }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? "bg-blue-500" : "bg-transparent"
+                      }`}
                   />
 
                   {/* 문서 아이콘 */}
@@ -361,11 +359,10 @@ export const DocsPage = () => {
                     />
                   ) : (
                     <span
-                      className={`flex-1 truncate ${
-                        isActive
+                      className={`flex-1 truncate ${isActive
                           ? "font-medium text-slate-800"
                           : "text-slate-500"
-                      }`}
+                        }`}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         startEditing(file.id);

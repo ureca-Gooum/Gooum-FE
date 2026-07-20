@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+
+@theme {
+  /* =========================
+     Foreground
+  ========================= */
+
+  --color-fg-primary: #1f2229;
+  --color-fg-secondary: #3b414c;
+  --color-fg-tertiary: #69717e;
+  --color-fg-disabled: #a8afb9;
+
+  /* =========================
+     Border
+  ========================= */
+
+  --color-border-default: #dce2ea;
+  --color-border-strong: #c9d2de;
+  --color-border-brand: #8ebef0;
+
+  /* =========================
+     Background
+  ========================= */
+
+  --color-bg-default: #ffffff;
+  --color-bg-canvas: #f4f7fb;
+  --color-bg-subtle: #eef3f9;
+  --color-bg-pressed: #e4ebf4;
+
+  /* =========================
+     Brand
+  ========================= */
+
+  --color-brand-primary: #285ea8;
+  --color-brand-secondary: #3474c8;
+  --color-brand-light: #4c8fe1;
+  --color-brand-soft: #eaf3fd;
+
+  /* =========================
+     Semantic
+  ========================= */
+
+  --color-error: #c94b55;
+  --color-error-bg: #fcf4f6;
+
+  --color-warning: #8c6415;
+  --color-warning-bg: #fff8e8;
+
+  --color-success: #287a5b;
+  --color-success-bg: #ddf3e7;
+}
+
+/* 다크모드 할 시 */
+
+[data-theme='dark'] {
+  --color-fg-primary: #f4f7fb;
+  --color-fg-secondary: #dce2ea;
+  --color-fg-tertiary: #a8afb9;
+  --color-fg-disabled: #69717e;
+
+  --color-border-default: #3b414c;
+  --color-border-strong: #69717e;
+
+  --color-bg-default: #1f2229;
+  --color-bg-canvas: #181b20;
+  --color-bg-subtle: #243a56;
+  --color-bg-pressed: #33445b;
+
+  --color-brand-primary: #4c8fe1;
+  --color-brand-secondary: #74a9e8;
+  --color-brand-light: #8ebef0;
+  --color-brand-soft: #29384c;
+}

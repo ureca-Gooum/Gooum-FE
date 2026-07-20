@@ -1,4 +1,6 @@
-:root {
+@import 'tailwindcss';
+
+@theme {
   /* =========================
      Foreground
   ========================= */
@@ -61,7 +63,7 @@
 
   --color-bg-default: #1f2229;
   --color-bg-canvas: #181b20;
-  --color-bg-subtle: #29384c;
+  --color-bg-subtle: #243a56;
   --color-bg-pressed: #33445b;
 
   --color-brand-primary: #4c8fe1;

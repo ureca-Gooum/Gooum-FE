@@ -6,12 +6,10 @@ export const NotFoundPage = () => {
 
   const handleLogout = () => {
     // 1. 로컬 스토리지에 저장된 토큰(출입증)을 삭제합니다.
-    // (아직 백엔드와 연결해 토큰을 저장하진 않았지만, 미리 로직을 짜둡니다)
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
 
     // 2. 다시 메인(또는 로그인) 페이지로 이동시킵니다.
-    // 프로젝트 라우터 설정에 따라 "/login" 이나 "/" 로 변경하시면 됩니다.
     navigate("/");
   };
 

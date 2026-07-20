@@ -49,12 +49,12 @@ export const KakaoCallback = () => {
     } else if (!code) {
       navigate("/login");
     }
-  }, [navigate]); // navigate 외에 sendCodeToBackend는 함수 내부 로직이므로 배열에 넣지 않아도 무방
+  }, [navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <h2 className="text-2xl font-bold mb-4">
-        카카오 로그인 처리 중입니다... 🔄
+        카카오 로그인 처리 중입니다...
       </h2>
       <p className="text-gray-500">잠시만 기다려 주세요.</p>
     </div>

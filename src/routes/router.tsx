@@ -1,10 +1,11 @@
+// src/routes/router.tsx
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginPage } from "@/pages/LoginPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { MainLayout } from "@/layouts/MainLayout";
 import { ChatPage } from "@/pages/ChatPage";
-// 1. 방금 새로 만든 KakaoCallback 컴포넌트를 불러옵니다.
 import { KakaoCallback } from "@/pages/KakaoCallback";
+import { DocsPage } from "@/pages/DocsPage";
 
 export const router = createBrowserRouter([
   {
@@ -15,7 +16,7 @@ export const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />,
   },
-  // 2. 카카오에서 돌려보내는 콜백 주소와 컴포넌트를 연결해 줍니다.
+  // 카카오에서 돌려보내는 콜백 주소와 컴포넌트를 연결
   {
     path: "/auth/kakao/callback",
     element: <KakaoCallback />,
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <ChatPage />,
+      },
+      {
+        path: "docs", // /app/docs 경로로 접근 시 동시편집 화면
+        element: <DocsPage />,
       },
     ],
   },

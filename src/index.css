@@ -1,4 +1,7 @@
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
 @import "tailwindcss";
+@import './styles/vars.css';
+@import './styles/globals.css';
 
 /* ── Tiptap 에디터 본문 ── */
 .docs-editor-body {

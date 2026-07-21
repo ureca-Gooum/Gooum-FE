@@ -48,6 +48,22 @@
 
   --color-success: #287a5b;
   --color-success-bg: #ddf3e7;
+
+  /* =========================
+     Presence (접속 상태 전용)
+  ========================= */
+
+  --color-presence-online: #6bb700;
+  --color-presence-away: #ffaa44;
+  --color-presence-offline: #f4f7fb;
+  --color-presence-offline-border: #a8afb9;
+
+  --color-avatar-1: #285ea8;
+  --color-avatar-2: #4c8fe1;
+  --color-avatar-3: #7c6fd1;
+  --color-avatar-4: #e2637a;
+  --color-avatar-5: #e0954c;
+  --color-avatar-6: #3474c8;
 }
 
 /* 다크모드 할 시 */

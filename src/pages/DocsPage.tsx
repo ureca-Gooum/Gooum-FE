@@ -1,15 +1,10 @@
-// src/pages/DocsPage.tsx
 import { useState, useRef, useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCaret from "@tiptap/extension-collaboration-caret";
-import Placeholder from "@tiptap/extension-placeholder";
-import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
+import { DocsEditor } from "@/components/DocsEditor";
+import type { DocsEditorRef } from "@/components/DocsEditor";
 
 import {
     getDocuments,
+    getDocumentById,
     createDocument,
     saveDocument,
     deleteDocument,
@@ -70,139 +65,144 @@ export const DocsPage = () => {
         f.title.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
-    /* ── Yjs + WebSocket Provider ── */
-    const [docState, setDocState] = useState<{
-        ydoc: Y.Doc;
-        provider: WebsocketProvider;
-    } | null>(null);
+    /* ── 문서 로딩 상태 ── */
+    const [initialContent, setInitialContent] = useState<any>(null);
+    const [isContentLoading, setIsContentLoading] = useState(false);
+    const editorRef = useRef<DocsEditorRef>(null);
 
-    const wsUrl = import.meta.env.PROD
-        ? "wss://app-gooum-backend.azurewebsites.net/"
-        : "ws://localhost:8000";
-
+    // 탭이 바뀔 때 문서 조회
     useEffect(() => {
-        if (!activeFileId) {
-            setDocState(null);
-            return;
-        }
+        if (!activeFileId) return;
 
-        const doc = new Y.Doc();
-        // 문서별 고유한 Yjs 방 이름 사용 (documentId 활용)
-        const prov = new WebsocketProvider(wsUrl, `doc-${activeFileId}`, doc);
-
-        setDocState({ ydoc: doc, provider: prov });
-
-        return () => {
-            prov.destroy();
-            doc.destroy();
+        let isMounted = true;
+        const fetchContent = async () => {
+            try {
+                setIsContentLoading(true);
+                console.log("📡 [API] 문서 상세 조회 (getDocumentById) 호출 시작:", activeFileId);
+                const res = await getDocumentById(activeFileId);
+                console.log("📡 [API] 문서 상세 조회 완료:", res);
+                if (isMounted) {
+                    setInitialContent(res.content || "");
+                }
+            } catch (error) {
+                console.error("문서 로딩 실패:", error);
+            } finally {
+                if (isMounted) setIsContentLoading(false);
+            }
         };
+
+        fetchContent();
+        return () => { isMounted = false; };
     }, [activeFileId]);
 
-    /* ── 활성 접속자 상태 ── */
+    const handleTabSwitch = async (newId: string) => {
+        if (activeFileId === newId) return;
+        
+        // 이동 전 기존 문서 자동 저장 강제 실행
+        if (editorRef.current) {
+            await editorRef.current.forceSave();
+        }
+        
+        setActiveFileId(newId);
+    };
+
+    /* ── 공유 상태 관리 (헤더 표시용) ── */
     const [activeUsers, setActiveUsers] = useState<any[]>([]);
-
-    useEffect(() => {
-        if (!docState?.provider) return;
-
-        const updateUsers = () => {
-            const states = Array.from(
-                docState.provider.awareness.getStates().values(),
-            );
-            const users = states
-                .map((state: any) => state.user)
-                .filter((u) => u && u.name);
-
-            // 이름 기준으로 중복 제거
-            const uniqueUsers = users.filter(
-                (v, i, a) => a.findIndex((t) => t.name === v.name) === i,
-            );
-            setActiveUsers(uniqueUsers);
-        };
-
-        docState.provider.awareness.on("update", updateUsers);
-        updateUsers();
-
-        return () => {
-            docState.provider.awareness.off("update", updateUsers);
-        };
-    }, [docState?.provider]);
-
-    /* ── 에디터 ── */
-    const editor = useEditor(
-        {
-            extensions: [
-                StarterKit.configure({ undoRedo: false }),
-                ...(docState
-                    ? [
-                        Collaboration.configure({ document: docState.ydoc }),
-                        CollaborationCaret.configure({
-                            provider: docState.provider,
-                            user: currentUser,
-                        }),
-                    ]
-                    : []),
-                Placeholder.configure({
-                    placeholder: "입력하기 시작하세요...",
-                }),
-            ],
-            // Yjs가 초기화되기 전에 에디터를 비워둡니다.
-            content: "",
-            editorProps: {
-                attributes: {
-                    class: "docs-editor-body",
-                },
-            },
-        },
-        [docState],
-    );
-
-    /* ── 저장 ── */
     const [isSaving, setIsSaving] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [showExportMenu, setShowExportMenu] = useState(false);
 
-    const handleSave = async () => {
-        if (!editor || !activeFile) return;
-        setIsSaving(true);
-        setToastMessage("저장 중...");
+    // 메뉴 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (showExportMenu && !(e.target as Element).closest('.export-menu-container')) {
+                setShowExportMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [showExportMenu]);
+
+    const handleHeaderSave = () => {
+        if (editorRef.current) {
+            editorRef.current.handleSave();
+        }
+        setShowExportMenu(false);
+    };
+
+    const handleExportTXT = () => {
+        setShowExportMenu(false);
+        if (!editorRef.current || !activeFile) return;
+        const text = editorRef.current.getText();
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${activeFile.title || "새 문서"}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportPDF = async () => {
+        setShowExportMenu(false);
+        if (!activeFile) return;
+        
         try {
-            const contentJSON = editor.getJSON();
-            // 백엔드 API 연동: PATCH /api/documents/{documentId}
-            await saveDocument(activeFile.documentId, {
-                title: activeFile.title,
-                content: contentJSON,
-            });
-            setToastMessage("문서가 성공적으로 저장되었습니다!");
+            // 동적 임포트
+            const html2pdf = (await import('html2pdf.js')).default;
+            const element = document.querySelector('.ProseMirror');
+            if (!element) return;
             
-            // 저장 성공 시 목록 갱신 (선택 사항)
-            setFiles((prev) =>
-                prev.map((f) =>
-                    f.documentId === activeFile.documentId
-                        ? { ...f, updatedAt: new Date().toISOString() }
-                        : f
-                )
-            );
+            const opt = {
+                margin:       10,
+                filename:     `${activeFile.title || "새 문서"}.pdf`,
+                image:        { type: 'jpeg' as const, quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            };
+            
+            html2pdf().set(opt).from(element as HTMLElement).save();
         } catch (error) {
-            console.error("문서 저장 실패:", error);
-            setToastMessage("저장 실패! 서버 오류가 발생했습니다.");
-        } finally {
-            setIsSaving(false);
-            setTimeout(() => setToastMessage(null), 3000);
+            console.error("PDF 변환 실패:", error);
+            alert("PDF 변환 중 오류가 발생했습니다.");
         }
     };
 
-    /* ── 파일 추가 ── */
+    /* ── 파일 추가 (낙관적 업데이트 및 강제 저장) ── */
     const handleAddFile = async () => {
+        if (editorRef.current) {
+            await editorRef.current.forceSave();
+        }
+
+        const tempId = `temp-${Date.now()}`;
+        const tempDoc: Document = {
+            documentId: tempId,
+            roomId: DEFAULT_ROOM_ID,
+            title: "새 문서",
+            type: "document",
+            createdBy: {
+                userId: "temp-user",
+                name: currentUser.name
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        
+        setFiles((prev) => [tempDoc, ...prev]);
+
         try {
-            // 백엔드 API 연동: POST /api/documents
             const newDoc = await createDocument({
                 title: "새 문서",
-                roomId: DEFAULT_ROOM_ID, // 임시 기본 방 ID
+                roomId: DEFAULT_ROOM_ID,
             });
             
-            setFiles((prev) => [newDoc, ...prev]);
+            setFiles((prev) => prev.map((f) => (f.documentId === tempId ? newDoc : f)));
             setActiveFileId(newDoc.documentId);
         } catch (error) {
             console.error("문서 생성 실패:", error);
+            setFiles((prev) => prev.filter((f) => f.documentId !== tempId));
             alert("문서 생성에 실패했습니다.");
         }
     };
@@ -235,21 +235,25 @@ export const DocsPage = () => {
         }
     };
 
-    /* ── 파일 삭제 ── */
+    /* ── 파일 삭제 (낙관적 업데이트) ── */
     const handleDeleteFile = async (id: string) => {
         if (!confirm("정말로 이 문서를 삭제하시겠습니까?")) return;
         
+        const previousFiles = [...files];
+        const next = files.filter((f) => f.documentId !== id);
+        
+        setFiles(next);
+        if (activeFileId === id) {
+            setActiveFileId(next.length > 0 ? next[0].documentId : null);
+        }
+        
         try {
-            // 백엔드 API 연동: DELETE /api/documents/{documentId}
             await deleteDocument(id);
-            const next = files.filter((f) => f.documentId !== id);
-            setFiles(next);
-            
-            if (activeFileId === id) {
-                setActiveFileId(next.length > 0 ? next[0].documentId : null);
-            }
         } catch (error: any) {
             console.error("문서 삭제 실패:", error);
+            setFiles(previousFiles);
+            if (activeFileId === id) setActiveFileId(id);
+
             if (error.response?.status === 403) {
                 alert("문서 생성자만 삭제할 수 있습니다.");
             } else {
@@ -368,7 +372,7 @@ export const DocsPage = () => {
                                     }`}
                                     onClick={() => {
                                         if (!isEditing)
-                                            setActiveFileId(file.documentId);
+                                            handleTabSwitch(file.documentId);
                                     }}
                                 >
                                     {/* 왼쪽 파란 바 (활성 시) */}
@@ -533,51 +537,82 @@ export const DocsPage = () => {
                                         ))}
                                     </div>
 
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={isSaving}
-                                        className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-4 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(79,142,247,0.4)] active:scale-95 disabled:opacity-60"
-                                    >
-                                        {isSaving && (
-                                            <svg
-                                                className="h-3.5 w-3.5 animate-spin"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
+                                    <div className="relative flex items-center export-menu-container">
+                                        <div className="flex rounded-lg shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(79,142,247,0.4)]">
+                                            <button
+                                                onClick={handleHeaderSave}
+                                                disabled={isSaving}
+                                                className="flex items-center gap-1.5 rounded-l-lg bg-gradient-to-r from-[#4f8ef7] to-[#5984f9] px-4 py-2 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-60 border-r border-blue-400/30"
                                             >
-                                                <circle
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="white"
-                                                    strokeWidth="3"
-                                                    opacity="0.3"
-                                                />
-                                                <path
-                                                    d="M4 12a8 8 0 018-8"
-                                                    stroke="white"
-                                                    strokeWidth="3"
-                                                    strokeLinecap="round"
-                                                />
-                                            </svg>
+                                                {isSaving && (
+                                                    <svg
+                                                        className="h-3.5 w-3.5 animate-spin"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <circle
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                            stroke="white"
+                                                            strokeWidth="3"
+                                                            opacity="0.3"
+                                                        />
+                                                        <path
+                                                            d="M4 12a8 8 0 018-8"
+                                                            stroke="white"
+                                                            strokeWidth="3"
+                                                            strokeLinecap="round"
+                                                        />
+                                                    </svg>
+                                                )}
+                                                저장
+                                            </button>
+                                            <button
+                                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                                disabled={isSaving}
+                                                className="flex items-center justify-center rounded-r-lg bg-gradient-to-r from-[#5984f9] to-[#6c7bfa] px-2 py-2 text-white active:scale-95 disabled:opacity-60 hover:brightness-110"
+                                                title="내보내기 옵션"
+                                            >
+                                                <svg
+                                                    className="h-4 w-4"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth={2.5}
+                                                >
+                                                    <polyline points="6 9 12 15 18 9" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        {/* 내보내기 드롭다운 메뉴 */}
+                                        {showExportMenu && (
+                                            <div className="absolute right-0 top-[110%] w-40 rounded-xl border border-gray-100 bg-white p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.1)] z-50">
+                                                <button
+                                                    onClick={handleExportPDF}
+                                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-blue-600"
+                                                >
+                                                    <span className="text-sm">📄</span>
+                                                    PDF로 저장
+                                                </button>
+                                                <button
+                                                    onClick={handleExportTXT}
+                                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-blue-600"
+                                                >
+                                                    <span className="text-sm">📝</span>
+                                                    TXT로 저장
+                                                </button>
+                                            </div>
                                         )}
-                                        저장
-                                        <svg
-                                            className="h-3 w-3"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            strokeWidth={2.5}
-                                        >
-                                            <polyline points="6 9 12 15 18 9" />
-                                        </svg>
-                                    </button>
+                                    </div>
                                 </div>
                             </header>
 
                             {/* 에디터 본문 */}
                             <div
                                 className="flex-1 cursor-text overflow-y-auto px-16 py-10"
-                                onClick={() => editor?.commands.focus()}
+                                onClick={() => editorRef.current?.focus()}
                             >
                                 <div className="mx-auto max-w-[720px]">
                                     {/* 큰 제목 */}
@@ -614,11 +649,21 @@ export const DocsPage = () => {
                                         </h1>
                                     )}
 
-                                    {/* Tiptap 에디터 */}
-                                    {editor ? (
-                                        <EditorContent editor={editor} />
+                                    {/* Tiptap 에디터 (DocsEditor 컴포넌트) */}
+                                    {isContentLoading ? (
+                                        <div className="py-10 text-gray-400">문서 로딩 중...</div>
                                     ) : (
-                                        <div className="text-gray-400">에디터 로딩 중...</div>
+                                        <DocsEditor
+                                            key={activeFile.documentId}
+                                            ref={editorRef}
+                                            activeFile={activeFile}
+                                            initialContent={initialContent}
+                                            currentUser={currentUser}
+                                            setFiles={setFiles}
+                                            onActiveUsersChange={setActiveUsers}
+                                            onIsSavingChange={setIsSaving}
+                                            setToastMessage={setToastMessage}
+                                        />
                                     )}
                                 </div>
                             </div>

@@ -1,37 +1,58 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  // 백엔드 기본 주소를 미리 적어둡니다 (.env에서 가져옴)
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+    // 백엔드 기본 주소를 미리 적어둡니다 (.env에서 가져옴)
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+    withCredentials: true,
 });
 
-// 직전에 무조건 실행되는 코드 (Interceptor)
+// 요청 인터셉터 — 토큰 자동 첨부
 api.interceptors.request.use(
-  (config) => {
-    // 로컬 스토리지에서 우리가 저장해둔 토큰을 꺼냄
-    const token = localStorage.getItem('accessToken');
+    (config) => {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
 
-    // 토큰이 있다면, 헤더(Authorization)에 'Bearer 토큰값' 형태로 붙임
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
+// 응답 인터셉터 — 401이면 토큰 재발급 시도
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // refreshToken으로 새 accessToken 발급
+                const { data } = await axios.post(
+                    `${import.meta.env.VITE_BACKEND_URL}/api/auth/refresh`,
+                    {},
+                    { withCredentials: true },
+                );
+
+                localStorage.setItem("accessToken", data.accessToken);
+                originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                return api(originalRequest); // 원래 요청 재시도
+            } catch (refreshError) {
+                // refreshToken도 만료 → 로그인 페이지로
+                localStorage.removeItem("accessToken");
+                window.location.href = "/login";
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    },
 );
 
 export default api;
-
-// 요청 나가기 직전에 토큰을 자동으로 헤더에 끼워넣음
-axios.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});

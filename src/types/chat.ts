@@ -20,12 +20,15 @@ export interface TiptapDoc {
 
 export interface Room {
   id: string;
-  userName: string; // 상대방 이름
-  lastMessage: string;
+  type: 'direct' | 'group';
+  displayName: string;
+  displayImage: string | null;
+  presence: PresenceStatus;
+  memberCount: number;
+  lastMessagePreview: string;
   lastMessageTime: string;
   unreadCount: number;
   isFavorite: boolean;
-  presence: PresenceStatus;
 }
 
 export interface Message {

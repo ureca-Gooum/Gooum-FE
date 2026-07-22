@@ -24,3 +24,13 @@ export async function fetchMessages({
     throw new Error(message);
   }
 }
+
+export async function deleteMessage(messageId: string): Promise<{ messageId: string; isDeleted: boolean }> {
+  try {
+    const res = await axios.delete(`/api/messages/${messageId}`);
+    return res.data;
+  } catch (err: any) {
+    const message = err.response?.data?.message ?? '메시지를 삭제하지 못했어요.';
+    throw new Error(message);
+  }
+}

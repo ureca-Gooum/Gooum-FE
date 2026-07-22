@@ -1,4 +1,14 @@
 import { io, Socket } from 'socket.io-client';
+import type { MessageDeletedPayload } from '@/types/socket';
+
+export function onMessageDeleted(handler: (payload: MessageDeletedPayload) => void) {
+  socket?.on('messageDeleted', handler); // 이벤트 이름은 지현님 확인 필요
+}
+
+export function offMessageDeleted(handler: (payload: MessageDeletedPayload) => void) {
+  socket?.off('messageDeleted', handler);
+}
+
 import type {
   SendMessagePayload,
   NewMessagePayload,

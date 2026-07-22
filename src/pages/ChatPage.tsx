@@ -9,7 +9,7 @@ import { RoomListItem } from '@/components/RoomListItem';
 import { Avatar } from '@/components/Avatar';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
-import { fetchMessages } from '@/api/messages';
+import { fetchMessages, deleteMessage } from '@/api/messages';
 import { mapMessageFromApi } from '@/api/mappers/messageMapper';
 import {
   connectSocket,
@@ -22,6 +22,8 @@ import {
   offNewMessage,
   onNewNotification,
   offNewNotification,
+  onMessageDeleted,
+  offMessageDeleted,
 } from '@/socket/socket';
 import { getCurrentUserId } from '@/constants/auth';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
@@ -31,7 +33,7 @@ import { stripSenderPrefix } from '@/utils/notification';
 import { buildLastMessagePreview } from '@/utils/tiptap';
 import type { Room, Message } from '@/types/chat';
 import type { RoomApiResponse } from '@/types/room';
-import type { NewMessagePayload, NewNotificationPayload } from '@/types/socket';
+import type { NewMessagePayload, NewNotificationPayload, MessageDeletedPayload } from '@/types/socket';
 
 function getDateLabel(time: string) {
   return time.split(',')[0];
@@ -39,9 +41,9 @@ function getDateLabel(time: string) {
 
 type PanelTab = 'chat' | 'file' | 'docs';
 
-const CURRENT_USER_ID = getCurrentUserId();
-
 export const ChatPage = () => {
+  const currentUserId = getCurrentUserId(); // 컴포넌트 안에서 매번 최신값 계산
+
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,6 @@ export const ChatPage = () => {
     return () => disconnectSocket();
   }, []);
 
-  // usePresence는 connectSocket 효과 이후에 등록해야, 최초 online 전송 시점에 소켓 인스턴스가 존재한다
   usePresence(setRooms);
 
   // 2. 방 선택 시 입장/퇴장 + 과거 메시지 불러오기
@@ -119,10 +120,7 @@ export const ChatPage = () => {
     };
   }, [selectedRoomId]);
 
-  // 3. 새 메시지 수신 - 현재 열려있는 방의 말풍선 목록에만 추가 (messageId 기준 중복 방지)
-  //    주의: 서버가 newMessage는 해당 방을 join한 사람에게만 보내므로, 다른 방을 보고 있을 땐 안 온다.
-  //    다른 사람이 보낸 메시지의 채팅 리스트 갱신은 항상 오는 newNotification으로 처리한다 (아래 4번).
-  //    내가 보낸 메시지는 newNotification이 오지 않으므로(발신자 본인 제외), 여기서 "나: 텍스트"로 직접 반영한다.
+  // 3. 새 메시지 수신
   useEffect(() => {
     const handleNewMessage = (payload: NewMessagePayload) => {
       console.log('🔔 newMessage 이벤트 도착!', payload);
@@ -135,12 +133,13 @@ export const ChatPage = () => {
           senderName: payload.sender.name,
           content: payload.content,
           time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
-          isMine: payload.sender.userId === CURRENT_USER_ID,
+          isMine: payload.sender.userId === currentUserId,
+          isDeleted: false,
         };
         return [...prev, receivedMessage];
       });
 
-      if (payload.sender.userId === CURRENT_USER_ID) {
+      if (payload.sender.userId === currentUserId) {
         setRooms((prev) => {
           const index = prev.findIndex((r) => r.id === payload.roomId);
           if (index === -1) return prev;
@@ -165,23 +164,20 @@ export const ChatPage = () => {
 
     onNewMessage(handleNewMessage);
     return () => offNewMessage(handleNewMessage);
-  }, []);
+  }, [currentUserId]);
 
-  // 4. 실시간 알림 수신 - 지금 보고 있지 않은 방을 포함해, 다른 사람이 보낸 메시지에 대해 온다.
-  //    채팅 리스트의 미리보기/시간/안읽음 갱신 + 최신 순 정렬은 여기서 전담한다.
+  // 4. 실시간 알림 수신
   useEffect(() => {
     const handleNewNotification = (payload: NewNotificationPayload) => {
       if (payload.type !== 'message') return;
 
       setRooms((prev) => {
         const index = prev.findIndex((r) => r.id === payload.roomId);
-        if (index === -1) return prev; // 아직 목록에 없는 방(예: 방금 초대된 새 방)은 별도 처리 필요
+        if (index === -1) return prev;
 
         const isRoomOpen = payload.roomId === selectedRoomId;
         const room = prev[index];
 
-        // 상대방이 보낸 메시지는 이름 없이 텍스트만 보여준다.
-        // body는 서버가 "이름: 메시지" 형태로 내려주므로 접두어를 잘라낸다.
         const preview = stripSenderPrefix(payload.body);
 
         const updatedRoom: Room = {
@@ -199,6 +195,21 @@ export const ChatPage = () => {
     onNewNotification(handleNewNotification);
     return () => offNewNotification(handleNewNotification);
   }, [selectedRoomId]);
+
+  // 5. 메시지 삭제
+  const updateMessageAsDeleted = (messageId: string) => {
+    setRoomMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m)));
+    setLocalMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m)));
+  };
+
+  useEffect(() => {
+    const handleMessageDeleted = (payload: MessageDeletedPayload) => {
+      updateMessageAsDeleted(payload.messageId);
+    };
+
+    onMessageDeleted(handleMessageDeleted);
+    return () => offMessageDeleted(handleMessageDeleted);
+  }, []);
 
   const handleRoomCreated = (newRoom: RoomApiResponse) => {
     setRooms((prev) => [mapRoomFromApi(newRoom), ...prev]);
@@ -231,7 +242,6 @@ export const ChatPage = () => {
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
-  // 5. 메시지 전송 - 낙관적 업데이트 제거, 소켓 전송만 (서버가 본인에게도 newMessage로 돌려줌)
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedRoomId) return;
 
@@ -245,6 +255,16 @@ export const ChatPage = () => {
     });
 
     setMessageText('');
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!confirm('메시지를 삭제하시겠어요?')) return;
+    try {
+      await deleteMessage(messageId);
+      updateMessageAsDeleted(messageId);
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   const favoriteRooms = rooms.filter((r) => r.isFavorite);
@@ -421,7 +441,7 @@ export const ChatPage = () => {
                 return (
                   <div key={msg.id}>
                     {showDateDivider && <DateDivider label={getDateLabel(msg.time)} />}
-                    <MessageBubble message={msg} />
+                    <MessageBubble message={msg} onDelete={handleDeleteMessage} />
                   </div>
                 );
               })}

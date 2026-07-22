@@ -1,5 +1,3 @@
-// src/pages/LoginPage.tsx
-// @ts-ignore
 import { useKakaoAuth } from "../hooks/useKakaoAuth";
 import illustrationImage from "../assets/illustration.png";
 

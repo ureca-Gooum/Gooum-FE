@@ -101,6 +101,7 @@ export const ChatPage = () => {
   // 3. 새 메시지 수신 - messageId 기준 중복 방지
   useEffect(() => {
     const handleNewMessage = (payload: NewMessagePayload) => {
+      console.log('🔔 newMessage 이벤트 도착!', payload);
       setLocalMessages((prev) => {
         if (prev.some((m) => m.id === payload.messageId)) return prev;
         const receivedMessage: Message = {

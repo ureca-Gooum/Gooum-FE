@@ -14,6 +14,7 @@ import { mapMessageFromApi } from '@/api/mappers/messageMapper';
 import {
   connectSocket,
   disconnectSocket,
+  getSocket,
   joinRoom,
   leaveRoom as leaveSocketRoom,
   sendMessage,
@@ -56,7 +57,6 @@ export const ChatPage = () => {
 
   // 1. 소켓 연결 - 앱 진입 시 한 번만
   useEffect(() => {
-    // connectSocket();
     const socket = connectSocket();
 
     socket.on('connect', () => {
@@ -78,9 +78,19 @@ export const ChatPage = () => {
     }
     console.log('🚪 입장 시도하는 roomId:', selectedRoomId);
 
-    joinRoom(selectedRoomId, (response: any) => {
-      console.log('joinRoom 응답:', response);
-    });
+    const socket = getSocket();
+
+    const doJoin = () => {
+      joinRoom(selectedRoomId, (response: any) => {
+        console.log('joinRoom 응답:', response);
+      });
+    };
+
+    if (socket?.connected) {
+      doJoin();
+    } else {
+      socket?.once('connect', doJoin);
+    }
 
     setIsMessagesLoading(true);
     fetchMessages({ roomId: selectedRoomId })
@@ -148,10 +158,10 @@ export const ChatPage = () => {
   const handleSelectRoom = (roomId: string) => {
     setSelectedRoomId(roomId);
     setActiveTab('chat');
-    setLocalMessages([]); // 방 바뀌면 이전 방의 로컬(실시간) 메시지 정리
+    setLocalMessages([]);
   };
 
-  // 4. 메시지 전송 - 낙관적 업데이트 + 소켓 전송
+  // 4. 메시지 전송 - 낙관적 업데이트 제거, 소켓 전송만 (서버가 본인에게도 newMessage로 돌려줌)
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedRoomId) return;
 
@@ -159,17 +169,6 @@ export const ChatPage = () => {
       type: 'doc',
       content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
     };
-
-    const optimisticMessage: Message = {
-      id: `local-${Date.now()}`,
-      roomId: selectedRoomId,
-      senderId: CURRENT_USER_ID ?? 'me',
-      senderName: '나',
-      content,
-      time: new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
-      isMine: true,
-    };
-    setLocalMessages((prev) => [...prev, optimisticMessage]);
 
     sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
       console.log('sendMessage 응답:', response);

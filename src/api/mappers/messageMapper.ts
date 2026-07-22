@@ -1,7 +1,8 @@
 import type { MessageApiResponse } from '@/types/message';
 import type { Message, TiptapDoc } from '@/types/chat';
+import { getCurrentUserId } from '@/constants/auth';
 
-const CURRENT_USER_ID = 'me-user-id'; // TODO: getCurrentUserId()로 교체
+const currentUserId = getCurrentUserId();
 
 function formatTime(createdAt: string): string {
   const date = new Date(createdAt);
@@ -27,6 +28,6 @@ export function mapMessageFromApi(apiData: MessageApiResponse): Message {
     senderName: apiData.sender.name,
     content: apiData.isDeleted ? getDeletedContent() : (apiData.content ?? getDeletedContent()),
     time: formatTime(apiData.createdAt),
-    isMine: apiData.sender.userId === CURRENT_USER_ID,
+    isMine: apiData.sender.userId === currentUserId,
   };
 }

@@ -69,6 +69,8 @@ export function RoomListItem({
     onToggleFavorite(room.id, room.isFavorite);
   };
 
+  const isUnread = room.unreadCount > 0;
+
   return (
     <div
       onClick={onSelect}
@@ -76,30 +78,39 @@ export function RoomListItem({
       <Avatar seed={room.id} imageUrl={room.displayImage} presence={room.presence} alt={room.displayName} size={40} />
 
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-fg-primary truncate">{room.displayName}</p>
-        <p className="text-sm text-fg-tertiary truncate">{room.lastMessagePreview}</p>
+        <p className={`truncate ${isUnread ? 'font-bold text-fg-primary' : 'font-medium text-fg-primary'}`}>
+          {room.displayName}
+        </p>
+        <p className={`truncate text-sm ${isUnread ? 'font-bold text-fg-primary' : 'text-fg-tertiary'}`}>
+          {room.lastMessagePreview}
+        </p>
       </div>
 
-      <div className="flex flex-col items-end gap-1">
-        <span className="text-xs text-fg-tertiary">{room.lastMessageTime}</span>
-        {room.unreadCount > 0 && (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-error text-[10px] text-white">
-            {room.unreadCount}
-          </span>
-        )}
-      </div>
+      <div className="relative flex h-8 w-14 shrink-0 items-center justify-end">
+        {/* 평소: 시간 + 안읽음 점 */}
+        <div
+          className={`absolute inset-0 flex items-center justify-end gap-1 transition-opacity duration-150 ${
+            isMenuOpen ? 'pointer-events-none opacity-0' : 'group-hover:opacity-0'
+          }`}>
+          <span className="text-xs text-fg-tertiary">{room.lastMessageTime}</span>
+          {isUnread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary" />}
+        </div>
 
-      <button
-        ref={buttonRef}
-        onClick={(e) => {
-          e.stopPropagation();
-          onMenuToggle();
-        }}
-        className={`rounded p-1 hover:bg-bg-canvas ${
-          isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-        }`}>
-        <MoreVertical size={16} className="text-fg-tertiary" />
-      </button>
+        {/* 호버 시: 같은 자리에 메뉴 버튼만 */}
+        <button
+          ref={buttonRef}
+          onClick={(e) => {
+            e.stopPropagation();
+            onMenuToggle();
+          }}
+          className={`absolute inset-0 flex items-center justify-end rounded p-1 transition-opacity duration-150 hover:bg-bg-canvas ${
+            isMenuOpen
+              ? 'pointer-events-auto opacity-100'
+              : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100'
+          }`}>
+          <MoreVertical size={16} className="text-fg-tertiary" />
+        </button>
+      </div>
 
       {createPortal(
         <div

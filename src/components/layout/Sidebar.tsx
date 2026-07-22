@@ -31,18 +31,23 @@ export function Sidebar() {
 
   const getStatusColor = (s: string) => {
     switch (s) {
-      case '온라인': return 'bg-green-500';
-      case '자리비움': return 'bg-yellow-500';
-      case '방해금지': return 'bg-red-500';
-      case '휴가': return 'bg-purple-500';
-      default: return 'bg-gray-500';
+      case '온라인':
+        return 'bg-green-500';
+      case '자리비움':
+        return 'bg-yellow-500';
+      case '방해금지':
+        return 'bg-red-500';
+      case '휴가':
+        return 'bg-purple-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    navigate("/login");
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    navigate('/login');
   };
 
   return (
@@ -69,12 +74,16 @@ export function Sidebar() {
 
       {/* 하단 아바타 및 상태 변경 팝업 메뉴 */}
       <div className="relative mt-auto" ref={menuRef}>
-        <button 
+        <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none"
-        >
-          <img src={avatarImage} alt="Profile Avatar" className="w-9 h-9 object-cover rounded-full shadow-sm hover:ring-2 hover:ring-gray-200" />
-          <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${getStatusColor(status)} ring-2 ring-bg-canvas`}></div>
+          className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none">
+          <img
+            src={avatarImage}
+            alt="Profile Avatar"
+            className="w-9 h-9 object-cover rounded-full shadow-sm hover:ring-2 hover:ring-gray-200"
+          />
+          <div
+            className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${getStatusColor(status)} ring-2 ring-bg-canvas`}></div>
         </button>
 
         {/* 팝업 메뉴 */}
@@ -84,30 +93,38 @@ export function Sidebar() {
               <p className="text-[13px] font-bold text-gray-800">박소연</p>
               <p className="text-[11px] text-gray-400 mt-0.5">내 상태 설정</p>
             </div>
-            
+
             <div className="flex flex-col gap-0.5">
-              <button 
-                onClick={() => { setStatus('온라인'); setIsMenuOpen(false); }} 
-                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium"
-              >
+              <button
+                onClick={() => {
+                  setStatus('온라인');
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div> 온라인
               </button>
-              <button 
-                onClick={() => { setStatus('자리비움'); setIsMenuOpen(false); }} 
-                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium"
-              >
+              <button
+                onClick={() => {
+                  setStatus('자리비움');
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium">
                 <div className="w-2 h-2 rounded-full bg-yellow-500"></div> 자리비움
               </button>
-              <button 
-                onClick={() => { setStatus('방해금지'); setIsMenuOpen(false); }} 
-                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium"
-              >
+              <button
+                onClick={() => {
+                  setStatus('방해금지');
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-gray-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium">
                 <div className="w-2 h-2 rounded-full bg-red-500"></div> 방해금지
               </button>
-              <button 
-                onClick={() => { setStatus('휴가'); setIsMenuOpen(false); }} 
-                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-purple-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium"
-              >
+              <button
+                onClick={() => {
+                  setStatus('휴가');
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2.5 px-3 py-1.5 hover:bg-purple-50 rounded-md text-[12px] text-gray-600 transition-colors w-full text-left font-medium">
                 <Coffee size={12} className="text-purple-500" /> 휴가중
               </button>
             </div>
@@ -117,10 +134,9 @@ export function Sidebar() {
             <button className="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 rounded-md w-full text-left text-[12px] text-gray-600 transition-colors font-medium">
               <Settings size={14} className="text-gray-400" /> 환경설정
             </button>
-            <button 
+            <button
               onClick={handleLogout}
-              className="flex items-center gap-2.5 px-3 py-2 hover:bg-red-50 text-red-500 rounded-md w-full text-left text-[12px] transition-colors mt-0.5 font-medium"
-            >
+              className="flex items-center gap-2.5 px-3 py-2 hover:bg-red-50 text-red-500 rounded-md w-full text-left text-[12px] transition-colors mt-0.5 font-medium">
               <LogOut size={14} /> 로그아웃
             </button>
           </div>

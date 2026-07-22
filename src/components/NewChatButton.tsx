@@ -14,7 +14,7 @@ export function NewChatButton({ onCreated }: { onCreated: (roomId: string) => vo
       // 나중에 유저 검색 UI 완성되면 선택한 유저 ID로 교체
       const room = await createRoom({
         type: 'direct',
-        memberIds: ['665f1c2a3b4e5f6a7b8c9d0f'], // 임시 테스트 ID
+        memberIds: ['6a5d8965c6ddc8d04da6cd45'], // 임시 테스트 ID
       });
       onCreated(room.roomId);
     } catch (err: any) {

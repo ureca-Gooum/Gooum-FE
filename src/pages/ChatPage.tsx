@@ -7,9 +7,10 @@ import { MessageBubble } from '@/components/MessageBubble';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { Avatar } from '@/components/Avatar';
-import { dummyMessages } from '@/data/dummyMessages';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
+import { fetchMessages } from '@/api/messages';
+import { mapMessageFromApi } from '@/api/mappers/messageMapper';
 import {
   connectSocket,
   disconnectSocket,
@@ -41,6 +42,8 @@ export const ChatPage = () => {
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PanelTab>('chat');
   const [messageText, setMessageText] = useState('');
+  const [roomMessages, setRoomMessages] = useState<Message[]>([]);
+  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -57,13 +60,25 @@ export const ChatPage = () => {
     return () => disconnectSocket();
   }, []);
 
-  // 2. 방 선택 시 입장, 방 바뀌면 이전 방 퇴장
+  // 2. 방 선택 시 입장/퇴장 + 과거 메시지 불러오기
   useEffect(() => {
-    if (!selectedRoomId) return;
+    if (!selectedRoomId) {
+      setRoomMessages([]);
+      return;
+    }
 
     joinRoom(selectedRoomId, (response: any) => {
       console.log('joinRoom 응답:', response);
     });
+
+    setIsMessagesLoading(true);
+    fetchMessages({ roomId: selectedRoomId })
+      .then((data) => {
+        const mapped = data.messages.map(mapMessageFromApi).reverse();
+        setRoomMessages(mapped);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setIsMessagesLoading(false));
 
     return () => {
       leaveSocketRoom(selectedRoomId, (response: any) => {
@@ -72,19 +87,22 @@ export const ChatPage = () => {
     };
   }, [selectedRoomId]);
 
-  // 3. 새 메시지 수신
+  // 3. 새 메시지 수신 - messageId 기준 중복 방지
   useEffect(() => {
     const handleNewMessage = (payload: NewMessagePayload) => {
-      const receivedMessage: Message = {
-        id: payload.messageId,
-        roomId: payload.roomId,
-        senderId: payload.sender.userId,
-        senderName: payload.sender.name,
-        content: payload.content,
-        time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
-        isMine: payload.sender.userId === CURRENT_USER_ID,
-      };
-      setLocalMessages((prev) => [...prev, receivedMessage]);
+      setLocalMessages((prev) => {
+        if (prev.some((m) => m.id === payload.messageId)) return prev;
+        const receivedMessage: Message = {
+          id: payload.messageId,
+          roomId: payload.roomId,
+          senderId: payload.sender.userId,
+          senderName: payload.sender.name,
+          content: payload.content,
+          time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
+          isMine: payload.sender.userId === CURRENT_USER_ID,
+        };
+        return [...prev, receivedMessage];
+      });
     };
 
     onNewMessage(handleNewMessage);
@@ -118,25 +136,32 @@ export const ChatPage = () => {
   const handleSelectRoom = (roomId: string) => {
     setSelectedRoomId(roomId);
     setActiveTab('chat');
+    setLocalMessages([]); // 방 바뀌면 이전 방의 로컬(실시간) 메시지 정리
   };
 
-  // 4. 메시지 전송 - 로컬에 바로 안 넣고 소켓으로만 전송 (서버가 newMessage로 되돌려줌)
+  // 4. 메시지 전송 - 낙관적 업데이트 + 소켓 전송
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedRoomId) return;
 
-    sendMessage(
-      {
-        roomId: selectedRoomId,
-        type: 'text',
-        content: {
-          type: 'doc',
-          content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
-        },
-      },
-      (response: any) => {
-        console.log('sendMessage 응답:', response);
-      },
-    );
+    const content = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
+    };
+
+    const optimisticMessage: Message = {
+      id: `local-${Date.now()}`,
+      roomId: selectedRoomId,
+      senderId: CURRENT_USER_ID ?? 'me',
+      senderName: '나',
+      content,
+      time: new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
+      isMine: true,
+    };
+    setLocalMessages((prev) => [...prev, optimisticMessage]);
+
+    sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
+      console.log('sendMessage 응답:', response);
+    });
 
     setMessageText('');
   };
@@ -144,10 +169,7 @@ export const ChatPage = () => {
   const favoriteRooms = rooms.filter((r) => r.isFavorite);
   const otherRooms = rooms.filter((r) => !r.isFavorite);
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
-  const currentMessages = [
-    ...dummyMessages.filter((m) => m.roomId === selectedRoomId),
-    ...localMessages.filter((m) => m.roomId === selectedRoomId),
-  ];
+  const currentMessages = [...roomMessages, ...localMessages.filter((m) => m.roomId === selectedRoomId)];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -301,20 +323,24 @@ export const ChatPage = () => {
           ) : undefined
         }>
         {activeTab === 'chat' ? (
-          <div className="flex flex-col gap-3">
-            {currentMessages.map((msg, index) => {
-              const prevMsg = currentMessages[index - 1];
-              const showDateDivider = !prevMsg || getDateLabel(prevMsg.time) !== getDateLabel(msg.time);
+          isMessagesLoading ? (
+            <p className="text-sm text-fg-tertiary">메시지 불러오는 중...</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {currentMessages.map((msg, index) => {
+                const prevMsg = currentMessages[index - 1];
+                const showDateDivider = !prevMsg || getDateLabel(prevMsg.time) !== getDateLabel(msg.time);
 
-              return (
-                <div key={msg.id}>
-                  {showDateDivider && <DateDivider label={getDateLabel(msg.time)} />}
-                  <MessageBubble message={msg} />
-                </div>
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </div>
+                return (
+                  <div key={msg.id}>
+                    {showDateDivider && <DateDivider label={getDateLabel(msg.time)} />}
+                    <MessageBubble message={msg} />
+                  </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          )
         ) : activeTab === 'file' ? (
           <p className="text-sm text-fg-tertiary">파일 목록 준비 중이에요.</p>
         ) : (

@@ -18,6 +18,12 @@ function formatLastMessageTime(sentAt?: string): string {
   return `${period} ${displayHour}:${minutes}`;
 }
 
+// 그룹채팅에 name이 없을 때, 멤버 이름들을 콤마로 나열해서 대체 이름 만들기
+function getGroupFallbackName(members: RoomMember[]): string {
+  const otherMembers = members.filter((m) => m.userId !== CURRENT_USER_ID);
+  return otherMembers.map((m) => m.name).join(', ');
+}
+
 export function mapRoomFromApi(apiData: RoomApiResponse): Room {
   const isDirect = apiData.type === 'direct';
   const otherMember = isDirect ? getOtherMember(apiData.members) : undefined;
@@ -26,7 +32,9 @@ export function mapRoomFromApi(apiData: RoomApiResponse): Room {
   return {
     id: apiData.roomId,
     type: apiData.type,
-    displayName: isDirect ? (otherMember?.name ?? '알 수 없음') : (apiData.name ?? '그룹 채팅'),
+    displayName: isDirect
+      ? (otherMember?.name ?? '알 수 없음')
+      : (apiData.name ?? getGroupFallbackName(apiData.members)),
     displayImage: isDirect ? (otherMember?.profileImageUrl ?? null) : null,
     presence: isDirect ? (otherMember?.presence?.status ?? 'offline') : 'offline',
     memberCount: apiData.memberCount,

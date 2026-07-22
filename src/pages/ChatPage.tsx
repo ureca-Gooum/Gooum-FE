@@ -56,7 +56,17 @@ export const ChatPage = () => {
 
   // 1. 소켓 연결 - 앱 진입 시 한 번만
   useEffect(() => {
-    connectSocket();
+    // connectSocket();
+    const socket = connectSocket();
+
+    socket.on('connect', () => {
+      console.log('✅ 소켓 연결됨:', socket.id);
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('❌ 소켓 끊김:', reason);
+    });
+
     return () => disconnectSocket();
   }, []);
 
@@ -66,6 +76,7 @@ export const ChatPage = () => {
       setRoomMessages([]);
       return;
     }
+    console.log('🚪 입장 시도하는 roomId:', selectedRoomId);
 
     joinRoom(selectedRoomId, (response: any) => {
       console.log('joinRoom 응답:', response);

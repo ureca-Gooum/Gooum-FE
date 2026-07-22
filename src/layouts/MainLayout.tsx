@@ -6,7 +6,7 @@ export const MainLayout = () => {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-bg-canvas ">
       <Header />
-      <div className="flex flex-1 overflow-hidden pt-4 pb-2.5 pr-2.5 gap-4">
+      <div className="flex flex-1 overflow-hidden pt-1 pb-2.5 pr-2.5 gap-4">
         <Sidebar />
         <Outlet />
       </div>

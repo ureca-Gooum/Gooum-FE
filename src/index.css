@@ -1,1 +1,56 @@
-@import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
+@import "tailwindcss";
+@import './styles/vars.css';
+@import './styles/globals.css';
+
+/* ── Tiptap 에디터 본문 ── */
+.docs-editor-body {
+  outline: none;
+  font-size: 15px;
+  line-height: 1.75;
+  color: #334155;
+  min-height: 50vh;
+}
+
+.docs-editor-body p {
+  margin-bottom: 0.5em;
+}
+
+/* ── Tiptap Placeholder ── */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+  font-style: normal;
+}
+
+/* ── Tiptap Collaboration Cursor ── */
+.collaboration-cursor__caret {
+  border-left: 2px solid;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+.collaboration-cursor__label {
+  border-radius: 4px 4px 4px 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  left: -1px;
+  line-height: 1.2;
+  padding: 2px 5px;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ── 타인의 텍스트 드래그(선택) 영역 ── */
+.collaboration-cursor__selection {
+  opacity: 0.15;
+}

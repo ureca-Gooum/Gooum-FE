@@ -1,10 +1,10 @@
 import type { RoomApiResponse, RoomMember } from '@/types/room';
 import type { Room } from '@/types/chat';
-
-const CURRENT_USER_ID = 'me-user-id';
+import { getCurrentUserId } from '@/constants/auth';
 
 function getOtherMember(members: RoomMember[]): RoomMember | undefined {
-  const filtered = members.filter((m) => m.userId !== CURRENT_USER_ID);
+  const currentUserId = getCurrentUserId();
+  const filtered = members.filter((m) => m.userId !== currentUserId);
   return filtered[0] ?? members[0];
 }
 
@@ -20,7 +20,8 @@ function formatLastMessageTime(sentAt?: string): string {
 
 // 그룹채팅에 name이 없을 때, 멤버 이름들을 콤마로 나열해서 대체 이름 만들기
 function getGroupFallbackName(members: RoomMember[]): string {
-  const otherMembers = members.filter((m) => m.userId !== CURRENT_USER_ID);
+  const currentUserId = getCurrentUserId();
+  const otherMembers = members.filter((m) => m.userId !== currentUserId);
   return otherMembers.map((m) => m.name).join(', ');
 }
 
@@ -37,6 +38,7 @@ export function mapRoomFromApi(apiData: RoomApiResponse): Room {
       : (apiData.name ?? getGroupFallbackName(apiData.members)),
     displayImage: isDirect ? (otherMember?.profileImageUrl ?? null) : null,
     presence: isDirect ? (otherMember?.presence?.status ?? 'offline') : 'offline',
+    otherUserId: isDirect ? (otherMember?.userId ?? null) : null,
     memberCount: apiData.memberCount,
     lastMessagePreview: lastMessage?.content ?? '아직 메시지가 없어요',
     lastMessageTime: formatLastMessageTime(lastMessage?.sentAt),

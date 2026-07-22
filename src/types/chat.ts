@@ -24,6 +24,7 @@ export interface Room {
   displayName: string;
   displayImage: string | null;
   presence: PresenceStatus;
+  otherUserId: string | null;
   memberCount: number;
   lastMessagePreview: string;
   lastMessageTime: string;

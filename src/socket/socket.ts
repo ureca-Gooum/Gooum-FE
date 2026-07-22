@@ -1,6 +1,14 @@
-// src/socket/socket.ts
 import { io, Socket } from 'socket.io-client';
-import type { SendMessagePayload, NewMessagePayload } from '@/types/socket';
+import type {
+  SendMessagePayload,
+  NewMessagePayload,
+  UserTypingPayload,
+  UpdatePresencePayload,
+  UpdatePresenceResponse,
+  PresenceChangedPayload,
+  NewNotificationPayload,
+} from '@/types/socket';
+import type { PresenceStatus } from '@/types/chat';
 
 let socket: Socket | null = null;
 
@@ -61,4 +69,42 @@ export function onNewMessage(handler: (payload: NewMessagePayload) => void) {
 
 export function offNewMessage(handler: (payload: NewMessagePayload) => void) {
   socket?.off('newMessage', handler);
+}
+
+// 6. 타이핑 중 알림 전송
+export function emitTyping(roomId: string, callback?: (response: any) => void) {
+  socket?.emit('typing', { roomId }, callback);
+}
+
+// 7. 상대방 타이핑 알림 수신 - 리스너 등록
+export function onUserTyping(handler: (payload: UserTypingPayload) => void) {
+  socket?.on('userTyping', handler);
+}
+
+export function offUserTyping(handler: (payload: UserTypingPayload) => void) {
+  socket?.off('userTyping', handler);
+}
+
+// 8. 내 온라인 상태 변경 전송
+export function updatePresence(status: PresenceStatus, callback?: (response: UpdatePresenceResponse) => void) {
+  const payload: UpdatePresencePayload = { status };
+  socket?.emit('updatePresence', payload, callback);
+}
+
+// 9. 상대방 온라인 상태 변경 수신 - 리스너 등록
+export function onPresenceChanged(handler: (payload: PresenceChangedPayload) => void) {
+  socket?.on('presenceChanged', handler);
+}
+
+export function offPresenceChanged(handler: (payload: PresenceChangedPayload) => void) {
+  socket?.off('presenceChanged', handler);
+}
+
+// 10. 실시간 알림 수신 - 지금 보고 있지 않은 방 포함, 내가 속한 모든 방에 대해 온다
+export function onNewNotification(handler: (payload: NewNotificationPayload) => void) {
+  socket?.on('newNotification', handler);
+}
+
+export function offNewNotification(handler: (payload: NewNotificationPayload) => void) {
+  socket?.off('newNotification', handler);
 }

@@ -9,7 +9,7 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="flex w-16 shrink-0 flex-col items-center gap-4 bg-bg-canvas">
+    <aside className="flex w-16 shrink-0 flex-col items-center gap-4 bg-bg-canvas pt-4">
       {navItems.map(({ icon: Icon, label }) => (
         <button
           key={label}

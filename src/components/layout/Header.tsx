@@ -8,7 +8,7 @@ export function Header() {
   return (
     <header className="flex h-14 shrink-0 items-center bg-bg-canvas px-3">
       {/* 왼쪽: 로고 */}
-      <img src="/public/favicon.svg" alt="구움" className="h-10 w-10" />
+      <img src="/favicon.svg" alt="구움" className="h-10 w-10" />
 
       <div className="flex flex-1 items-center justify-center gap-2">
         <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>

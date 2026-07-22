@@ -28,6 +28,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
+    "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.3.2",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.31"

@@ -10,14 +10,27 @@ import { Avatar } from '@/components/Avatar';
 import { dummyMessages } from '@/data/dummyMessages';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
+import {
+  connectSocket,
+  disconnectSocket,
+  joinRoom,
+  leaveRoom as leaveSocketRoom,
+  sendMessage,
+  onNewMessage,
+  offNewMessage,
+} from '@/socket/socket';
+import { getCurrentUserId } from '@/constants/auth';
 import type { Room, Message } from '@/types/chat';
 import type { RoomApiResponse } from '@/types/room';
+import type { NewMessagePayload } from '@/types/socket';
 
 function getDateLabel(time: string) {
   return time.split(',')[0];
 }
 
 type PanelTab = 'chat' | 'file' | 'docs';
+
+const CURRENT_USER_ID = getCurrentUserId();
 
 export const ChatPage = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -36,6 +49,46 @@ export const ChatPage = () => {
       .then((data) => setRooms(data.rooms.map(mapRoomFromApi)))
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
+  }, []);
+
+  // 1. 소켓 연결 - 앱 진입 시 한 번만
+  useEffect(() => {
+    connectSocket();
+    return () => disconnectSocket();
+  }, []);
+
+  // 2. 방 선택 시 입장, 방 바뀌면 이전 방 퇴장
+  useEffect(() => {
+    if (!selectedRoomId) return;
+
+    joinRoom(selectedRoomId, (response: any) => {
+      console.log('joinRoom 응답:', response);
+    });
+
+    return () => {
+      leaveSocketRoom(selectedRoomId, (response: any) => {
+        console.log('leaveRoom 응답:', response);
+      });
+    };
+  }, [selectedRoomId]);
+
+  // 3. 새 메시지 수신
+  useEffect(() => {
+    const handleNewMessage = (payload: NewMessagePayload) => {
+      const receivedMessage: Message = {
+        id: payload.messageId,
+        roomId: payload.roomId,
+        senderId: payload.sender.userId,
+        senderName: payload.sender.name,
+        content: payload.content,
+        time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
+        isMine: payload.sender.userId === CURRENT_USER_ID,
+      };
+      setLocalMessages((prev) => [...prev, receivedMessage]);
+    };
+
+    onNewMessage(handleNewMessage);
+    return () => offNewMessage(handleNewMessage);
   }, []);
 
   const handleRoomCreated = (newRoom: RoomApiResponse) => {
@@ -67,23 +120,24 @@ export const ChatPage = () => {
     setActiveTab('chat');
   };
 
+  // 4. 메시지 전송 - 로컬에 바로 안 넣고 소켓으로만 전송 (서버가 newMessage로 되돌려줌)
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedRoomId) return;
 
-    const newMessage: Message = {
-      id: `local-${Date.now()}`,
-      roomId: selectedRoomId,
-      senderId: 'me',
-      senderName: '나',
-      content: {
-        type: 'doc',
-        content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
+    sendMessage(
+      {
+        roomId: selectedRoomId,
+        type: 'text',
+        content: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
+        },
       },
-      time: new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
-      isMine: true,
-    };
+      (response: any) => {
+        console.log('sendMessage 응답:', response);
+      },
+    );
 
-    setLocalMessages((prev) => [...prev, newMessage]);
     setMessageText('');
   };
 

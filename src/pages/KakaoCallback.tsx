@@ -12,8 +12,16 @@ export const KakaoCallback = () => {
             const response = await api.post("/api/auth/login", { code });
 
             const accessToken = response.data.accessToken;
+            const userName = response.data.name;
+
             if (accessToken) {
                 localStorage.setItem("accessToken", accessToken);
+
+                // 사용자 이름도 함께 로컬 스토리지에 저장
+                if (userName) {
+                    localStorage.setItem("userName", userName);
+                }
+
                 navigate("/app");
             }
         } catch (error) {

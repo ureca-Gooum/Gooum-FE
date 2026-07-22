@@ -1,23 +1,5 @@
 export type PresenceStatus = 'online' | 'away' | 'offline';
 
-export interface TiptapMark {
-  type: string;
-  attrs?: Record<string, any>;
-}
-
-export interface TiptapNode {
-  type: string;
-  text?: string;
-  marks?: TiptapMark[];
-  content?: TiptapNode[];
-  attrs?: Record<string, any>;
-}
-
-export interface TiptapDoc {
-  type: string; // 보통 "doc"
-  content: TiptapNode[];
-}
-
 export interface Room {
   id: string;
   type: 'direct' | 'group';
@@ -37,7 +19,7 @@ export interface Message {
   roomId: string;
   senderId: string;
   senderName: string;
-  content: TiptapDoc;
+  content: string | Record<string, any>;
   time: string;
   isMine: boolean;
 }

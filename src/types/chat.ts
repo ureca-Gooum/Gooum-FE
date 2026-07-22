@@ -18,7 +18,7 @@ export interface Message {
   roomId: string;
   senderId: string;
   senderName: string;
-  content: string;
+  content: string | Record<string, any>;
   time: string;
   isMine: boolean;
 }

@@ -1,3 +1,4 @@
+// @ts-ignore
 import { useKakaoAuth } from "../hooks/useKakaoAuth";
 import illustrationImage from "../assets/illustration.png";
 import gooumLogo from "../assets/goounmLogo 2.png";

@@ -73,3 +73,8 @@ export interface NewNotificationPayload {
   isRead: boolean;
   createdAt: string;
 }
+
+export interface MessageDeletedPayload {
+  messageId: string;
+  roomId: string;
+}

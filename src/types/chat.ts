@@ -40,4 +40,5 @@ export interface Message {
   content: TiptapDoc;
   time: string;
   isMine: boolean;
+  isDeleted: boolean;
 }

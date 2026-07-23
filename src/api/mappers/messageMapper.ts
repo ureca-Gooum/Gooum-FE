@@ -1,8 +1,7 @@
+// src/api/mappers/messageMapper.ts
 import type { MessageApiResponse } from '@/types/message';
 import type { Message, TiptapDoc } from '@/types/chat';
 import { getCurrentUserId } from '@/constants/auth';
-
-const currentUserId = getCurrentUserId();
 
 function formatTime(createdAt: string): string {
   const date = new Date(createdAt);
@@ -21,6 +20,8 @@ function getDeletedContent(): TiptapDoc {
 }
 
 export function mapMessageFromApi(apiData: MessageApiResponse): Message {
+  const currentUserId = getCurrentUserId(); // 함수 안으로 이동 - 호출될 때마다 최신값
+
   return {
     id: apiData.messageId,
     roomId: apiData.roomId,
@@ -29,5 +30,6 @@ export function mapMessageFromApi(apiData: MessageApiResponse): Message {
     content: apiData.isDeleted ? getDeletedContent() : (apiData.content ?? getDeletedContent()),
     time: formatTime(apiData.createdAt),
     isMine: apiData.sender.userId === currentUserId,
+    isDeleted: apiData.isDeleted,
   };
 }

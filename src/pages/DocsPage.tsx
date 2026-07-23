@@ -30,10 +30,8 @@ const getUserColor = (idOrName: string) => {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 };
 
-// 사용자가 제공한 기본 Room ID (채팅방 ID)
-const DEFAULT_ROOM_ID = '6a5daef3985ae04d3626cca3';
-
 export const DocsPage = () => {
+
   // 내 정보 상태 관리
   const [myProfile, setMyProfile] = useState<{ id?: string; name: string; avatar: string }>({
     id: '',
@@ -84,7 +82,7 @@ export const DocsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const navState = (location.state as { roomId?: string; messages?: Message[] } | null) || null;
-  const aiSummaryRoomId = navState?.roomId || roomIdParam || DEFAULT_ROOM_ID;
+  const aiSummaryRoomId = navState?.roomId || roomIdParam ;
   const aiSummaryMessages = navState?.messages || [];
 
   /* ── 파일 목록 상태 ── */

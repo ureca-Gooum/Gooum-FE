@@ -6,6 +6,8 @@ import defaultAvatar from '@/assets/Avatar.svg';
 import { ProfileDropdown } from './ProfileDropdown';
 import { USER_STATUS_CONFIG, type UserStatus } from '@/types/user';
 import type { PresenceStatus } from '@/types/chat';
+import { getAvatarColorClass } from '@/utils/avatar';
+import { getCurrentUserId } from '@/constants/auth';
 import api from '@/api/axiosInstance';
 import { getSocket } from '@/socket/socket';
 import { logout } from '@/api/users';
@@ -40,6 +42,8 @@ export function Sidebar() {
   const [status, setStatus] = useState<UserStatus>('대화 가능');
   const [statusMessage, setStatusMessage] = useState('');
   const [userImage, setUserImage] = useState<string | null>(null);
+  // 프로필 이미지 로드 실패 시 채팅 리스트 아바타와 동일하게 배경색 있는 마스코트 아이콘으로 대체
+  const [profileImgError, setProfileImgError] = useState(false);
 
   // 1. 프로필 정보 조회 (GET)
   useEffect(() => {
@@ -65,6 +69,7 @@ export function Sidebar() {
           response.data.profileImageUrl || response.data.profile_image_url || response.data.profileImage;
         if (profileImg) {
           setUserImage(profileImg);
+          setProfileImgError(false);
         }
       } catch (error) {
         console.error('프로필 조회 실패:', error);
@@ -148,6 +153,7 @@ export function Sidebar() {
 
       // 3단계: 프론트 UI 반영
       setUserImage(newImageUrl);
+      setProfileImgError(false);
     } catch (error: unknown) {
       console.error('프로필 사진 변경 실패:', error);
 
@@ -250,14 +256,26 @@ export function Sidebar() {
         <button
           onClick={handleProfileClick}
           className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none ring-1 ring-black/5">
-          <img
-            src={userImage || defaultAvatar}
-            alt="사용자"
-            className="w-full h-full rounded-full object-cover"
-            onError={(e) => {
-              e.currentTarget.src = defaultAvatar;
-            }}
-          />
+          {userImage && !profileImgError ? (
+            <img
+              src={userImage}
+              alt="사용자"
+              className="w-full h-full rounded-full object-cover"
+              onError={() => setProfileImgError(true)}
+            />
+          ) : (
+            <div
+              className={`flex h-full w-full items-center justify-center rounded-full ${getAvatarColorClass(
+                getCurrentUserId() ?? userName,
+              )}`}>
+              <img
+                src={defaultAvatar}
+                alt="사용자"
+                className="object-contain"
+                style={{ width: 40 * 0.62, height: 40 * 0.62 }}
+              />
+            </div>
+          )}
           <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${statusColor} ring-2 ring-bg-canvas`} />
         </button>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Heart, MessageCircle, Sparkles, Pencil, Send } from 'lucide-react';
+import { Plus, Heart, MessageCircle, Pencil } from 'lucide-react';
 import { DateDivider } from '@/components/DateDivider';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { MainPanel } from '@/components/layout/MainPanel';
@@ -8,6 +8,7 @@ import { MessageBubble } from '@/components/MessageBubble';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { Avatar } from '@/components/Avatar';
+import { ChatMessageInput } from '@/components/ChatMessageInput';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
@@ -33,7 +34,7 @@ import { usePresence } from '@/hooks/usePresence';
 import { formatTime } from '@/utils/formatTime';
 import { stripSenderPrefix } from '@/utils/notification';
 import { buildLastMessagePreview } from '@/utils/tiptap';
-import type { Room, Message } from '@/types/chat';
+import type { Room, Message, TiptapDoc } from '@/types/chat';
 import type { RoomApiResponse } from '@/types/room';
 import type { NewMessagePayload, NewNotificationPayload, MessageDeletedPayload } from '@/types/socket';
 
@@ -54,7 +55,6 @@ export const ChatPage = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PanelTab>('chat');
-  const [messageText, setMessageText] = useState('');
   const [roomMessages, setRoomMessages] = useState<Message[]>([]);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
@@ -253,19 +253,12 @@ export const ChatPage = () => {
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
-  const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedRoomId) return;
-
-    const content = {
-      type: 'doc',
-      content: [{ type: 'paragraph', content: [{ type: 'text', text: messageText }] }],
-    };
+  const handleSendMessage = (content: TiptapDoc) => {
+    if (!selectedRoomId) return;
 
     sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
       console.log('sendMessage 응답:', response);
     });
-
-    setMessageText('');
   };
 
   // ── AI 회의록: 카톡 캡쳐처럼 메시지를 클릭해 범위를 선택하는 모드 ──
@@ -507,34 +500,11 @@ export const ChatPage = () => {
             ) : (
               <div className="flex flex-col gap-1">
                 {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
-                <div className="flex items-center gap-2">
-                  <input
-                    value={messageText}
-                    onChange={(e) => {
-                      setMessageText(e.target.value);
-                      notifyTyping();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                        handleSendMessage();
-                      }
-                    }}
-                    className="flex-1 rounded-lg border border-border-default px-4 py-2 text-sm outline-none transition-shadow focus:shadow-[0_2px_0_0_var(--color-brand-primary)]"
-                    placeholder="메시지를 입력하세요."
-                  />
-                  <button
-                    onClick={handleStartSelectingMessages}
-                    className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
-                    title="AI 회의록 생성">
-                    <Sparkles size={18} />
-                  </button>
-                  <button
-                    onClick={handleSendMessage}
-                    className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
-                    title="전송">
-                    <Send size={18} />
-                  </button>
-                </div>
+                <ChatMessageInput
+                  onSend={handleSendMessage}
+                  onTyping={notifyTyping}
+                  onOpenAiMinutes={handleStartSelectingMessages}
+                />
               </div>
             )
           ) : undefined

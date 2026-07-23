@@ -6,6 +6,7 @@ import { MainLayout } from "@/layouts/MainLayout";
 import { ChatPage } from "@/pages/ChatPage";
 import { KakaoCallback } from "@/pages/KakaoCallback";
 import { DocsPage } from "@/pages/DocsPage";
+import { NotificationsPage } from "@/pages/NotificationsPage";
 
 export const router = createBrowserRouter([
     {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
                     {
                         path: "docs", // 접속 URL: /app/docs
                         element: <DocsPage />,
+                    },
+                    {
+                        path: "notifications", // 접속 URL: /app/notifications
+                        element: <NotificationsPage />,
                     },
                 ],
             },

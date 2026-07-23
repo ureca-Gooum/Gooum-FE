@@ -13,7 +13,7 @@ import { AiMinutesBlock } from '@/components/AiMinutesBlock';
 interface DocsEditorProps {
   activeFile: Document;
   initialContent: any;
-  currentUser: { name: string; color: string };
+  currentUser: { name: string; color: string; avatar?: string };
   setFiles: React.Dispatch<React.SetStateAction<Document[]>>;
   onActiveUsersChange: (users: any[]) => void;
   onIsSavingChange: (isSaving: boolean) => void;
@@ -44,13 +44,14 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
     useEffect(() => {
       const doc = new Y.Doc();
       const prov = new WebsocketProvider(wsUrl, `doc-${activeFile.documentId}`, doc);
+
       setDocState({ ydoc: doc, provider: prov });
 
       return () => {
         prov.destroy();
         doc.destroy();
       };
-    }, [activeFile.documentId, wsUrl]);
+    }, [activeFile.documentId, wsUrl, currentUser]);
 
     // 2. 접속자 관리
     useEffect(() => {

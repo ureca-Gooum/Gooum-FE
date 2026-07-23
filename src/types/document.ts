@@ -12,7 +12,7 @@ export interface Document {
   documentId: string;
   title: string;
   type: string;
-  roomId: string;
+  roomId?: string;
   roomName?: string | null;
   content?: any | null; // Editor's JSON content
   collaborators?: Collaborator[];
@@ -28,7 +28,8 @@ export interface GetDocumentsResponse {
 
 export interface CreateDocumentRequest {
   title: string;
-  roomId: string;
+  roomId?: string;
+  type: string;
 }
 
 export interface SaveDocumentRequest {

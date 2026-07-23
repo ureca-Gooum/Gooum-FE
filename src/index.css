@@ -45,6 +45,7 @@
 
 .tiptap-content pre {
   background: #f4f4f5;
+  border: 1px solid var(--color-border-default, #dce2ea);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   margin: 0.25rem 0;

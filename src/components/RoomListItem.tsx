@@ -86,14 +86,14 @@ export function RoomListItem({
         </p>
       </div>
 
-      <div className="relative flex h-8 w-14 shrink-0 items-center justify-end">
+      <div className="relative flex h-8 w-[72px] shrink-0 items-center justify-end">
         {/* 평소: 시간 + 안읽음 점 */}
         <div
-          className={`absolute inset-0 flex items-center justify-end gap-1 transition-opacity duration-150 ${
+          className={`absolute inset-0 flex items-center justify-end gap-2 transition-opacity duration-150 ${
             isMenuOpen ? 'pointer-events-none opacity-0' : 'group-hover:opacity-0'
           }`}>
-          <span className="text-xs text-fg-tertiary">{room.lastMessageTime}</span>
-          {isUnread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary" />}
+          <span className="whitespace-nowrap text-xs text-fg-tertiary">{room.lastMessageTime}</span>
+          {isUnread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-fg-primary" />}
         </div>
 
         {/* 호버 시: 같은 자리에 메뉴 버튼만 */}
@@ -103,12 +103,18 @@ export function RoomListItem({
             e.stopPropagation();
             onMenuToggle();
           }}
-          className={`absolute inset-0 flex items-center justify-end rounded p-1 transition-opacity duration-150 hover:bg-bg-canvas ${
+          className={`group/menubtn absolute inset-0 flex items-center justify-end rounded p-1 transition-opacity duration-150 ${
             isMenuOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100'
           }`}>
-          <MoreVertical size={16} className="text-fg-tertiary" />
+          <MoreVertical
+            size={16}
+            strokeWidth={isMenuOpen ? 2.5 : 2}
+            className={`transition-colors group-hover/menubtn:text-fg-primary ${
+              isMenuOpen ? 'text-fg-primary' : 'text-fg-tertiary'
+            }`}
+          />
         </button>
       </div>
 
@@ -149,8 +155,8 @@ export function RoomListItem({
               padding: '10px 12px',
               textAlign: 'left',
               fontSize: '14px',
+              fontWeight: hoveredItem === 'favorite' ? 700 : 400,
               color: 'var(--color-fg-primary)',
-              backgroundColor: hoveredItem === 'favorite' ? 'var(--color-bg-subtle)' : 'transparent',
             }}>
             <Heart
               size={14}
@@ -181,8 +187,8 @@ export function RoomListItem({
               padding: '10px 12px',
               textAlign: 'left',
               fontSize: '14px',
+              fontWeight: hoveredItem === 'leave' ? 700 : 400,
               color: 'var(--color-fg-primary)',
-              backgroundColor: hoveredItem === 'leave' ? 'var(--color-bg-subtle)' : 'transparent',
             }}>
             <LogOut
               size={14}

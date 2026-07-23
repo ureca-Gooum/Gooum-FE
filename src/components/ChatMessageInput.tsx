@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { uploadFile } from '@/api/upload';
+import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
 import type { TiptapDoc } from '@/types/chat';
 
 interface ToolbarButtonProps {
@@ -32,6 +33,7 @@ interface ToolbarButtonProps {
 const ToolbarButton = ({ onClick, isActive, label, children }: ToolbarButtonProps) => (
   <button
     type="button"
+    // 클릭 시 에디터가 포커스를 잃고 선택 영역이 풀리는 것을 방지
     onMouseDown={(e) => e.preventDefault()}
     onClick={onClick}
     title={label}
@@ -149,6 +151,12 @@ interface ChatMessageInputProps {
   placeholder?: string;
 }
 
+/**
+ * 채팅방 하단 메시지 입력창.
+ * - Enter: 메시지 전송
+ * - Shift+Enter: 줄바꿈 (Tiptap StarterKit의 HardBreak 기본 단축키)
+ * - 에디터, AI 버튼, 전송 버튼이 하나의 테두리 박스 안에 함께 배치된다.
+ */
 export const ChatMessageInput = ({
   onSend,
   onSendFile,
@@ -159,10 +167,13 @@ export const ChatMessageInput = ({
 }: ChatMessageInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // 파일을 선택하면 바로 전송하지 않고, 업로드만 미리 해둔 채 입력창에 미리보기로 담아뒀다가
+  // Enter/전송 버튼을 눌렀을 때 함께 전송한다.
   const [pendingAttachment, setPendingAttachment] = useState<{
     type: 'image' | 'file';
     fileUrl: string;
     fileName: string;
+    /** 이미지 미리보기용 로컬 blob URL (서버 업로드 완료를 기다리지 않고 바로 보여주기 위함) */
     previewUrl?: string;
   } | null>(null);
 
@@ -210,6 +221,8 @@ export const ChatMessageInput = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  // 커서 위치나 선택 영역이 바뀔 때마다 툴바를 다시 그려서 "굵게/기울임/링크 등이 지금 켜져 있는지"가
+  // 실시간으로 반영되도록 한다. (isActive()는 스냅샷이라 별도로 리렌더를 걸어줘야 함)
   const [, forceToolbarUpdate] = useState(0);
   useEffect(() => {
     if (!editor) return;
@@ -223,6 +236,7 @@ export const ChatMessageInput = ({
   }, [editor]);
 
   const handleSend = () => {
+    // 업로드가 아직 끝나지 않았으면 전송을 막는다 (fileUrl이 아직 없음)
     if (isUploading) return;
 
     const hasText = !!editor && !editor.isEmpty;
@@ -239,7 +253,7 @@ export const ChatMessageInput = ({
     }
 
     if (hasText && editor) {
-      const content = editor.getJSON() as TiptapDoc;
+      const content = stripTrailingEmptyParagraphs(editor.getJSON() as TiptapDoc);
       onSend(content);
       editor.commands.clearContent();
     }
@@ -250,7 +264,7 @@ export const ChatMessageInput = ({
   // 파일 첨부: 선택 즉시 멀티파트 폼데이터로 업로드는 해두되, 전송은 Enter/전송 버튼을 누를 때까지 미룬다.
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    e.target.value = '';
+    e.target.value = ''; // 같은 파일을 다시 선택해도 onChange가 또 뜨도록 초기화
     if (!file) return;
 
     const type: 'image' | 'file' = file.type.startsWith('image/') ? 'image' : 'file';
@@ -274,6 +288,7 @@ export const ChatMessageInput = ({
     setPendingAttachment(null);
   };
 
+  // 언마운트 시 blob URL 정리 (메모리 누수 방지)
   useEffect(() => {
     return () => {
       if (pendingAttachment?.previewUrl) URL.revokeObjectURL(pendingAttachment.previewUrl);

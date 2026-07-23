@@ -485,46 +485,48 @@ export const ChatPage = () => {
         }
         footer={
           selectedRoom && activeTab === 'chat' ? (
-            isSelectingMessages ? (
-              <div className="flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2.5">
-                <span className="text-sm text-fg-primary">
-                  {selectedMessageIds.length > 0
-                    ? `${selectedMessageIds.length}개 메시지 선택됨`
-                    : '요약할 메시지의 시작점을 클릭해주세요'}
-                </span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handleResetSelection}
-                    disabled={selectedMessageIds.length === 0}
-                    className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas disabled:opacity-40">
-                    초기화
-                  </button>
-                  <button
-                    onClick={handleCancelSelectingMessages}
-                    className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas">
-                    취소
-                  </button>
-                  <button
-                    onClick={handleConfirmSelection}
-                    disabled={selectedMessageIds.length === 0}
-                    className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40">
-                    다음
-                  </button>
+            <div className="mx-auto w-full max-w-6xl">
+              {isSelectingMessages ? (
+                <div className="flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2.5">
+                  <span className="text-sm text-fg-primary">
+                    {selectedMessageIds.length > 0
+                      ? `${selectedMessageIds.length}개 메시지 선택됨`
+                      : '요약할 메시지의 시작점을 클릭해주세요'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={handleResetSelection}
+                      disabled={selectedMessageIds.length === 0}
+                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas disabled:opacity-40">
+                      초기화
+                    </button>
+                    <button
+                      onClick={handleCancelSelectingMessages}
+                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas">
+                      취소
+                    </button>
+                    <button
+                      onClick={handleConfirmSelection}
+                      disabled={selectedMessageIds.length === 0}
+                      className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40">
+                      다음
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1">
-                {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
-                <ChatMessageInput
-                  onSend={handleSendMessage}
-                  onSendFile={handleSendFile}
-                  onTyping={notifyTyping}
-                  onOpenAiMinutes={handleStartSelectingMessages}
-                  // TODO: 동시문서편집 문서 생성 + 이동 기능 연결 예정. 지금은 아이콘만 노출.
-                  onCreateDocument={() => {}}
-                />
-              </div>
-            )
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
+                  <ChatMessageInput
+                    onSend={handleSendMessage}
+                    onSendFile={handleSendFile}
+                    onTyping={notifyTyping}
+                    onOpenAiMinutes={handleStartSelectingMessages}
+                    // TODO: 동시문서편집 문서 생성 + 이동 기능 연결 예정. 지금은 아이콘만 노출.
+                    onCreateDocument={() => {}}
+                  />
+                </div>
+              )}
+            </div>
           ) : undefined
         }>
         {activeTab === 'chat' ? (
@@ -533,7 +535,7 @@ export const ChatPage = () => {
               <LoadingSpinner />
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
               {isSelectingMessages && (
                 <p className="rounded-lg bg-brand-soft px-3 py-2 text-xs text-brand-primary">
                   메시지를 클릭해 요약할 범위를 선택해주세요. 시작점을 누르고, 끝점을 누르면 그 사이가 전부 선택돼요.

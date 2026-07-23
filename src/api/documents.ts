@@ -47,7 +47,7 @@ export const createAiSummaryClientOnly = async (params: {
   const content = await callGeminiForMinutes(transcript, params.title);
 
   // 1) 빈 문서를 하나 만들고 (기존 "새 문서 추가" 버튼과 동일한 API)
-  const newDoc = await createDocument({ title: params.title, roomId: params.roomId });
+  const newDoc = await createDocument({ title: params.title, roomId: params.roomId, type: "ai_summary" });
   // 2) AI가 만든 콘텐츠를 그 문서에 저장한다 (기존 자동저장과 동일한 API)
   await saveDocument(newDoc.documentId, { title: params.title, content });
 

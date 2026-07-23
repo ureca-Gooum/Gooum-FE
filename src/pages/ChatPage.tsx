@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Heart, MessageCircle, Sparkles, Pencil, Send } from 'lucide-react';
 import { DateDivider } from '@/components/DateDivider';
 import { ListPanel } from '@/components/layout/ListPanel';
@@ -43,6 +44,7 @@ type PanelTab = 'chat' | 'file' | 'docs';
 
 export const ChatPage = () => {
   const currentUserId = getCurrentUserId(); // 컴포넌트 안에서 매번 최신값 계산
+  const navigate = useNavigate();
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,6 +59,11 @@ export const ChatPage = () => {
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { typingLabel, notifyTyping } = useTypingIndicator(selectedRoomId);
+
+  // ── AI 회의록: 카톡 캡쳐처럼 메시지 범위를 선택하는 모드 상태 ──
+  const [isSelectingMessages, setIsSelectingMessages] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
+  const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRooms()
@@ -239,6 +246,9 @@ export const ChatPage = () => {
     setSelectedRoomId(roomId);
     setActiveTab('chat');
     setLocalMessages([]);
+    setIsSelectingMessages(false);
+    setSelectedMessageIds([]);
+    setSelectionAnchorId(null);
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
@@ -255,6 +265,69 @@ export const ChatPage = () => {
     });
 
     setMessageText('');
+  };
+
+  // ── AI 회의록: 카톡 캡쳐처럼 메시지를 클릭해 범위를 선택하는 모드 ──
+  const handleStartSelectingMessages = () => {
+    if (!selectedRoomId) return;
+    setIsSelectingMessages(true);
+    setSelectedMessageIds([]);
+    setSelectionAnchorId(null);
+  };
+
+  const handleCancelSelectingMessages = () => {
+    setIsSelectingMessages(false);
+    setSelectedMessageIds([]);
+    setSelectionAnchorId(null);
+  };
+
+  const handleResetSelection = () => {
+    setSelectedMessageIds([]);
+    setSelectionAnchorId(null);
+  };
+
+  const handleToggleMessageSelect = (messageId: string) => {
+    const ids = currentMessages.map((m) => m.id);
+    const clickedIndex = ids.indexOf(messageId);
+    if (clickedIndex === -1) return;
+
+    // 아직 아무것도 선택 안 한 상태 → 이 메시지를 시작점으로 지정
+    if (selectedMessageIds.length === 0) {
+      setSelectionAnchorId(messageId);
+      setSelectedMessageIds([messageId]);
+      return;
+    }
+
+    // 시작점 하나만 선택된 상태에서 같은 메시지를 다시 클릭 → 선택 해제
+    if (selectedMessageIds.length === 1 && selectionAnchorId === messageId) {
+      setSelectionAnchorId(null);
+      setSelectedMessageIds([]);
+      return;
+    }
+
+    // 시작점을 기준으로, 클릭한 지점까지의 범위를 전부 선택 (끝점은 다시 클릭해서 조정 가능)
+    if (selectionAnchorId) {
+      const anchorIndex = ids.indexOf(selectionAnchorId);
+      if (anchorIndex !== -1) {
+        const [from, to] = anchorIndex < clickedIndex ? [anchorIndex, clickedIndex] : [clickedIndex, anchorIndex];
+        setSelectedMessageIds(ids.slice(from, to + 1));
+        return;
+      }
+    }
+
+    // 예외 상황 대비: 새로 시작
+    setSelectionAnchorId(messageId);
+    setSelectedMessageIds([messageId]);
+  };
+
+  const handleConfirmSelection = () => {
+    if (!selectedRoomId || selectedMessageIds.length === 0) return;
+    // 실제 메시지 내용(TiptapDoc)까지 함께 넘겨야 Docs 페이지에서 서버 재조회 없이 바로 AI에 보낼 수 있음
+    const selectedMessages = currentMessages.filter((m) => selectedMessageIds.includes(m.id));
+    navigate('/app/docs', { state: { roomId: selectedRoomId, messages: selectedMessages } });
+    setIsSelectingMessages(false);
+    setSelectedMessageIds([]);
+    setSelectionAnchorId(null);
   };
 
   const handleDeleteMessage = async (messageId: string) => {
@@ -399,34 +472,66 @@ export const ChatPage = () => {
         }
         footer={
           selectedRoom && activeTab === 'chat' ? (
-            <div className="flex flex-col gap-1">
-              {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
-              <div className="flex items-center gap-2">
-                <input
-                  value={messageText}
-                  onChange={(e) => {
-                    setMessageText(e.target.value);
-                    notifyTyping();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                      handleSendMessage();
-                    }
-                  }}
-                  className="flex-1 rounded-lg border border-border-default px-4 py-2 text-sm outline-none transition-shadow focus:shadow-[0_2px_0_0_var(--color-brand-primary)]"
-                  placeholder="메시지를 입력하세요."
-                />
-                <button className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle" title="AI 회의록 생성">
-                  <Sparkles size={18} />
-                </button>
-                <button
-                  onClick={handleSendMessage}
-                  className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
-                  title="전송">
-                  <Send size={18} />
-                </button>
+            isSelectingMessages ? (
+              <div className="flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2.5">
+                <span className="text-sm text-fg-primary">
+                  {selectedMessageIds.length > 0
+                    ? `${selectedMessageIds.length}개 메시지 선택됨`
+                    : '요약할 메시지의 시작점을 클릭해주세요'}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={handleResetSelection}
+                    disabled={selectedMessageIds.length === 0}
+                    className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas disabled:opacity-40">
+                    초기화
+                  </button>
+                  <button
+                    onClick={handleCancelSelectingMessages}
+                    className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas">
+                    취소
+                  </button>
+                  <button
+                    onClick={handleConfirmSelection}
+                    disabled={selectedMessageIds.length === 0}
+                    className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40">
+                    다음
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
+                <div className="flex items-center gap-2">
+                  <input
+                    value={messageText}
+                    onChange={(e) => {
+                      setMessageText(e.target.value);
+                      notifyTyping();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                        handleSendMessage();
+                      }
+                    }}
+                    className="flex-1 rounded-lg border border-border-default px-4 py-2 text-sm outline-none transition-shadow focus:shadow-[0_2px_0_0_var(--color-brand-primary)]"
+                    placeholder="메시지를 입력하세요."
+                  />
+                  <button
+                    onClick={handleStartSelectingMessages}
+                    className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
+                    title="AI 회의록 생성">
+                    <Sparkles size={18} />
+                  </button>
+                  <button
+                    onClick={handleSendMessage}
+                    className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
+                    title="전송">
+                    <Send size={18} />
+                  </button>
+                </div>
+              </div>
+            )
           ) : undefined
         }>
         {activeTab === 'chat' ? (
@@ -434,6 +539,11 @@ export const ChatPage = () => {
             <p className="text-sm text-fg-tertiary">메시지 불러오는 중...</p>
           ) : (
             <div className="flex flex-col gap-3">
+              {isSelectingMessages && (
+                <p className="rounded-lg bg-brand-soft px-3 py-2 text-xs text-brand-primary">
+                  메시지를 클릭해 요약할 범위를 선택해주세요. 시작점을 누르고, 끝점을 누르면 그 사이가 전부 선택돼요.
+                </p>
+              )}
               {currentMessages.map((msg, index) => {
                 const prevMsg = currentMessages[index - 1];
                 const showDateDivider = !prevMsg || getDateLabel(prevMsg.time) !== getDateLabel(msg.time);
@@ -441,7 +551,13 @@ export const ChatPage = () => {
                 return (
                   <div key={msg.id}>
                     {showDateDivider && <DateDivider label={getDateLabel(msg.time)} />}
-                    <MessageBubble message={msg} onDelete={handleDeleteMessage} />
+                    <MessageBubble
+                      message={msg}
+                      onDelete={handleDeleteMessage}
+                      selectable={isSelectingMessages}
+                      isSelected={selectedMessageIds.includes(msg.id)}
+                      onToggleSelect={handleToggleMessageSelect}
+                    />
                   </div>
                 );
               })}

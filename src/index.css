@@ -16,31 +16,34 @@
   margin-bottom: 0.5em;
 }
 
-/* ── 채팅 입력창 Tiptap 에디터 ── */
-.chat-input-editor p {
+/* ── 채팅 입력창 / 말풍선 공용 Tiptap 콘텐츠 스타일 ──
+   채팅 입력창(ChatMessageInput)과 전송된 메시지 말풍선(MessageBubble)이
+   같은 클래스를 공유해서, 입력할 때 보이는 목록/코드블록 스타일이
+   전송 후에도 동일하게 적용되도록 한다. */
+.tiptap-content p {
   margin: 0;
 }
 
-.chat-input-editor ul,
-.chat-input-editor ol {
+.tiptap-content ul,
+.tiptap-content ol {
   padding-left: 1.25rem;
   margin: 0.25rem 0;
 }
 
-.chat-input-editor ul {
+.tiptap-content ul {
   list-style: disc;
 }
 
-.chat-input-editor ol {
+.tiptap-content ol {
   list-style: decimal;
 }
 
-.chat-input-editor a {
+.tiptap-content a {
   color: var(--color-brand-primary, #2563eb);
   text-decoration: underline;
 }
 
-.chat-input-editor pre {
+.tiptap-content pre {
   background: #f4f4f5;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -50,7 +53,7 @@
   overflow-x: auto;
 }
 
-.chat-input-editor pre code {
+.tiptap-content pre code {
   background: none;
   padding: 0;
 }

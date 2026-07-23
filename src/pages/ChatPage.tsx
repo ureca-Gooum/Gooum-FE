@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Heart, MessageCircle, Pencil } from 'lucide-react';
-import { DateDivider } from '@/components/DateDivider';
+import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { MessageBubble } from '@/components/MessageBubble';
@@ -140,6 +140,9 @@ export const ChatPage = () => {
           senderId: payload.sender.userId,
           senderName: payload.sender.name,
           content: payload.content,
+          type: payload.type,
+          fileUrl: payload.fileUrl,
+          fileName: payload.fileName,
           time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
           isMine: payload.sender.userId === currentUserId,
           isDeleted: false,
@@ -259,6 +262,18 @@ export const ChatPage = () => {
     sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
       console.log('sendMessage 응답:', response);
     });
+  };
+
+  // 파일 첨부(클립 아이콘) 업로드가 끝난 후 호출됨 - 이미지/파일 메시지 전송
+  const handleSendFile = (payload: { type: 'image' | 'file'; fileUrl: string; fileName: string }) => {
+    if (!selectedRoomId) return;
+
+    sendMessage(
+      { roomId: selectedRoomId, type: payload.type, fileUrl: payload.fileUrl, fileName: payload.fileName },
+      (response: any) => {
+        console.log('sendMessage(파일) 응답:', response);
+      },
+    );
   };
 
   // ── AI 회의록: 카톡 캡쳐처럼 메시지를 클릭해 범위를 선택하는 모드 ──
@@ -502,8 +517,11 @@ export const ChatPage = () => {
                 {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
                 <ChatMessageInput
                   onSend={handleSendMessage}
+                  onSendFile={handleSendFile}
                   onTyping={notifyTyping}
                   onOpenAiMinutes={handleStartSelectingMessages}
+                  // TODO: 동시문서편집 문서 생성 + 이동 기능 연결 예정. 지금은 아이콘만 노출.
+                  onCreateDocument={() => {}}
                 />
               </div>
             )
@@ -527,7 +545,7 @@ export const ChatPage = () => {
 
                 return (
                   <div key={msg.id}>
-                    {showDateDivider && <DateDivider label={getDateLabel(msg.time)} />}
+                    {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
                     <MessageBubble
                       message={msg}
                       onDelete={handleDeleteMessage}

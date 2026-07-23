@@ -37,7 +37,10 @@ export interface Message {
   roomId: string;
   senderId: string;
   senderName: string;
-  content: TiptapDoc;
+  content: TiptapDoc | null;
+  type: 'text' | 'image' | 'file';
+  fileUrl: string | null;
+  fileName: string | null;
   time: string;
   isMine: boolean;
   isDeleted: boolean;

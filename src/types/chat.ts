@@ -1,4 +1,4 @@
-export type PresenceStatus = 'online' | 'away' | 'offline';
+export type PresenceStatus = 'online' | 'away' | 'busy' | 'offline';
 
 export interface TiptapMark {
   type: string;

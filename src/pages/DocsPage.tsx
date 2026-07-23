@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
@@ -10,20 +10,68 @@ import { getDocuments, getDocumentById, createDocument, saveDocument, deleteDocu
 import type { Document } from '@/types/document';
 import type { Message } from '@/types/chat';
 import { connectSocket, sendMessage } from '@/socket/socket';
+import api from '@/api/axiosInstance';
 
-const userColors = ['#958DF1', '#F98181', '#FBCE76', '#8AE234', '#3498DB'];
-const userNames = ['ㅇㅇ1', 'ㅇㅇ2', 'ㅇㅇ3', 'ㅇㅇ4', 'ㅇㅇ5'];
+const AVATAR_COLORS = [
+  'var(--color-avatar-1)',
+  'var(--color-avatar-2)',
+  'var(--color-avatar-3)',
+  'var(--color-avatar-4)',
+  'var(--color-avatar-5)',
+  'var(--color-avatar-6)',
+];
 
-const getRandomItem = (array: string[]) => array[Math.floor(Math.random() * array.length)];
-const currentUser = {
-  name: getRandomItem(userNames),
-  color: getRandomItem(userColors),
+// 유저 ID/이름 기반으로 고유한 CSS 변수 색상을 지정해 주는 함수
+const getUserColor = (idOrName: string) => {
+  let hash = 0;
+  for (let i = 0; i < idOrName.length; i++) {
+    hash = idOrName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 };
 
-// 사용자가 제공한 기본 Room ID (채팅방 ID)
-const DEFAULT_ROOM_ID = '6a5daef3985ae04d3626cca3';
-
 export const DocsPage = () => {
+
+  // 내 정보 상태 관리
+  const [myProfile, setMyProfile] = useState<{ id?: string; name: string; avatar: string }>({
+    id: '',
+    name: "사용자",
+    avatar: "",
+  });
+
+  // 1. 내 프로필 정보 불러오기 (/api/users/me)
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    const fetchMyProfile = async () => {
+      try {
+        const response = await api.get("/api/users/me");
+        const data = response.data;
+        
+        setMyProfile({
+                id: data.id || data.userId || '',
+                name: data.name || "사용자",
+                avatar: data.profileImageUrl || "",
+              });
+      } catch (error) {
+        console.error("DocsPage 내 프로필 조회 실패:", error);
+      }
+    };
+
+    fetchMyProfile();
+  }, []);
+
+  // 2. 동시 편집 및 아바타에 전달할 currentUser 생성
+  const currentUser = useMemo(() => {
+    return {
+      name: myProfile.name,
+      color: getUserColor(myProfile.name), // 이름 기반 색상 함수
+      avatar: myProfile.avatar,
+    };
+  }, [myProfile]);
+
+
   /* ── URL 쿼리 파라미터 (채팅 페이지의 AI 회의록 버튼에서 전달됨) ── */
   const [searchParams] = useSearchParams();
   const roomIdParam = searchParams.get('room');
@@ -34,7 +82,7 @@ export const DocsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const navState = (location.state as { roomId?: string; messages?: Message[] } | null) || null;
-  const aiSummaryRoomId = navState?.roomId || roomIdParam || DEFAULT_ROOM_ID;
+  const aiSummaryRoomId = navState?.roomId || roomIdParam ;
   const aiSummaryMessages = navState?.messages || [];
 
   /* ── 파일 목록 상태 ── */
@@ -260,15 +308,14 @@ export const DocsPage = () => {
       await editorRef.current.forceSave();
     }
 
-    const tempId = `temp-${Date.now()}`;
+    const tempId = `temp-${crypto.randomUUID()}`;
     const tempDoc: Document = {
       documentId: tempId,
-      roomId: DEFAULT_ROOM_ID,
       title: '새 문서',
       type: 'document',
       createdBy: {
-        userId: 'temp-user',
-        name: currentUser.name,
+          userId: myProfile.id || 'current-user-id', // 실제 사용자 ID 연동
+          name: currentUser.name || myProfile.name || '사용자',
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -279,7 +326,7 @@ export const DocsPage = () => {
     try {
       const newDoc = await createDocument({
         title: '새 문서',
-        roomId: DEFAULT_ROOM_ID,
+        type: "document"
       });
 
       setFiles((prev) => prev.map((f) => (f.documentId === tempId ? newDoc : f)));
@@ -476,11 +523,24 @@ export const DocsPage = () => {
                   {/* 우측: 사용자 아바타 (활성) or 삭제 */}
                   {isActive && !isEditing && (
                     <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white overflow-hidden"
                       style={{
                         backgroundColor: currentUser.color,
-                      }}>
-                      {currentUser.name.charAt(0)}
+                      }}
+                    >
+                      {currentUser.avatar ? (
+                        <img
+                          src={currentUser.avatar}
+                          alt={currentUser.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // 이미지 로드 실패 시 이니셜로 대체
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        currentUser.name.charAt(0)
+                      )}
                     </span>
                   )}
                   {!isEditing && !isActive && (
@@ -560,10 +620,23 @@ export const DocsPage = () => {
                     {activeUsers.map((u, i) => (
                       <div
                         key={i}
-                        className="relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white transition-transform hover:z-10 hover:scale-110"
+                        className="relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] overflow-hidden transition-transform hover:z-10 hover:scale-110 flex-shrink-0"
                         style={{ backgroundColor: u.color }}
-                        title={u.name}>
-                        {u.name.charAt(0)}
+                        title={u.name}
+                      >
+                        {u.avatar ? (
+                          <img
+                            src={u.avatar}
+                            alt={u.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              // 이미지 로드 실패 시 이니셜로 대체 렌더링
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          u.name.charAt(0)
+                        )}
                       </div>
                     ))}
                   </div>

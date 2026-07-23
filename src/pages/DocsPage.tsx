@@ -82,7 +82,7 @@ export const DocsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const navState = (location.state as { roomId?: string; messages?: Message[] } | null) || null;
-  const aiSummaryRoomId = navState?.roomId || roomIdParam ;
+  const aiSummaryRoomId = navState?.roomId || roomIdParam || "";
   const aiSummaryMessages = navState?.messages || [];
 
   /* ── 파일 목록 상태 ── */

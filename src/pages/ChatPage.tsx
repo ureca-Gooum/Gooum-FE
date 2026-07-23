@@ -8,6 +8,7 @@ import { MessageBubble } from '@/components/MessageBubble';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { Avatar } from '@/components/Avatar';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { fetchMessages, deleteMessage } from '@/api/messages';
@@ -350,7 +351,11 @@ export const ChatPage = () => {
   }, [currentMessages.length]);
 
   if (isLoading) {
-    return <div className="flex flex-1 items-center justify-center text-fg-tertiary">불러오는 중...</div>;
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (error) {
@@ -536,7 +541,9 @@ export const ChatPage = () => {
         }>
         {activeTab === 'chat' ? (
           isMessagesLoading ? (
-            <p className="text-sm text-fg-tertiary">메시지 불러오는 중...</p>
+            <div className="flex-1 flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
           ) : (
             <div className="flex flex-col gap-3">
               {isSelectingMessages && (

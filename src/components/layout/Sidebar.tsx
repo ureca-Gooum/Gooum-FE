@@ -249,6 +249,12 @@ export function Sidebar() {
                         key={label}
                         to={to}
                         end={to === "/app"}
+                        onClick={(e) => {
+                            if (label === "알림" && !localStorage.getItem("accessToken")) {
+                                e.preventDefault();
+                                alert("로그인 후 이용해주세요.");
+                            }
+                        }}
                         className={({ isActive }) =>
                             `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
                                 isActive

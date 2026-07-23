@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/api/axiosInstance";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export const KakaoCallback = () => {
     const navigate = useNavigate();
@@ -45,11 +46,8 @@ export const KakaoCallback = () => {
     }, [navigate]);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <h2 className="text-2xl font-bold mb-4">
-                카카오 로그인 처리 중입니다...
-            </h2>
-            <p className="text-gray-500">잠시만 기다려 주세요.</p>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-bg-canvas">
+            <LoadingSpinner message="카카오 로그인 처리 중입니다..." />
         </div>
     );
 };

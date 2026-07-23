@@ -72,7 +72,7 @@ export function MessageBubble({
                   maxWidth: '60%',
                   wordBreak: 'break-word',
                   whiteSpace: 'pre-wrap',
-                  backgroundColor: message.isMine ? 'var(--color-brand-soft)' : 'var(--color-bg-canvas)',
+                  backgroundColor: message.isMine ? 'var(--color-brand-soft)' : 'var(--color-bg-pressed)',
                   color: 'var(--color-fg-primary)',
                 }
           }

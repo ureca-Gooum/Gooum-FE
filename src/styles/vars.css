@@ -88,3 +88,33 @@
   --color-brand-light: #8ebef0;
   --color-brand-soft: #29384c;
 }
+
+/* 파스텔 브라운 테마 */
+[data-theme='pastel-brown'] {
+  --color-bg-canvas: #fdf8f5;
+  --color-bg-default: #ffffff;
+  --color-bg-subtle: #f6efe9;
+  --color-border-default: #e6d5c3;
+  --color-fg-primary: #5c4033;
+  --color-fg-secondary: #7b5e4a;
+}
+
+/* 파스텔 핑크 테마 */
+[data-theme='pastel-pink'] {
+  --color-bg-canvas: #fff0f5;
+  --color-bg-default: #ffffff;
+  --color-bg-subtle: #ffe4e1;
+  --color-border-default: #ffb6c1;
+  --color-fg-primary: #8b0000;
+  --color-fg-secondary: #a52a2a;
+}
+
+/* 파스텔 그린 테마 */
+[data-theme='pastel-green'] {
+  --color-bg-canvas: #f0fff0;
+  --color-bg-default: #ffffff;
+  --color-bg-subtle: #e6ffe6;
+  --color-border-default: #90ee90;
+  --color-fg-primary: #006400;
+  --color-fg-secondary: #228b22;
+}

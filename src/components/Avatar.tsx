@@ -9,15 +9,33 @@ interface AvatarProps {
   size?: number;
   presence?: PresenceStatus;
   alt?: string;
+  /**
+   * 그룹 채팅방용: 이미지/상태 대신 인원수만 보여주는 뱃지로 렌더링한다.
+   * (예: 채팅 리스트에서 그룹방은 개인 상태 없이 인원수만 표시)
+   */
+  memberCount?: number;
 }
 
-export function Avatar({ seed, imageUrl, size = 32, presence = 'offline', alt = '사용자' }: AvatarProps) {
+export function Avatar({ seed, imageUrl, size = 32, presence = 'offline', alt = '사용자', memberCount }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const showImage = Boolean(imageUrl) && !imgError;
   const bgColorClass = getAvatarColorClass(seed);
   const presenceRingStyle = {
     boxShadow: '0 0 0 2px var(--color-bg-canvas)',
   };
+
+  if (memberCount !== undefined) {
+    return (
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-full ${bgColorClass}`}
+        style={{ width: size, height: size }}
+        title={`${memberCount}명`}>
+        <span className="font-semibold text-white" style={{ fontSize: size * 0.38 }}>
+          {memberCount}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>

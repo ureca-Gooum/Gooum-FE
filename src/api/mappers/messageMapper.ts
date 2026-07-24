@@ -37,6 +37,7 @@ export function mapMessageFromApi(apiData: MessageApiResponse): Message {
     fileUrl: apiData.fileUrl,
     fileName: apiData.fileName,
     time: formatTime(apiData.createdAt),
+    createdAt: apiData.createdAt,
     isMine: apiData.sender.userId === currentUserId,
     isDeleted: apiData.isDeleted,
   };

@@ -42,6 +42,7 @@ export interface Message {
   fileUrl: string | null;
   fileName: string | null;
   time: string;
+  createdAt?: string;
   isMine: boolean;
   isDeleted: boolean;
 }

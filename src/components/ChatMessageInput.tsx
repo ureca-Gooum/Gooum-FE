@@ -21,7 +21,10 @@ import {
 } from 'lucide-react';
 import { uploadFile } from '@/api/upload';
 import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
+import { createMentionExtension, mentionSuggestionPluginKey } from '@/components/mentionExtension';
+import { getCurrentUserId } from '@/constants/auth';
 import type { TiptapDoc } from '@/types/chat';
+import type { RoomMember } from '@/types/room';
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -146,13 +149,10 @@ interface ChatMessageInputProps {
   onTyping?: () => void;
   /** AI 회의록 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다. */
   onOpenAiMinutes?: () => void;
-  /**
-   * 문서 아이콘 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다.
-   * 아이콘을 눌러도 바로 실행되지 않고, 입력창 안에 인라인 문서 작성 카드가 먼저 열린다.
-   * 그 카드에서 "전송"을 눌렀을 때만 이 콜백이 호출되며, 그 시점에 실제로
-   * 동시문서편집 문서를 생성해야 한다 (생성 후 채팅방에 문서 카드 메시지를 올리는 것은 호출부 책임).
-   */
+  /** 문서 아이콘 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다.*/
   onCreateDocument?: (payload: { title: string; content: TiptapDoc; isContentEmpty: boolean }) => void | Promise<void>;
+  /** "@"로 멘션할 수 있는 현재 채팅방 멤버 목록. 넘기지 않으면 멘션 검색 결과가 항상 비어있다. */
+  roomMembers?: RoomMember[];
   placeholder?: string;
 }
 
@@ -168,10 +168,24 @@ export const ChatMessageInput = ({
   onTyping,
   onOpenAiMinutes,
   onCreateDocument,
+  roomMembers = [],
   placeholder = '메시지를 입력하세요.',
 }: ChatMessageInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // 멘션 검색이 항상 최신 멤버 목록을 보도록 ref로 들고 있는다.
+  // (editor extensions는 마운트 시 한 번만 만들어지므로, roomMembers가 바뀔 때마다
+  //  에디터를 통째로 재생성하지 않고 이 ref만 갱신한다)
+  const roomMembersRef = useRef<RoomMember[]>(roomMembers);
+  useEffect(() => {
+    roomMembersRef.current = roomMembers;
+  }, [roomMembers]);
+  const [mentionExtension] = useState(() =>
+    createMentionExtension(
+      () => roomMembersRef.current,
+      () => getCurrentUserId(),
+    ),
+  );
   // 문서 아이콘을 누르면 바로 만들지 않고, 입력창 자리에 인라인 "문서 작성" 카드를 띄운다.
   // 여기서 제목/내용을 쓰고 전송을 눌러야 실제로 문서가 생성된다.
   const [isDocMode, setIsDocMode] = useState(false);
@@ -201,6 +215,7 @@ export const ChatMessageInput = ({
         autolink: true,
       }),
       Placeholder.configure({ placeholder }),
+      mentionExtension,
     ],
     content: '',
     editorProps: {
@@ -209,7 +224,12 @@ export const ChatMessageInput = ({
       },
       // Enter는 전송, Shift+Enter는 기본 동작(줄바꿈)이 그대로 실행되도록 여기서만 가로챈다.
       // 단, 코드 블록이나 리스트 안에서는 Enter가 원래 하던 일(줄바꿈/새 목록 항목)을 해야 하므로 그대로 둔다.
-      handleKeyDown: (_view, event) => {
+      handleKeyDown: (view, event) => {
+        // 멘션 추천 목록(@)이 열려 있는 동안에는 Enter를 "사람 선택"에 그대로 넘겨줘야 한다.
+        // 여기서 먼저 가로채면 목록이 뜬 상태에서도 Enter가 메시지 전송으로 처리돼버린다.
+        const isMentionSuggestionOpen = !!mentionSuggestionPluginKey.getState(view.state)?.active;
+        if (isMentionSuggestionOpen) return false;
+
         const inCodeBlock = editor?.isActive('codeBlock');
         const inList = editor?.isActive('listItem');
 

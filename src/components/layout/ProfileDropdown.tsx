@@ -13,6 +13,9 @@ interface ProfileDropdownProps {
   onLogout?: () => void;
   onImageUpload?: () => void;
   onStatusMessageChange?: (newMessage: string) => Promise<void> | void;
+  /** 카드 바깥 래퍼의 위치 클래스. 기본값은 사이드바 하단 고정 배치용이며,
+   *  다른 곳(예: 멘션 호버 카드)에서 재사용할 때는 바깥에서 위치를 잡아줄 수 있도록 덮어쓴다. */
+  className?: string;
 }
 
 export function ProfileDropdown({
@@ -25,6 +28,7 @@ export function ProfileDropdown({
   onLogout,
   onImageUpload,
   onStatusMessageChange,
+  className = 'absolute bottom-12 left-12',
 }: ProfileDropdownProps) {
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -69,13 +73,14 @@ export function ProfileDropdown({
   };
 
   return (
-    <div className="absolute bottom-12 left-12 w-[240px] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-gray-100 p-4 z-50 transform origin-bottom-left transition-all text-gray-800">
+    <div
+      className={`${className} w-[240px] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-gray-100 p-4 z-50 transform origin-bottom-left transition-all text-gray-800`}>
       {/* 1. 상단 프로필 헤더 */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="relative group">
-            {/* 내 프로필일 때만 카메라 툴팁 표시 */}
-            {isSelf && (
+            {/* 내 프로필일 때만 카메라 툴팁 표시 (업로드 핸들러가 있을 때만) */}
+            {isSelf && onImageUpload && (
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 pointer-events-none transition-all duration-200 z-20 whitespace-nowrap">
                 <div className="bg-gray-900/90 text-white text-[10px] font-medium px-2 py-1 rounded-md shadow-md backdrop-blur-sm">
                   프로필 사진 변경
@@ -88,7 +93,7 @@ export function ProfileDropdown({
             <div
               onClick={isSelf ? onImageUpload : undefined}
               className={`relative w-12 h-12 shrink-0 rounded-full bg-gray-100 flex items-center justify-center ring-1 ring-black/5 overflow-hidden ${
-                isSelf ? 'cursor-pointer' : ''
+                isSelf && onImageUpload ? 'cursor-pointer' : ''
               }`}>
               <img
                 src={userImage || defaultAvatar}
@@ -98,8 +103,8 @@ export function ProfileDropdown({
                   e.currentTarget.src = defaultAvatar;
                 }}
               />
-              {/* 내 프로필일 때만 카메라 마스크 보여주기 */}
-              {isSelf && (
+              {/* 내 프로필일 때만 카메라 마스크 보여주기 (업로드 핸들러가 있을 때만) */}
+              {isSelf && onImageUpload && (
                 <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center backdrop-blur-[1px]">
                   <Camera size={16} className="text-white drop-shadow-sm" />
                 </div>

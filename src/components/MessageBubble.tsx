@@ -2,11 +2,14 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
+import Mention from '@tiptap/extension-mention';
 import { MoreVertical, Trash2, Check, Download, Paperclip } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Message } from '@/types/chat';
+import type { RoomMember } from '@/types/room';
 import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
 import { DocumentCardNode } from '@/components/DocumentCardNode';
+import { MentionHoverCard } from '@/components/MentionHoverCard';
 
 interface MessageBubbleProps {
   message: Message;
@@ -15,6 +18,10 @@ interface MessageBubbleProps {
   selectable?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (messageId: string) => void;
+  /** 메시지 안의 "@멘션"에 호버했을 때 보여줄 프로필 카드용 방 멤버 목록 */
+  roomMembers?: RoomMember[];
+  /** 다른 사람의 멘션 카드에서 "메시지 보내기"를 눌렀을 때 호출 */
+  onStartDirectMessage?: (userId: string) => void;
 }
 
 export function MessageBubble({
@@ -23,28 +30,62 @@ export function MessageBubble({
   selectable = false,
   isSelected = false,
   onToggleSelect,
+  roomMembers,
+  onStartDirectMessage,
 }: MessageBubbleProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [hoveredMention, setHoveredMention] = useState<{ userId: string; rect: DOMRect } | null>(null);
+  const hideTimeoutRef = useRef<number>();
+
+  const clearHideTimeout = () => {
+    if (hideTimeoutRef.current) {
+      window.clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = undefined;
+    }
+  };
+
+  const scheduleHideMention = () => {
+    clearHideTimeout();
+    hideTimeoutRef.current = window.setTimeout(() => setHoveredMention(null), 150);
+  };
+
+  // 멘션(@) span에 마우스를 올리면 프로필 호버 카드를 띄운다. (이벤트 위임: 매 렌더마다 span 각각에
+  // 리스너를 새로 붙일 필요 없이, 말풍선 컨테이너에서 한 번에 처리)
+  const handleMentionMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = (e.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
+    if (!target) return;
+    const userId = target.getAttribute('data-id');
+    if (!userId) return;
+    clearHideTimeout();
+    setHoveredMention({ userId, rect: target.getBoundingClientRect() });
+  };
+
+  const handleMentionMouseOut = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = (e.target as HTMLElement).closest('[data-type="mention"]');
+    if (!target) return;
+    scheduleHideMention();
+  };
 
   const editor = useEditor({
-    // ChatMessageInput에서 사용하는 확장(Underline, Link)을 동일하게 등록해야
-    // 해당 마크가 포함된 메시지가 누락되지 않고 그대로 렌더링된다.
-    extensions: [StarterKit, Underline, Link.configure({ openOnClick: true, autolink: true }), DocumentCardNode],
+    extensions: [
+      StarterKit,
+      Underline,
+      Link.configure({ openOnClick: true, autolink: true }),
+      DocumentCardNode,
+      Mention.configure({ HTMLAttributes: { class: 'mention' } }),
+    ],
     content: message.content ? stripTrailingEmptyParagraphs(message.content) : { type: 'doc', content: [] },
     editable: false,
     editorProps: {
-      // 입력창과 같은 클래스를 공유해서 목록(•, 1.)과 코드 블록 스타일이
-      // 전송된 메시지에도 동일하게 적용되도록 한다.
       attributes: {
         class: 'tiptap-content text-sm',
       },
     },
   });
 
-  // 메시지 전체가 문서 카드 하나뿐이면, 말풍선 배경/패딩 없이 카드 자체만 보여준다 (Teams Loop 카드 느낌)
   const isDocumentCardOnly =
     message.content?.content?.length === 1 && message.content.content[0]?.type === 'documentCard';
-  // 이미지/파일 첨부 메시지도 같은 이유로 말풍선 배경/패딩 없이 그 자체만 보여준다
+
   const isImage = message.type === 'image' && !!message.fileUrl;
   const isFile = message.type === 'file' && !!message.fileUrl;
   const isBareContent = isDocumentCardOnly || isImage || isFile;
@@ -53,7 +94,14 @@ export function MessageBubble({
     return (
       <div className={`flex flex-col ${message.isMine ? 'items-end' : 'items-start'}`}>
         <div
-          style={{ display: 'inline-block', maxWidth: '60%', wordBreak: 'break-word' }}
+          style={{
+            display: 'block',
+            width: 'fit-content',
+            minWidth: '2.25rem',
+            maxWidth: '60%',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+          }}
           className="rounded-lg px-4 py-2 text-sm italic text-fg-tertiary bg-bg-subtle">
           이 메시지가 삭제되었습니다.
         </div>
@@ -69,7 +117,7 @@ export function MessageBubble({
       onClick={() => {
         if (selectable) onToggleSelect?.(message.id);
       }}>
-      <div className={`flex items-center gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex w-full min-w-0 items-center gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
         {selectable && (
           <span
             className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
@@ -80,13 +128,16 @@ export function MessageBubble({
         )}
 
         <div
+          onMouseOver={handleMentionMouseOver}
+          onMouseOut={handleMentionMouseOut}
           style={
             isBareContent
               ? undefined
               : {
-                  display: 'inline-block',
-                  maxWidth: '60%',
-                  wordBreak: 'break-word',
+                  width: 'fit-content',
+                  minWidth: '2.25rem',
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'anywhere',
                   whiteSpace: 'pre-wrap',
                   backgroundColor: message.isMine ? 'var(--color-brand-soft)' : 'var(--color-bg-pressed)',
                   color: 'var(--color-fg-primary)',
@@ -95,7 +146,9 @@ export function MessageBubble({
           className={
             isBareContent
               ? 'shrink-0'
-              : `shrink-0 rounded-lg px-4 py-2 text-sm transition-shadow ${isSelected ? 'ring-2 ring-brand-primary' : ''}`
+              : `min-w-0 max-w-[75%] rounded-lg px-4 py-2 text-sm transition-shadow
+       sm:max-w-[70%] lg:max-w-[60%]
+       ${isSelected ? 'ring-2 ring-brand-primary' : ''}`
           }>
           {isImage ? (
             <img
@@ -128,6 +181,17 @@ export function MessageBubble({
             <EditorContent editor={editor} />
           )}
         </div>
+
+        {hoveredMention && (
+          <MentionHoverCard
+            userId={hoveredMention.userId}
+            anchorRect={hoveredMention.rect}
+            member={roomMembers?.find((m) => m.userId === hoveredMention.userId)}
+            onMouseEnterCard={clearHideTimeout}
+            onMouseLeaveCard={scheduleHideMention}
+            onStartDirectMessage={onStartDirectMessage}
+          />
+        )}
 
         {!selectable && message.isMine && (
           <div className="relative">

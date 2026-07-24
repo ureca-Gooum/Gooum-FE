@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Heart, MessageCircle, Pencil } from 'lucide-react';
+import { Plus, Heart, MessageCircle, Pencil, Bell, BellOff } from 'lucide-react';
 import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { MainPanel } from '@/components/layout/MainPanel';
@@ -10,7 +10,7 @@ import { RoomListItem } from '@/components/RoomListItem';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
+import { fetchRooms, fetchRoomDetail, toggleFavorite, leaveRoom, createRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { fetchMessages, deleteMessage } from '@/api/messages';
 import { createDocument, saveDocument } from '@/api/documents';
@@ -34,9 +34,9 @@ import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { usePresence } from '@/hooks/usePresence';
 import { formatTime } from '@/utils/formatTime';
 import { stripSenderPrefix } from '@/utils/notification';
-import { buildLastMessagePreview } from '@/utils/tiptap';
+import { buildLastMessagePreview, extractMentionedUserIds } from '@/utils/tiptap';
 import type { Room, Message, TiptapDoc } from '@/types/chat';
-import type { RoomApiResponse } from '@/types/room';
+import type { RoomApiResponse, RoomMember } from '@/types/room';
 import type { NewMessagePayload, NewNotificationPayload, MessageDeletedPayload } from '@/types/socket';
 
 function getDateLabel(time: string) {
@@ -59,6 +59,8 @@ export const ChatPage = () => {
   const [roomMessages, setRoomMessages] = useState<Message[]>([]);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  // "@"로 멘션할 수 있는 현재 방 멤버 목록 (멘션 자동완성용)
+  const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { typingLabel, notifyTyping } = useTypingIndicator(selectedRoomId);
 
@@ -66,6 +68,20 @@ export const ChatPage = () => {
   const [isSelectingMessages, setIsSelectingMessages] = useState(false);
   const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
   const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
+
+  const [mutedRoomIds, setMutedRoomIds] = useState<string[]>(() => {
+    const savedMutedRoomIds = localStorage.getItem('mutedRoomIds');
+
+    if (!savedMutedRoomIds) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(savedMutedRoomIds) as string[];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     fetchRooms()
@@ -92,6 +108,22 @@ export const ChatPage = () => {
   usePresence(setRooms);
 
   // 2. 방 선택 시 입장/퇴장 + 과거 메시지 불러오기
+  useEffect(() => {
+    if (!selectedRoomId) {
+      setRoomMembers([]);
+      return;
+    }
+    let isMounted = true;
+    fetchRoomDetail(selectedRoomId)
+      .then((res) => {
+        if (isMounted) setRoomMembers(res.members);
+      })
+      .catch((err) => console.error('방 멤버 목록을 불러오지 못했어요:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedRoomId]);
+
   useEffect(() => {
     if (!selectedRoomId) {
       setRoomMessages([]);
@@ -237,6 +269,18 @@ export const ChatPage = () => {
     }
   };
 
+  const handleToggleRoomNotification = (roomId: string) => {
+    setMutedRoomIds((prevMutedRoomIds) => {
+      const isMuted = prevMutedRoomIds.includes(roomId);
+
+      const nextMutedRoomIds = isMuted ? prevMutedRoomIds.filter((id) => id !== roomId) : [...prevMutedRoomIds, roomId];
+
+      localStorage.setItem('mutedRoomIds', JSON.stringify(nextMutedRoomIds));
+
+      return nextMutedRoomIds;
+    });
+  };
+
   const handleLeave = async (roomId: string) => {
     try {
       await leaveRoom(roomId);
@@ -257,12 +301,40 @@ export const ChatPage = () => {
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
+  // 멘션 호버 카드의 "메시지 보내기": 이미 DM방이 있으면 그 방을 열고, 없으면 새로 만들어서 연다.
+  const handleStartDirectMessage = async (userId: string) => {
+    if (!userId || userId === currentUserId) return;
+
+    const existingRoom = rooms.find((r) => r.type === 'direct' && r.otherUserId === userId);
+    if (existingRoom) {
+      handleSelectRoom(existingRoom.id);
+      return;
+    }
+
+    try {
+      const room = await createRoom({ type: 'direct', memberIds: [userId] });
+      setRooms((prev) => [mapRoomFromApi(room), ...prev]);
+      handleSelectRoom(room.roomId);
+    } catch (err: any) {
+      alert(err.message ?? 'DM방을 여는 데 실패했어요.');
+    }
+  };
+
   const handleSendMessage = (content: TiptapDoc) => {
     if (!selectedRoomId) return;
 
-    sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
-      console.log('sendMessage 응답:', response);
-    });
+    const mentions = extractMentionedUserIds(content);
+    sendMessage(
+      {
+        roomId: selectedRoomId,
+        type: 'text',
+        content,
+        ...(mentions.length > 0 ? { mentions } : {}),
+      },
+      (response: any) => {
+        console.log('sendMessage 응답:', response);
+      },
+    );
   };
 
   // 파일 첨부(클립 아이콘) 업로드가 끝난 후 호출됨 - 이미지/파일 메시지 전송
@@ -406,8 +478,6 @@ export const ChatPage = () => {
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
   const currentMessages = [...roomMessages, ...localMessages.filter((m) => m.roomId === selectedRoomId)];
 
-  // 방에 처음 들어왔을 때(로딩 스피너 -> 메시지 렌더)는 즉시 맨 아래로,
-  // 이미 보고 있던 방에 새 메시지가 도착했을 때는 부드럽게 스크롤한다.
   const prevRoomIdRef = useRef<string | null>(null);
   const wasLoadingRef = useRef(false);
 
@@ -422,10 +492,6 @@ export const ChatPage = () => {
     const behavior: ScrollBehavior = justEnteredRoom || roomChanged ? 'auto' : 'smooth';
     const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior });
 
-    // 메시지 목록엔 이미지/파일 카드/문서 카드처럼 렌더링 이후에 실제 높이가 바뀌는
-    // 콘텐츠가 섞여 있다(특히 <img>는 로드 전엔 높이가 0이라 로드 완료 시 레이아웃이
-    // 아래로 밀린다). 커밋 직후 한 번만 스크롤하면 그 사이 늘어난 높이만큼 애매한
-    // 위치에서 멈춰버리므로, 레이아웃이 안정된 뒤 몇 차례 더 보정해준다.
     scrollToBottom();
     const raf1 = requestAnimationFrame(() => {
       scrollToBottom();
@@ -458,7 +524,7 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex min-w-0 flex-1 overflow-hidden">
       <ListPanel
         header={
           <div className="flex items-center justify-between">
@@ -548,15 +614,40 @@ export const ChatPage = () => {
                 ))}
               </div>
 
-              <button
-                onClick={() => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite)}
-                className="ml-auto shrink-0">
-                <Heart
-                  size={18}
-                  fill={selectedRoom.isFavorite ? 'currentColor' : 'none'}
-                  className={selectedRoom.isFavorite ? 'text-brand-primary' : 'text-fg-tertiary'}
-                />
-              </button>
+              <div className="ml-auto flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleToggleRoomNotification(selectedRoom.id)}
+                  title={mutedRoomIds.includes(selectedRoom.id) ? '채팅방 알림 켜기' : '채팅방 알림 끄기'}
+                  aria-label={mutedRoomIds.includes(selectedRoom.id) ? '채팅방 알림 켜기' : '채팅방 알림 끄기'}
+                  aria-pressed={!mutedRoomIds.includes(selectedRoom.id)}
+                  className="
+      flex h-8 w-8 items-center justify-center
+      rounded-md text-fg-tertiary
+      transition-colors
+      hover:bg-bg-subtle hover:text-brand-primary
+    ">
+                  {mutedRoomIds.includes(selectedRoom.id) ? (
+                    <BellOff size={18} />
+                  ) : (
+                    <Bell size={18} className="text-brand-primary" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite)}
+                  title={selectedRoom.isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
+                  aria-label={selectedRoom.isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-fg-tertiary transition-colors hover:bg-bg-subtle hover:text-brand-primary
+    ">
+                  <Heart
+                    size={18}
+                    fill={selectedRoom.isFavorite ? 'currentColor' : 'none'}
+                    className={selectedRoom.isFavorite ? 'text-brand-primary' : 'text-fg-tertiary'}
+                  />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex h-[63px] items-center border-b border-border-default px-4">
@@ -603,6 +694,7 @@ export const ChatPage = () => {
                     onTyping={notifyTyping}
                     onOpenAiMinutes={handleStartSelectingMessages}
                     onCreateDocument={handleCreateDocument}
+                    roomMembers={roomMembers}
                   />
                 </div>
               )}
@@ -615,7 +707,7 @@ export const ChatPage = () => {
               <LoadingSpinner />
             </div>
           ) : (
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
+            <div className="mx-auto flex min-w-0 w-full max-w-6xl flex-col gap-3">
               {isSelectingMessages && (
                 <p className="rounded-lg bg-brand-soft px-3 py-2 text-xs text-brand-primary">
                   메시지를 클릭해 요약할 범위를 선택해주세요. 시작점을 누르고, 끝점을 누르면 그 사이가 전부 선택돼요.
@@ -626,7 +718,7 @@ export const ChatPage = () => {
                 const showDateDivider = !prevMsg || getDateLabel(prevMsg.time) !== getDateLabel(msg.time);
 
                 return (
-                  <div key={msg.id}>
+                  <div key={msg.id} className="w-full min-w-0">
                     {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
                     <MessageBubble
                       message={msg}
@@ -634,6 +726,8 @@ export const ChatPage = () => {
                       selectable={isSelectingMessages}
                       isSelected={selectedMessageIds.includes(msg.id)}
                       onToggleSelect={handleToggleMessageSelect}
+                      roomMembers={roomMembers}
+                      onStartDirectMessage={handleStartDirectMessage}
                     />
                   </div>
                 );

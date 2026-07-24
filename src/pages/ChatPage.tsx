@@ -13,6 +13,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { fetchMessages, deleteMessage } from '@/api/messages';
+import { createDocument, saveDocument } from '@/api/documents';
 import { mapMessageFromApi } from '@/api/mappers/messageMapper';
 import {
   connectSocket,
@@ -276,6 +277,57 @@ export const ChatPage = () => {
     );
   };
 
+  // 채팅 입력창의 인라인 "문서 작성" 카드에서 전송을 눌렀을 때 호출됨.
+  // 이 시점에 비로소 동시문서편집 문서를 실제로 만들고, 채팅방에 문서 카드 메시지를 올린다.
+  // (Docs 페이지로 이동시키지 않고 채팅에 머무른 채로 처리 — 문서는 카드를 눌렀을 때 열람)
+  const handleCreateDocument = async ({
+    title,
+    content,
+    isContentEmpty,
+  }: {
+    title: string;
+    content: TiptapDoc;
+    isContentEmpty: boolean;
+  }) => {
+    if (!selectedRoomId) return;
+
+    const docTitle = title.trim() || '제목 없는 문서';
+    try {
+      const newDoc = await createDocument({ title: docTitle, roomId: selectedRoomId, type: 'document' });
+
+      if (!isContentEmpty) {
+        await saveDocument(newDoc.documentId, { title: docTitle, content });
+      }
+
+      sendMessage(
+        {
+          roomId: selectedRoomId,
+          type: 'document',
+          content: {
+            type: 'doc',
+            content: [
+              {
+                type: 'documentCard',
+                attrs: {
+                  documentId: newDoc.documentId,
+                  title: docTitle,
+                  roomId: selectedRoomId,
+                  docType: 'document',
+                },
+              },
+            ],
+          },
+        },
+        (response: any) => {
+          console.log('문서 카드 메시지 전송 응답:', response);
+        },
+      );
+    } catch (err) {
+      console.error('문서 생성 실패:', err);
+      alert('문서를 만들지 못했어요. 다시 시도해주세요.');
+    }
+  };
+
   // ── AI 회의록: 카톡 캡쳐처럼 메시지를 클릭해 범위를 선택하는 모드 ──
   const handleStartSelectingMessages = () => {
     if (!selectedRoomId) return;
@@ -354,9 +406,38 @@ export const ChatPage = () => {
   const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
   const currentMessages = [...roomMessages, ...localMessages.filter((m) => m.roomId === selectedRoomId)];
 
+  // 방에 처음 들어왔을 때(로딩 스피너 -> 메시지 렌더)는 즉시 맨 아래로,
+  // 이미 보고 있던 방에 새 메시지가 도착했을 때는 부드럽게 스크롤한다.
+  const prevRoomIdRef = useRef<string | null>(null);
+  const wasLoadingRef = useRef(false);
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentMessages.length]);
+    const justEnteredRoom = wasLoadingRef.current && !isMessagesLoading;
+    wasLoadingRef.current = isMessagesLoading;
+    const roomChanged = prevRoomIdRef.current !== selectedRoomId;
+    prevRoomIdRef.current = selectedRoomId;
+
+    if (isMessagesLoading) return;
+
+    const behavior: ScrollBehavior = justEnteredRoom || roomChanged ? 'auto' : 'smooth';
+    const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior });
+
+    // 메시지 목록엔 이미지/파일 카드/문서 카드처럼 렌더링 이후에 실제 높이가 바뀌는
+    // 콘텐츠가 섞여 있다(특히 <img>는 로드 전엔 높이가 0이라 로드 완료 시 레이아웃이
+    // 아래로 밀린다). 커밋 직후 한 번만 스크롤하면 그 사이 늘어난 높이만큼 애매한
+    // 위치에서 멈춰버리므로, 레이아웃이 안정된 뒤 몇 차례 더 보정해준다.
+    scrollToBottom();
+    const raf1 = requestAnimationFrame(() => {
+      scrollToBottom();
+      requestAnimationFrame(scrollToBottom);
+    });
+    const timer = window.setTimeout(scrollToBottom, 150);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      window.clearTimeout(timer);
+    };
+  }, [currentMessages.length, isMessagesLoading, selectedRoomId]);
 
   if (isLoading) {
     return (
@@ -521,8 +602,7 @@ export const ChatPage = () => {
                     onSendFile={handleSendFile}
                     onTyping={notifyTyping}
                     onOpenAiMinutes={handleStartSelectingMessages}
-                    // TODO: 동시문서편집 문서 생성 + 이동 기능 연결 예정. 지금은 아이콘만 노출.
-                    onCreateDocument={() => {}}
+                    onCreateDocument={handleCreateDocument}
                   />
                 </div>
               )}

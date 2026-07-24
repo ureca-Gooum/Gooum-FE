@@ -21,7 +21,25 @@ interface FileMessagePayload extends BaseSendMessagePayload {
   fileName: string;
 }
 
-export type SendMessagePayload = TextMessagePayload | ImageMessagePayload | FileMessagePayload;
+// 채팅에 "문서 카드"를 올릴 때 사용. 일반 문서 생성 카드
+interface DocumentMessagePayload extends BaseSendMessagePayload {
+  type: 'document';
+  content: TiptapDoc;
+}
+
+// AI 회의록 생성 카드 - 위와 페이로드 모양은 같지만 백엔드/프론트에서
+// "문서"와 "AI 회의록"을 구분해서 표시하기 위해 타입을 분리한다
+interface AiSummaryMessagePayload extends BaseSendMessagePayload {
+  type: 'ai_summary';
+  content: TiptapDoc;
+}
+
+export type SendMessagePayload =
+  | TextMessagePayload
+  | ImageMessagePayload
+  | FileMessagePayload
+  | DocumentMessagePayload
+  | AiSummaryMessagePayload;
 
 export interface TypingPayload {
   roomId: string;
@@ -57,7 +75,7 @@ export interface NewMessagePayload {
     profileImageUrl: string | null;
   };
   content: TiptapDoc;
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'document' | 'ai_summary';
   fileUrl: string | null;
   fileName: string | null;
   documentId: string | null;

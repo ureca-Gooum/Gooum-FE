@@ -27,7 +27,13 @@ export function mapMessageFromApi(apiData: MessageApiResponse): Message {
     senderId: apiData.sender.userId,
     senderName: apiData.sender.name,
     content: apiData.isDeleted ? getDeletedContent() : (apiData.content ?? null),
-    type: apiData.type === 'image' || apiData.type === 'file' ? apiData.type : 'text',
+    type:
+      apiData.type === 'image' ||
+      apiData.type === 'file' ||
+      apiData.type === 'document' ||
+      apiData.type === 'ai_summary'
+        ? apiData.type
+        : 'text',
     fileUrl: apiData.fileUrl,
     fileName: apiData.fileName,
     time: formatTime(apiData.createdAt),

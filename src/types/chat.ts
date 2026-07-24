@@ -38,7 +38,7 @@ export interface Message {
   senderId: string;
   senderName: string;
   content: TiptapDoc | null;
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'document' | 'ai_summary';
   fileUrl: string | null;
   fileName: string | null;
   time: string;

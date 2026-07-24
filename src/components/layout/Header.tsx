@@ -15,9 +15,10 @@ interface HeaderProps {
   onMaximize?: () => void;
   onClose?: () => void;
   isMaximized?: boolean;
+  onMouseDown?: (e: React.MouseEvent) => void;
 }
 
-export function Header({ onMinimize, onMaximize, onClose, isMaximized = true }: HeaderProps = {}) {
+export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, onMouseDown }: HeaderProps = {}) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -40,7 +41,10 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true }: 
   );
 
   return (
-    <header className="flex h-14 shrink-0 items-center bg-bg-canvas px-3">
+    <header 
+      className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
+      onMouseDown={onMouseDown}
+    >
       {/* 왼쪽: 로고 */}
       <img src="/favicon.svg" alt="구움" className="h-10 w-10" />
 

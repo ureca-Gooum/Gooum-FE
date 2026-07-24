@@ -1,3 +1,8 @@
+export function formatDateShort(dateString: string): string {
+  const date = new Date(dateString);
+  return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
+}
+
 export function formatTime(dateString: string): string {
   const date = new Date(dateString);
   const hours = date.getHours();

@@ -109,7 +109,6 @@ export function ChatRoomPanel({
   isSelectingMessages,
   selectedMessageIds,
   onToggleMessageSelect,
-  onStartSelecting,
   onCancelSelecting,
   onResetSelection,
   onConfirmSelection,

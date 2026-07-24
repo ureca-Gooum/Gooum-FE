@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, FileText, Sparkles } from 'lucide-react';
+import { MessageCircle, FileText, Sparkles, AtSign } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { NotificationListItem } from '@/components/NotificationListItem';
@@ -127,30 +127,37 @@ export const NotificationsPage = () => {
             <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
-                className={`pb-3 text-[13px] font-bold transition-colors ${
-                  activeTab === '전체'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`pb-3 text-[13px] font-bold transition-colors ${activeTab === '전체'
+                  ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                  : 'text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 전체
               </button>
               <button
                 onClick={() => setActiveTab('DM')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === 'DM'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === 'DM'
+                  ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                  : 'text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 <MessageCircle size={15} />
                 DM
               </button>
+
+              <button
+                onClick={() => setActiveTab('멘션')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === '멘션'
+                  ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                  : 'text-fg-tertiary hover:text-fg-primary'
+                  }`}>
+                <AtSign size={15} />
+                멘션
+              </button>
               <button
                 onClick={() => setActiveTab('문서')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === '문서'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === '문서'
+                  ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                  : 'text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 <FileText size={15} />
                 문서
               </button>
@@ -189,11 +196,10 @@ export const NotificationsPage = () => {
             <div className="flex items-center gap-5 ml-4">
               <button
                 onClick={() => setActiveMainTab('채팅')}
-                className={`relative text-[13px] transition-colors ${
-                  activeMainTab === '채팅'
-                    ? 'font-bold text-brand-primary'
-                    : 'font-medium text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`relative text-[13px] transition-colors ${activeMainTab === '채팅'
+                  ? 'font-bold text-brand-primary'
+                  : 'font-medium text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 채팅
                 {activeMainTab === '채팅' && (
                   <span
@@ -204,11 +210,10 @@ export const NotificationsPage = () => {
               </button>
               <button
                 onClick={() => setActiveMainTab('파일')}
-                className={`relative text-[13px] transition-colors ${
-                  activeMainTab === '파일'
-                    ? 'font-bold text-brand-primary'
-                    : 'font-medium text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`relative text-[13px] transition-colors ${activeMainTab === '파일'
+                  ? 'font-bold text-brand-primary'
+                  : 'font-medium text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 파일
                 {activeMainTab === '파일' && (
                   <span
@@ -219,11 +224,10 @@ export const NotificationsPage = () => {
               </button>
               <button
                 onClick={() => setActiveMainTab('AI 회의록')}
-                className={`relative flex items-center gap-1 text-[13px] transition-colors ${
-                  activeMainTab === 'AI 회의록'
-                    ? 'font-bold text-brand-primary'
-                    : 'font-medium text-fg-tertiary hover:text-fg-primary'
-                }`}>
+                className={`relative flex items-center gap-1 text-[13px] transition-colors ${activeMainTab === 'AI 회의록'
+                  ? 'font-bold text-brand-primary'
+                  : 'font-medium text-fg-tertiary hover:text-fg-primary'
+                  }`}>
                 <Sparkles size={14} />
                 AI 회의록
                 {activeMainTab === 'AI 회의록' && (
@@ -240,7 +244,7 @@ export const NotificationsPage = () => {
           {activeMainTab === '채팅' && (
             <>
               {DUMMY_MESSAGES.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} onDelete={() => {}} />
+                <MessageBubble key={msg.id} message={msg} onDelete={() => { }} />
               ))}
             </>
           )}

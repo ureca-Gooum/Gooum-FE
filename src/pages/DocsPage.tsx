@@ -399,20 +399,19 @@ export const DocsPage = () => {
 
       {/* ── 메인 카드 ── */}
       <div className="relative flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
-        
+
         {/* ── 모바일 사이드바 오버레이 ── */}
         {isSidebarOpen && (
-          <div 
-            className="absolute inset-0 bg-black/20 z-30 @md:hidden" 
-            onClick={() => setIsSidebarOpen(false)} 
+          <div
+            className="absolute inset-0 bg-black/20 z-30 @md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
           />
         )}
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
-        <aside 
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
-            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-          }`}>
+        <aside
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+            }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -579,7 +578,7 @@ export const DocsPage = () => {
               <header className="flex min-h-[48px] items-center justify-between border-b border-border-default px-5 py-2.5">
                 {/* 왼쪽: 햄버거 메뉴 + 문서 제목 */}
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={() => setIsSidebarOpen(true)}
                     className="@md:hidden flex items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95"
                   >

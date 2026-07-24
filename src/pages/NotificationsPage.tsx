@@ -11,44 +11,16 @@ import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
-
-const DUMMY_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: '1',
-    type: 'message', // DM 탭
-    title: 'Daichi Fukuda',
-    content:
-      'Cupcake ipsum dolor sit amet muffin sesame snaps caramels. Gingerbread chupa chups cupcake tiramisu croissant.',
-    time: '어제',
-    isRead: false,
-    roomId: 'r1', // TODO: 실제 알림 API 연동 시 서버가 내려주는 roomId로 교체
-  },
-  {
-    id: '2',
-    type: 'message', // DM 탭
-    title: 'Park Soyeon',
-    content: "I will push Krystal to give us a few more days. That shouldn't be a problem.",
-    time: '어제',
-    isRead: false,
-    roomId: 'r2',
-  },
-  {
-    id: '3',
-    type: 'document', // 문서 탭
-    title: '디자인 시스템',
-    content: '기획서 문서가 업데이트 되었습니다. 확인 부탁드립니다.',
-    time: '어제',
-    isRead: false,
-  },
-];
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
+import { triggerBadgeRefresh } from '@/hooks/useUnreadBadge';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
 export const NotificationsPage = () => {
   const currentUserId = getCurrentUserId();
 
-  const [notifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
-  const [selectedNotiId, setSelectedNotiId] = useState<string | null>('1');
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [selectedNotiId, setSelectedNotiId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
 
@@ -61,6 +33,23 @@ export const NotificationsPage = () => {
 
   const selectedNoti = notifications.find((n) => n.id === selectedNotiId) || notifications[0];
   const roomId = selectedNoti?.roomId ?? null;
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchNotifications()
+      .then((res) => {
+        if (isMounted) {
+          setNotifications(res.data);
+          if (res.data.length > 0) {
+            setSelectedNotiId(res.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.error('알림을 불러오지 못했어요:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!roomId) {
@@ -92,8 +81,6 @@ export const NotificationsPage = () => {
     }
   };
 
-  // 좌측 탭 필터링 로직
-  // '멘션' 탭이 새로 생기면서 DM은 message만, 멘션은 mention만 보여주도록 분리했다.
   const filteredNotifications = notifications.filter((noti) => {
     if (activeTab === '전체') return true;
     if (activeTab === 'DM') return noti.type === 'message';
@@ -101,6 +88,31 @@ export const NotificationsPage = () => {
     if (activeTab === '문서') return noti.type === 'document';
     return true;
   });
+
+  const handleSelectNoti = async (noti: NotificationItem) => {
+    setSelectedNotiId(noti.id);
+    if (!noti.isRead) {
+      try {
+        await markNotificationAsRead(noti.id);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
+        );
+        triggerBadgeRefresh();
+      } catch (err) {
+        console.error('알림 읽음 처리 실패:', err);
+      }
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      triggerBadgeRefresh();
+    } catch (err) {
+      console.error('전체 읽음 처리 실패:', err);
+    }
+  };
 
   const isLoggedIn = !!localStorage.getItem('accessToken');
   if (!isLoggedIn) {
@@ -122,7 +134,15 @@ export const NotificationsPage = () => {
       <ListPanel
         header={
           <div className="flex flex-col gap-4">
-            <h2 className="text-[20px] font-bold text-fg-primary">내 활동</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-[20px] font-bold text-fg-primary">내 활동</h2>
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-xs text-fg-tertiary hover:text-fg-primary transition-colors"
+              >
+                모두 읽음
+              </button>
+            </div>
             <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
@@ -177,7 +197,7 @@ export const NotificationsPage = () => {
                     key={noti.id}
                     notification={noti}
                     isSelected={selectedNotiId === noti.id}
-                    onSelect={() => setSelectedNotiId(noti.id)}
+                    onSelect={() => handleSelectNoti(noti)}
                   />
                 ))}
               </div>

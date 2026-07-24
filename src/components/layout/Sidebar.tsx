@@ -7,6 +7,7 @@ import { USER_STATUS_CONFIG } from '@/types/user';
 import { getAvatarColorClass } from '@/utils/avatar';
 import { getCurrentUserId } from '@/constants/auth';
 import { useMyProfile } from '@/hooks/useMyProfile';
+import { useUnreadBadge } from '@/hooks/useUnreadBadge';
 import { logout } from '@/api/users';
 
 const navItems = [
@@ -20,6 +21,8 @@ export function Sidebar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { unreadNotiCount, unreadDMCount } = useUnreadBadge();
 
   const {
     userName,
@@ -109,28 +112,38 @@ export function Sidebar() {
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
 
       <div className="flex w-full flex-col items-center gap-4">
-        {navItems.map(({ icon: Icon, label, to }) => (
-          <NavLink
-            key={label}
-            to={to}
-            end={to === '/app'}
-            onClick={(e) => {
-              if (label === '알림' && !localStorage.getItem('accessToken')) {
-                e.preventDefault();
-                alert('로그인 후 이용해주세요.');
-              }
-            }}
-            className={({ isActive }) =>
-              `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
-                isActive
-                  ? 'text-brand-primary bg-bg-subtle'
-                  : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
-              }`
-            }>
-            <Icon size={20} />
-            <span className="text-[11px]">{label}</span>
-          </NavLink>
-        ))}
+        {navItems.map(({ icon: Icon, label, to }) => {
+          const unreadCount = label === '알림' ? unreadNotiCount : label === 'DM' ? unreadDMCount : 0;
+          return (
+            <NavLink
+              key={label}
+              to={to}
+              end={to === '/app'}
+              onClick={(e) => {
+                if (label === '알림' && !localStorage.getItem('accessToken')) {
+                  e.preventDefault();
+                  alert('로그인 후 이용해주세요.');
+                }
+              }}
+              className={({ isActive }) =>
+                `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
+                  isActive
+                    ? 'text-brand-primary bg-bg-subtle'
+                    : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
+                }`
+              }>
+              <div className="relative">
+                <Icon size={20} />
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-bg-canvas leading-none tracking-tighter">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
+                )}
+              </div>
+              <span className="text-[11px]">{label}</span>
+            </NavLink>
+          );
+        })}
       </div>
 
       <div className="relative mt-auto mb-4 flex flex-col items-center" ref={themeMenuRef}>

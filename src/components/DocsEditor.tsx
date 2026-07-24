@@ -40,6 +40,9 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
       provider: WebsocketProvider;
     } | null>(null);
 
+    // 실시간 마우스 포인터 상태
+    const [pointers, setPointers] = useState<Record<string, any>>({});
+
     // 1. Yjs 초기화
     useEffect(() => {
       const doc = new Y.Doc();
@@ -53,14 +56,25 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
       };
     }, [activeFile.documentId, wsUrl, currentUser]);
 
-    // 2. 접속자 관리
+    // 2. 접속자 및 마우스 포인터 관리
     useEffect(() => {
       if (!docState?.provider) return;
       const updateUsers = () => {
-        const states = Array.from(docState.provider.awareness.getStates().values());
-        const users = states.map((state: any) => state.user).filter((u) => u && u.name);
+        const states = Array.from(docState.provider.awareness.getStates().entries());
+        const users = states.map(([_, state]: any) => state.user).filter((u) => u && u.name);
         const uniqueUsers = users.filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i);
         onActiveUsersChange(uniqueUsers);
+
+        const newPointers: Record<string, any> = {};
+        states.forEach(([clientId, state]: any) => {
+          if (clientId !== docState.ydoc.clientID && state.pointer && state.user) {
+            newPointers[clientId] = {
+              pointer: state.pointer,
+              user: state.user,
+            };
+          }
+        });
+        setPointers(newPointers);
       };
       docState.provider.awareness.on('update', updateUsers);
       updateUsers();
@@ -222,6 +236,59 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
       return <div className="text-gray-400">에디터 로딩 중...</div>;
     }
 
-    return <EditorContent editor={editor} />;
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!docState?.provider) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      docState.provider.awareness.setLocalStateField('pointer', { x, y });
+    };
+    
+    const handleMouseLeave = () => {
+      if (!docState?.provider) return;
+      docState.provider.awareness.setLocalStateField('pointer', null);
+    };
+
+    return (
+      <div 
+        className="relative min-h-[500px]" 
+        onMouseMove={handleMouseMove} 
+        onMouseLeave={handleMouseLeave}
+      >
+        <EditorContent editor={editor} />
+        
+        {/* 상대방 마우스 커서 렌더링 */}
+        {Object.entries(pointers).map(([clientId, data]) => (
+          <div
+            key={clientId}
+            className="pointer-events-none absolute z-50 flex items-center gap-1.5 transition-all duration-75 ease-linear"
+            style={{
+              left: data.pointer.x,
+              top: data.pointer.y,
+              transform: 'translate(-2px, -2px)'
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill={data.user.color}
+              stroke="white"
+              strokeWidth="2"
+              className="drop-shadow-md"
+            >
+              <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+            </svg>
+            <span 
+              className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"
+              style={{ backgroundColor: data.user.color }}
+            >
+              {data.user.name}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
   },
 );

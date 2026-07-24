@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, FileText } from 'lucide-react';
+import { MessageCircle, FileText, AtSign } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { NotificationListItem } from '@/components/NotificationListItem';
@@ -49,7 +49,7 @@ export const NotificationsPage = () => {
 
   const [notifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>('1');
-  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서'>('전체');
+  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
 
   // 알림에 연결된 채팅방 상세 (아바타/이름/즐겨찾기 등 헤더 표시용) - ChatPage의 rooms 리스트 대신
@@ -93,9 +93,11 @@ export const NotificationsPage = () => {
   };
 
   // 좌측 탭 필터링 로직
+  // '멘션' 탭이 새로 생기면서 DM은 message만, 멘션은 mention만 보여주도록 분리했다.
   const filteredNotifications = notifications.filter((noti) => {
     if (activeTab === '전체') return true;
-    if (activeTab === 'DM') return noti.type === 'message' || noti.type === 'mention';
+    if (activeTab === 'DM') return noti.type === 'message';
+    if (activeTab === '멘션') return noti.type === 'mention';
     if (activeTab === '문서') return noti.type === 'document';
     return true;
   });
@@ -140,6 +142,17 @@ export const NotificationsPage = () => {
                 }`}>
                 <MessageCircle size={15} />
                 DM
+              </button>
+
+              <button
+                onClick={() => setActiveTab('멘션')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                  activeTab === '멘션'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <AtSign size={15} />
+                멘션
               </button>
               <button
                 onClick={() => setActiveTab('문서')}

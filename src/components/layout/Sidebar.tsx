@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Bell, MessageCircle, FileText } from 'lucide-react';
+import { Bell, MessageCircle, FileText, Palette } from 'lucide-react';
 import axios from 'axios';
 import defaultAvatar from '@/assets/Avatar.svg';
 import { ProfileDropdown } from './ProfileDropdown';
@@ -44,6 +44,22 @@ export function Sidebar() {
   const [userImage, setUserImage] = useState<string | null>(null);
   // 프로필 이미지 로드 실패 시 채팅 리스트 아바타와 동일하게 배경색 있는 마스코트 아이콘으로 대체
   const [profileImgError, setProfileImgError] = useState(false);
+
+  // 테마 상태 관리
+  const [theme, setTheme] = useState<string>(() => {
+    return localStorage.getItem('gooum-theme') || 'light';
+  });
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('gooum-theme', theme);
+    if (theme === 'light') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
 
   // 1. 프로필 정보 조회 (GET)
   useEffect(() => {
@@ -216,6 +232,9 @@ export function Sidebar() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
+      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
+        setIsThemeMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -240,10 +259,9 @@ export function Sidebar() {
               }
             }}
             className={({ isActive }) =>
-              `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
-                isActive
-                  ? 'text-brand-primary bg-bg-subtle'
-                  : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
+              `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${isActive
+                ? 'text-brand-primary bg-bg-subtle'
+                : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
               }`
             }>
             <Icon size={20} />
@@ -252,7 +270,47 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="relative mt-auto" ref={menuRef}>
+      <div className="relative mt-auto mb-4 flex flex-col items-center" ref={themeMenuRef}>
+        <button
+          onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+          className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors focus:outline-none ${isThemeMenuOpen ? 'bg-bg-subtle text-brand-primary' : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
+            }`}
+          title="테마 변경">
+          <Palette size={20} />
+        </button>
+
+        {isThemeMenuOpen && (
+          <div className="absolute left-14 bottom-0 w-32 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
+            <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
+            <div className="flex flex-col gap-1">
+              {[
+                { id: 'light', label: 'light', color: '#ffffff' },
+                { id: 'dark', label: 'dark', color: '#1f2229' },
+                { id: 'pastel-brown', label: 'brown', color: '#fdf8f5' },
+                { id: 'pastel-pink', label: 'pink', color: '#fff0f5' },
+                { id: 'pastel-green', label: 'green', color: '#f0fff0' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setTheme(t.id);
+                    setIsThemeMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition-colors ${theme === t.id ? 'bg-bg-subtle text-brand-primary font-medium' : 'text-fg-primary hover:bg-bg-subtle'
+                    }`}>
+                  <div
+                    className="h-3.5 w-3.5 rounded-full border border-border-default shadow-sm"
+                    style={{ backgroundColor: t.color }}
+                  />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="relative" ref={menuRef}>
         <button
           onClick={handleProfileClick}
           className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none ring-1 ring-black/5">

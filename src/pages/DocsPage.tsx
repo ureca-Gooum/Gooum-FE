@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Menu } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { AiMinutesModal } from '@/components/AiMinutesModal';
@@ -31,6 +31,7 @@ const getUserColor = (idOrName: string) => {
 };
 
 export const DocsPage = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // 내 정보 상태 관리
   const [myProfile, setMyProfile] = useState<{ id?: string; name: string; avatar: string }>({
@@ -48,12 +49,12 @@ export const DocsPage = () => {
       try {
         const response = await api.get("/api/users/me");
         const data = response.data;
-        
+
         setMyProfile({
-                id: data.id || data.userId || '',
-                name: data.name || "사용자",
-                avatar: data.profileImageUrl || "",
-              });
+          id: data.id || data.userId || '',
+          name: data.name || "사용자",
+          avatar: data.profileImageUrl || "",
+        });
       } catch (error) {
         console.error("DocsPage 내 프로필 조회 실패:", error);
       }
@@ -314,8 +315,8 @@ export const DocsPage = () => {
       title: '새 문서',
       type: 'document',
       createdBy: {
-          userId: myProfile.id || 'current-user-id', // 실제 사용자 ID 연동
-          name: currentUser.name || myProfile.name || '사용자',
+        userId: myProfile.id || 'current-user-id', // 실제 사용자 ID 연동
+        name: currentUser.name || myProfile.name || '사용자',
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -393,22 +394,33 @@ export const DocsPage = () => {
 
   return (
     /* ── 최외곽: Docs.png 연회색 배경 ── */
-    <div className="relative flex h-full w-full flex-col bg-[#eef1f6] p-3 pb-4 font-sans">
-      {/* "Docs" 라벨 */}
-      <span className="mb-2 pl-1 text-[13px] font-semibold text-blue-500">Docs</span>
+    <div className="relative flex h-full w-full flex-col bg-bg-canvas p-3 pb-4 font-sans">
+
 
       {/* ── 메인 카드 ── */}
-      <div className="flex flex-1 overflow-hidden rounded-2xl bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
+      <div className="relative flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
+        
+        {/* ── 모바일 사이드바 오버레이 ── */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/20 z-30 @md:hidden" 
+            onClick={() => setIsSidebarOpen(false)} 
+          />
+        )}
+
         {/* ━━━ 좌측 사이드바 ━━━ */}
-        <aside className="flex w-[260px] min-w-[260px] flex-col border-r border-gray-200 bg-gradient-to-b from-[#eef4ff] to-[#f5f8ff]">
+        <aside 
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+          }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
-            <span className="text-base font-bold text-slate-800">Gooum</span>
+            <span className="text-base font-bold text-fg-primary">문서</span>
           </div>
 
           {/* 검색바 + 필터 + 추가 */}
           <div className="flex items-center gap-1 px-3 pb-2.5">
-            <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-200 bg-white px-2.5 py-[7px]">
+            <div className="flex flex-1 items-center gap-2 rounded-lg border border-border-default bg-bg-default px-2.5 py-[7px]">
               {/* 🔍 아이콘 */}
               <svg
                 className="h-3.5 w-3.5 shrink-0 text-gray-400"
@@ -424,7 +436,7 @@ export const DocsPage = () => {
                 placeholder="검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border-none bg-transparent text-[13px] text-gray-600 outline-none placeholder:text-gray-400"
+                className="w-full border-none bg-transparent text-[13px] text-fg-primary outline-none placeholder:text-fg-tertiary"
               />
             </div>
             {/* 필터 아이콘 */}
@@ -478,22 +490,19 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                    isActive ? 'bg-white shadow-sm' : 'hover:bg-white/50'
-                  }`}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
+                    }`}
                   onClick={() => {
-                    if (!isEditing) handleTabSwitch(file.documentId);
+                    if (!isEditing) {
+                      handleTabSwitch(file.documentId);
+                      setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
+                    }
                   }}>
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
-                      isActive ? 'bg-blue-500' : 'bg-transparent'
-                    }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-blue-500' : 'bg-transparent'
+                      }`}
                   />
-
-                  {/* 문서 아이콘 */}
-                  <span className="ml-1 shrink-0 text-sm">{isActive ? '🌐' : '📄'}</span>
-
                   {/* 제목 */}
                   {isEditing ? (
                     <input
@@ -510,7 +519,7 @@ export const DocsPage = () => {
                     />
                   ) : (
                     <span
-                      className={`flex-1 truncate ${isActive ? 'font-medium text-slate-800' : 'text-slate-500'}`}
+                      className={`flex-1 truncate ${isActive ? 'font-medium text-fg-primary' : 'text-fg-secondary'}`}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         startEditing(file.documentId);
@@ -559,29 +568,23 @@ export const DocsPage = () => {
             })}
           </nav>
 
-          {/* 사이드바 하단 - 휴지통 */}
-          <div className="flex items-center gap-2 border-t border-gray-200 px-5 py-3.5">
-            <svg
-              className="h-3.5 w-3.5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}>
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-            <span className="text-[13px] text-gray-400">휴지통</span>
-          </div>
+
         </aside>
 
         {/* ━━━ 우측 메인 에디터 ━━━ */}
-        <main className="flex flex-1 flex-col overflow-hidden bg-white">
+        <main className="flex flex-1 flex-col overflow-hidden bg-bg-default">
           {activeFile ? (
             <>
               {/* 상단 헤더바 */}
-              <header className="flex min-h-[48px] items-center justify-between border-b border-gray-100 px-5 py-2.5">
-                {/* 왼쪽: 문서 제목 */}
-                <div className="flex items-center">
+              <header className="flex min-h-[48px] items-center justify-between border-b border-border-default px-5 py-2.5">
+                {/* 왼쪽: 햄버거 메뉴 + 문서 제목 */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="@md:hidden flex items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
                   {editingTitleId === `header-${activeFile.documentId}` ? (
                     <input
                       ref={titleInputRef}
@@ -597,7 +600,7 @@ export const DocsPage = () => {
                   ) : (
                     <button
                       onClick={() => startEditing(`header-${activeFile.documentId}`)}
-                      className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100">
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-fg-secondary transition-colors hover:bg-bg-subtle">
                       {activeFile.title || '새 문서'}
                       <svg
                         className="h-3 w-3 text-gray-400"
@@ -673,16 +676,16 @@ export const DocsPage = () => {
 
                     {/* 내보내기 드롭다운 메뉴 */}
                     {showExportMenu && (
-                      <div className="absolute right-0 top-[110%] w-40 rounded-xl border border-gray-100 bg-white p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.1)] z-50">
+                      <div className="absolute right-0 top-[110%] w-40 rounded-xl border border-border-default bg-bg-default p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.1)] z-50">
                         <button
                           onClick={handleExportPDF}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-blue-600">
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-fg-primary transition-colors hover:bg-bg-subtle hover:text-blue-600">
                           <span className="text-sm">📄</span>
                           PDF로 저장
                         </button>
                         <button
                           onClick={handleExportTXT}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-blue-600">
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-fg-primary transition-colors hover:bg-bg-subtle hover:text-blue-600">
                           <span className="text-sm">📝</span>
                           TXT로 저장
                         </button>
@@ -708,12 +711,12 @@ export const DocsPage = () => {
                         if (e.key === 'Enter') finishEditing(activeFile.documentId);
                       }}
                       autoFocus
-                      className="mb-3 w-full border-none bg-transparent text-[32px] font-bold leading-tight text-slate-800 outline-none placeholder:text-gray-300"
+                      className="mb-3 w-full border-none bg-transparent text-[32px] font-bold leading-tight text-fg-primary outline-none placeholder:text-fg-disabled"
                       placeholder="새 문서"
                     />
                   ) : (
                     <h1
-                      className="mb-3 cursor-text text-[32px] font-bold leading-tight text-slate-800 transition-colors hover:text-slate-600"
+                      className="mb-3 cursor-text text-[32px] font-bold leading-tight text-fg-primary transition-colors hover:text-fg-secondary"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingTitleId(`main-${activeFile.documentId}`);

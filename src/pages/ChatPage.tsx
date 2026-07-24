@@ -1,46 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Heart, MessageCircle, Pencil } from 'lucide-react';
-import { ChatDateDivider } from '@/components/ChatDateDivider';
+import { Plus, Heart, MessageCircle } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
-import { MainPanel } from '@/components/layout/MainPanel';
-import { MessageBubble } from '@/components/MessageBubble';
+import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
-import { Avatar } from '@/components/Avatar';
-import { ChatMessageInput } from '@/components/ChatMessageInput';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { fetchRooms, toggleFavorite, leaveRoom } from '@/api/rooms';
+import { fetchRooms, toggleFavorite, leaveRoom, createRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
-import { fetchMessages, deleteMessage } from '@/api/messages';
-import { mapMessageFromApi } from '@/api/mappers/messageMapper';
-import {
-  connectSocket,
-  disconnectSocket,
-  getSocket,
-  joinRoom,
-  leaveRoom as leaveSocketRoom,
-  sendMessage,
-  onNewMessage,
-  offNewMessage,
-  onNewNotification,
-  offNewNotification,
-  onMessageDeleted,
-  offMessageDeleted,
-} from '@/socket/socket';
+import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { getCurrentUserId } from '@/constants/auth';
-import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { useRoomConversation } from '@/hooks/useRoomConversation';
+import { useMutedRooms } from '@/hooks/useMutedRooms';
 import { usePresence } from '@/hooks/usePresence';
 import { formatTime } from '@/utils/formatTime';
 import { stripSenderPrefix } from '@/utils/notification';
 import { buildLastMessagePreview } from '@/utils/tiptap';
-import type { Room, Message, TiptapDoc } from '@/types/chat';
+import type { Room } from '@/types/chat';
 import type { RoomApiResponse } from '@/types/room';
-import type { NewMessagePayload, NewNotificationPayload, MessageDeletedPayload } from '@/types/socket';
-
-function getDateLabel(time: string) {
-  return time.split(',')[0];
-}
+import type { NewNotificationPayload } from '@/types/socket';
 
 type PanelTab = 'chat' | 'file' | 'docs';
 
@@ -55,16 +33,34 @@ export const ChatPage = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PanelTab>('chat');
-  const [roomMessages, setRoomMessages] = useState<Message[]>([]);
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
-  const [localMessages, setLocalMessages] = useState<Message[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { typingLabel, notifyTyping } = useTypingIndicator(selectedRoomId);
 
-  // ── AI 회의록: 카톡 캡쳐처럼 메시지 범위를 선택하는 모드 상태 ──
-  const [isSelectingMessages, setIsSelectingMessages] = useState(false);
-  const [selectedMessageIds, setSelectedMessageIds] = useState<string[]>([]);
-  const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null);
+  const { mutedRoomIds, toggleMute } = useMutedRooms();
+
+  // 채팅방 하나(selectedRoomId)에 대한 메시지/소켓/입력/AI캡쳐선택 로직은 전부 이 훅이 담당한다.
+  // 내가 보낸 메시지가 도착하면 사이드바 미리보기(rooms 목록)를 갱신해야 하므로 onMessageSent로 위임받는다.
+  const conversation = useRoomConversation(selectedRoomId, currentUserId, {
+    onMessageSent: (payload) => {
+      setRooms((prev) => {
+        const index = prev.findIndex((r) => r.id === payload.roomId);
+        if (index === -1) return prev;
+
+        const preview = buildLastMessagePreview({
+          type: payload.type,
+          content: payload.content,
+          fileName: payload.fileName,
+        });
+
+        const updatedRoom: Room = {
+          ...prev[index],
+          lastMessagePreview: `나: ${preview}`,
+          lastMessageTime: formatTime(payload.createdAt),
+        };
+
+        const rest = prev.filter((r) => r.id !== payload.roomId);
+        return [updatedRoom, ...rest];
+      });
+    },
+  });
 
   useEffect(() => {
     fetchRooms()
@@ -73,7 +69,7 @@ export const ChatPage = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // 1. 소켓 연결 - 앱 진입 시 한 번만
+  // 소켓 연결 - 앱 진입 시 한 번만
   useEffect(() => {
     const socket = connectSocket();
 
@@ -90,94 +86,7 @@ export const ChatPage = () => {
 
   usePresence(setRooms);
 
-  // 2. 방 선택 시 입장/퇴장 + 과거 메시지 불러오기
-  useEffect(() => {
-    if (!selectedRoomId) {
-      setRoomMessages([]);
-      return;
-    }
-    console.log('🚪 입장 시도하는 roomId:', selectedRoomId);
-
-    const socket = getSocket();
-
-    const doJoin = () => {
-      joinRoom(selectedRoomId, (response: any) => {
-        console.log('joinRoom 응답:', response);
-      });
-    };
-
-    if (socket?.connected) {
-      doJoin();
-    } else {
-      socket?.once('connect', doJoin);
-    }
-
-    setIsMessagesLoading(true);
-    fetchMessages({ roomId: selectedRoomId })
-      .then((data) => {
-        const mapped = data.messages.map(mapMessageFromApi).reverse();
-        setRoomMessages(mapped);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setIsMessagesLoading(false));
-
-    return () => {
-      leaveSocketRoom(selectedRoomId, (response: any) => {
-        console.log('leaveRoom 응답:', response);
-      });
-    };
-  }, [selectedRoomId]);
-
-  // 3. 새 메시지 수신
-  useEffect(() => {
-    const handleNewMessage = (payload: NewMessagePayload) => {
-      console.log('🔔 newMessage 이벤트 도착!', payload);
-      setLocalMessages((prev) => {
-        if (prev.some((m) => m.id === payload.messageId)) return prev;
-        const receivedMessage: Message = {
-          id: payload.messageId,
-          roomId: payload.roomId,
-          senderId: payload.sender.userId,
-          senderName: payload.sender.name,
-          content: payload.content,
-          type: payload.type,
-          fileUrl: payload.fileUrl,
-          fileName: payload.fileName,
-          time: new Date(payload.createdAt).toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' }),
-          isMine: payload.sender.userId === currentUserId,
-          isDeleted: false,
-        };
-        return [...prev, receivedMessage];
-      });
-
-      if (payload.sender.userId === currentUserId) {
-        setRooms((prev) => {
-          const index = prev.findIndex((r) => r.id === payload.roomId);
-          if (index === -1) return prev;
-
-          const preview = buildLastMessagePreview({
-            type: payload.type,
-            content: payload.content,
-            fileName: payload.fileName,
-          });
-
-          const updatedRoom: Room = {
-            ...prev[index],
-            lastMessagePreview: `나: ${preview}`,
-            lastMessageTime: formatTime(payload.createdAt),
-          };
-
-          const rest = prev.filter((r) => r.id !== payload.roomId);
-          return [updatedRoom, ...rest];
-        });
-      }
-    };
-
-    onNewMessage(handleNewMessage);
-    return () => offNewMessage(handleNewMessage);
-  }, [currentUserId]);
-
-  // 4. 실시간 알림 수신
+  // 실시간 알림 수신 (다른 방에서 온 메시지의 미리보기/안읽음 배지 갱신 - 방 목록 소유 상태라 여기 유지)
   useEffect(() => {
     const handleNewNotification = (payload: NewNotificationPayload) => {
       if (payload.type !== 'message') return;
@@ -207,21 +116,6 @@ export const ChatPage = () => {
     return () => offNewNotification(handleNewNotification);
   }, [selectedRoomId]);
 
-  // 5. 메시지 삭제
-  const updateMessageAsDeleted = (messageId: string) => {
-    setRoomMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m)));
-    setLocalMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m)));
-  };
-
-  useEffect(() => {
-    const handleMessageDeleted = (payload: MessageDeletedPayload) => {
-      updateMessageAsDeleted(payload.messageId);
-    };
-
-    onMessageDeleted(handleMessageDeleted);
-    return () => offMessageDeleted(handleMessageDeleted);
-  }, []);
-
   const handleRoomCreated = (newRoom: RoomApiResponse) => {
     setRooms((prev) => [mapRoomFromApi(newRoom), ...prev]);
     setIsModalOpen(false);
@@ -249,114 +143,33 @@ export const ChatPage = () => {
   const handleSelectRoom = (roomId: string) => {
     setSelectedRoomId(roomId);
     setActiveTab('chat');
-    setLocalMessages([]);
-    setIsSelectingMessages(false);
-    setSelectedMessageIds([]);
-    setSelectionAnchorId(null);
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
-  const handleSendMessage = (content: TiptapDoc) => {
-    if (!selectedRoomId) return;
+  // 멘션 호버 카드의 "메시지 보내기": 이미 DM방이 있으면 그 방을 열고, 없으면 새로 만들어서 연다.
+  const handleStartDirectMessage = async (userId: string) => {
+    if (!userId || userId === currentUserId) return;
 
-    sendMessage({ roomId: selectedRoomId, type: 'text', content }, (response: any) => {
-      console.log('sendMessage 응답:', response);
-    });
-  };
-
-  // 파일 첨부(클립 아이콘) 업로드가 끝난 후 호출됨 - 이미지/파일 메시지 전송
-  const handleSendFile = (payload: { type: 'image' | 'file'; fileUrl: string; fileName: string }) => {
-    if (!selectedRoomId) return;
-
-    sendMessage(
-      { roomId: selectedRoomId, type: payload.type, fileUrl: payload.fileUrl, fileName: payload.fileName },
-      (response: any) => {
-        console.log('sendMessage(파일) 응답:', response);
-      },
-    );
-  };
-
-  // ── AI 회의록: 카톡 캡쳐처럼 메시지를 클릭해 범위를 선택하는 모드 ──
-  const handleStartSelectingMessages = () => {
-    if (!selectedRoomId) return;
-    setIsSelectingMessages(true);
-    setSelectedMessageIds([]);
-    setSelectionAnchorId(null);
-  };
-
-  const handleCancelSelectingMessages = () => {
-    setIsSelectingMessages(false);
-    setSelectedMessageIds([]);
-    setSelectionAnchorId(null);
-  };
-
-  const handleResetSelection = () => {
-    setSelectedMessageIds([]);
-    setSelectionAnchorId(null);
-  };
-
-  const handleToggleMessageSelect = (messageId: string) => {
-    const ids = currentMessages.map((m) => m.id);
-    const clickedIndex = ids.indexOf(messageId);
-    if (clickedIndex === -1) return;
-
-    // 아직 아무것도 선택 안 한 상태 → 이 메시지를 시작점으로 지정
-    if (selectedMessageIds.length === 0) {
-      setSelectionAnchorId(messageId);
-      setSelectedMessageIds([messageId]);
+    const existingRoom = rooms.find((r) => r.type === 'direct' && r.otherUserId === userId);
+    if (existingRoom) {
+      handleSelectRoom(existingRoom.id);
       return;
     }
 
-    // 시작점 하나만 선택된 상태에서 같은 메시지를 다시 클릭 → 선택 해제
-    if (selectedMessageIds.length === 1 && selectionAnchorId === messageId) {
-      setSelectionAnchorId(null);
-      setSelectedMessageIds([]);
-      return;
+    try {
+      const room = await createRoom({ type: 'direct', memberIds: [userId] });
+      setRooms((prev) => [mapRoomFromApi(room), ...prev]);
+      handleSelectRoom(room.roomId);
+    } catch (err: any) {
+      alert(err.message ?? 'DM방을 여는 데 실패했어요.');
     }
-
-    // 시작점을 기준으로, 클릭한 지점까지의 범위를 전부 선택 (끝점은 다시 클릭해서 조정 가능)
-    if (selectionAnchorId) {
-      const anchorIndex = ids.indexOf(selectionAnchorId);
-      if (anchorIndex !== -1) {
-        const [from, to] = anchorIndex < clickedIndex ? [anchorIndex, clickedIndex] : [clickedIndex, anchorIndex];
-        setSelectedMessageIds(ids.slice(from, to + 1));
-        return;
-      }
-    }
-
-    // 예외 상황 대비: 새로 시작
-    setSelectionAnchorId(messageId);
-    setSelectedMessageIds([messageId]);
   };
 
   const handleConfirmSelection = () => {
-    if (!selectedRoomId || selectedMessageIds.length === 0) return;
-    // 실제 메시지 내용(TiptapDoc)까지 함께 넘겨야 Docs 페이지에서 서버 재조회 없이 바로 AI에 보낼 수 있음
-    const selectedMessages = currentMessages.filter((m) => selectedMessageIds.includes(m.id));
-    navigate('/app/docs', { state: { roomId: selectedRoomId, messages: selectedMessages } });
-    setIsSelectingMessages(false);
-    setSelectedMessageIds([]);
-    setSelectionAnchorId(null);
+    conversation.confirmSelection((selectedMessages) => {
+      navigate('/app/docs', { state: { roomId: selectedRoomId, messages: selectedMessages } });
+    });
   };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!confirm('메시지를 삭제하시겠어요?')) return;
-    try {
-      await deleteMessage(messageId);
-      updateMessageAsDeleted(messageId);
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
-  const favoriteRooms = rooms.filter((r) => r.isFavorite);
-  const otherRooms = rooms.filter((r) => !r.isFavorite);
-  const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
-  const currentMessages = [...roomMessages, ...localMessages.filter((m) => m.roomId === selectedRoomId)];
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentMessages.length]);
 
   if (isLoading) {
     return (
@@ -370,6 +183,10 @@ export const ChatPage = () => {
     return <div className="flex flex-1 items-center justify-center text-error">{error}</div>;
   }
 
+  const favoriteRooms = rooms.filter((r) => r.isFavorite);
+  const otherRooms = rooms.filter((r) => !r.isFavorite);
+  const selectedRoom = rooms.find((r) => r.id === selectedRoomId);
+
   const tabs: { key: PanelTab; label: string }[] = [
     { key: 'chat', label: '채팅' },
     { key: 'file', label: '파일' },
@@ -377,7 +194,7 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex min-w-0 flex-1 overflow-hidden">
       <ListPanel
         header={
           <div className="flex items-center justify-between">
@@ -424,149 +241,56 @@ export const ChatPage = () => {
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
-      <MainPanel
-        header={
-          selectedRoom ? (
-            <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-              <Avatar
-                seed={selectedRoom.id}
-                imageUrl={selectedRoom.displayImage}
-                presence={selectedRoom.presence}
-                alt={selectedRoom.displayName}
-                size={28}
-              />
-
-              <h2 className="shrink-0 font-semibold text-fg-primary">{selectedRoom.displayName}</h2>
-
-              {selectedRoom.type === 'group' && (
-                <button
-                  onClick={() => {
-                    /* 그룹 이름 수정 - 나중에 구현 */
-                  }}
-                  className="shrink-0 text-fg-tertiary hover:text-brand-primary">
-                  <Pencil size={16} />
-                </button>
-              )}
-
-              <div className="flex items-center gap-4">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`relative text-sm ${
-                      activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
-                    }`}>
-                    {tab.label}
-                    {activeTab === tab.key && (
-                      <span
-                        className="absolute left-0 right-0 bg-brand-primary"
-                        style={{ bottom: '-17px', height: '2px' }}
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite)}
-                className="ml-auto shrink-0">
-                <Heart
-                  size={18}
-                  fill={selectedRoom.isFavorite ? 'currentColor' : 'none'}
-                  className={selectedRoom.isFavorite ? 'text-brand-primary' : 'text-fg-tertiary'}
-                />
-              </button>
-            </div>
+      <ChatRoomPanel
+        target={
+          selectedRoom
+            ? {
+                id: selectedRoom.id,
+                displayName: selectedRoom.displayName,
+                displayImage: selectedRoom.displayImage,
+                presence: selectedRoom.presence,
+                isGroup: selectedRoom.type === 'group',
+                isFavorite: selectedRoom.isFavorite,
+              }
+            : null
+        }
+        emptyHeaderLabel="채팅방을 선택해주세요"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(key) => setActiveTab(key as PanelTab)}
+        chatTabKey="chat"
+        renderOtherTab={(tabKey) =>
+          tabKey === 'file' ? (
+            <p className="text-sm text-fg-tertiary">파일 목록 준비 중이에요.</p>
           ) : (
-            <div className="flex h-[63px] items-center border-b border-border-default px-4">
-              <h2 className="text-fg-tertiary">채팅방을 선택해주세요</h2>
-            </div>
+            <p className="text-sm text-fg-tertiary">AI 회의록 목록 준비 중이에요.</p>
           )
         }
-        footer={
-          selectedRoom && activeTab === 'chat' ? (
-            <div className="mx-auto w-full max-w-6xl">
-              {isSelectingMessages ? (
-                <div className="flex items-center justify-between rounded-lg bg-bg-subtle px-3 py-2.5">
-                  <span className="text-sm text-fg-primary">
-                    {selectedMessageIds.length > 0
-                      ? `${selectedMessageIds.length}개 메시지 선택됨`
-                      : '요약할 메시지의 시작점을 클릭해주세요'}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={handleResetSelection}
-                      disabled={selectedMessageIds.length === 0}
-                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas disabled:opacity-40">
-                      초기화
-                    </button>
-                    <button
-                      onClick={handleCancelSelectingMessages}
-                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-canvas">
-                      취소
-                    </button>
-                    <button
-                      onClick={handleConfirmSelection}
-                      disabled={selectedMessageIds.length === 0}
-                      className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40">
-                      다음
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  {typingLabel && <p className="px-1 text-xs text-fg-tertiary">{typingLabel}</p>}
-                  <ChatMessageInput
-                    onSend={handleSendMessage}
-                    onSendFile={handleSendFile}
-                    onTyping={notifyTyping}
-                    onOpenAiMinutes={handleStartSelectingMessages}
-                    // TODO: 동시문서편집 문서 생성 + 이동 기능 연결 예정. 지금은 아이콘만 노출.
-                    onCreateDocument={() => {}}
-                  />
-                </div>
-              )}
-            </div>
-          ) : undefined
-        }>
-        {activeTab === 'chat' ? (
-          isMessagesLoading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <LoadingSpinner />
-            </div>
-          ) : (
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
-              {isSelectingMessages && (
-                <p className="rounded-lg bg-brand-soft px-3 py-2 text-xs text-brand-primary">
-                  메시지를 클릭해 요약할 범위를 선택해주세요. 시작점을 누르고, 끝점을 누르면 그 사이가 전부 선택돼요.
-                </p>
-              )}
-              {currentMessages.map((msg, index) => {
-                const prevMsg = currentMessages[index - 1];
-                const showDateDivider = !prevMsg || getDateLabel(prevMsg.time) !== getDateLabel(msg.time);
-
-                return (
-                  <div key={msg.id}>
-                    {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
-                    <MessageBubble
-                      message={msg}
-                      onDelete={handleDeleteMessage}
-                      selectable={isSelectingMessages}
-                      isSelected={selectedMessageIds.includes(msg.id)}
-                      onToggleSelect={handleToggleMessageSelect}
-                    />
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-          )
-        ) : activeTab === 'file' ? (
-          <p className="text-sm text-fg-tertiary">파일 목록 준비 중이에요.</p>
-        ) : (
-          <p className="text-sm text-fg-tertiary">AI 회의록 목록 준비 중이에요.</p>
-        )}
-      </MainPanel>
+        isMuted={selectedRoom ? mutedRoomIds.includes(selectedRoom.id) : false}
+        onToggleMute={selectedRoom ? () => toggleMute(selectedRoom.id) : undefined}
+        onToggleFavorite={
+          selectedRoom ? () => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite) : undefined
+        }
+        messages={conversation.messages}
+        isMessagesLoading={conversation.isMessagesLoading}
+        roomMembers={conversation.roomMembers}
+        messagesEndRef={conversation.messagesEndRef}
+        isSelectingMessages={conversation.isSelectingMessages}
+        selectedMessageIds={conversation.selectedMessageIds}
+        onToggleMessageSelect={conversation.toggleMessageSelect}
+        onStartSelecting={conversation.startSelecting}
+        onCancelSelecting={conversation.cancelSelecting}
+        onResetSelection={conversation.resetSelection}
+        onConfirmSelection={handleConfirmSelection}
+        typingLabel={conversation.typingLabel}
+        onSend={conversation.sendMessage}
+        onSendFile={conversation.sendFile}
+        onTyping={conversation.notifyTyping}
+        onOpenAiMinutes={conversation.startSelecting}
+        onCreateDocument={conversation.createDocumentMessage}
+        onDeleteMessage={conversation.deleteMessage}
+        onStartDirectMessage={handleStartDirectMessage}
+      />
     </div>
   );
 };

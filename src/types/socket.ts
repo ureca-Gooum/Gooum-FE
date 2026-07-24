@@ -7,6 +7,7 @@ interface BaseSendMessagePayload {
 interface TextMessagePayload extends BaseSendMessagePayload {
   type: 'text';
   content: TiptapDoc;
+  mentions?: string[];
 }
 
 interface ImageMessagePayload extends BaseSendMessagePayload {
@@ -21,7 +22,22 @@ interface FileMessagePayload extends BaseSendMessagePayload {
   fileName: string;
 }
 
-export type SendMessagePayload = TextMessagePayload | ImageMessagePayload | FileMessagePayload;
+interface DocumentMessagePayload extends BaseSendMessagePayload {
+  type: 'document';
+  content: TiptapDoc;
+}
+
+interface AiSummaryMessagePayload extends BaseSendMessagePayload {
+  type: 'ai_summary';
+  content: TiptapDoc;
+}
+
+export type SendMessagePayload =
+  | TextMessagePayload
+  | ImageMessagePayload
+  | FileMessagePayload
+  | DocumentMessagePayload
+  | AiSummaryMessagePayload;
 
 export interface TypingPayload {
   roomId: string;
@@ -57,10 +73,11 @@ export interface NewMessagePayload {
     profileImageUrl: string | null;
   };
   content: TiptapDoc;
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'document' | 'ai_summary';
   fileUrl: string | null;
   fileName: string | null;
   documentId: string | null;
+  mentions?: string[];
   createdAt: string;
 }
 

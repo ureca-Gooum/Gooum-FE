@@ -10,12 +10,6 @@ function isEmptyParagraph(node: TiptapNode | undefined): boolean {
   return !!node && node.type === 'paragraph' && (!node.content || node.content.length === 0);
 }
 
-/**
- * 코드 블록/목록 뒤에서 커서를 빠져나오려고 Enter(또는 아래 화살표)를 치면 Tiptap이
- * 편집 편의를 위해 빈 문단을 자동으로 하나 붙여준다. 편집 중에는 필요하지만, 그대로
- * 전송/렌더링하면 말풍선 안에 실제 내용 없는 빈 줄만큼 여백이 남는다. 문서 맨 끝에
- * 연속으로 붙은 빈 문단들을 잘라내서 그 여백을 없앤다.
- */
 export function stripTrailingEmptyParagraphs(doc: TiptapDoc): TiptapDoc {
   if (!doc?.content || doc.content.length === 0) return doc;
 
@@ -31,32 +25,39 @@ export function extractPreviewText(doc: TiptapDoc | null | undefined): string {
   return doc.content.map(extractTextFromNode).join(' ').trim();
 }
 
-/**
- * 채팅 리스트에 보여줄 마지막 메시지 미리보기 문자열을 만든다.
- * 텍스트 메시지는 본문을, 이미지/파일 메시지는 안내 문구를 반환한다.
- */
+export function extractMentionedUserIds(doc: TiptapDoc | null | undefined): string[] {
+  if (!doc?.content) return [];
+  const ids = new Set<string>();
+
+  const walk = (node: TiptapNode) => {
+    if (node.type === 'mention' && node.attrs?.id) {
+      ids.add(node.attrs.id as string);
+    }
+    node.content?.forEach(walk);
+  };
+
+  doc.content.forEach(walk);
+  return Array.from(ids);
+}
+
 export function buildLastMessagePreview(params: {
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'document' | 'ai_summary';
   content: TiptapDoc | null;
   fileName: string | null;
 }): string {
   if (params.type === 'image') return '사진을 보냈습니다';
   if (params.type === 'file') return params.fileName ? `${params.fileName} 파일을 보냈습니다` : '파일을 보냈습니다';
+  if (params.type === 'document') return '문서를 보냈습니다';
+  if (params.type === 'ai_summary') return 'AI 회의록을 보냈습니다';
   return extractPreviewText(params.content) || '메시지';
 }
 
 export interface AiMinutesMeta {
   roomId: string;
   title: string;
-  /** "다시 생성" 시 서버 없이 동일한 원문으로 Gemini를 다시 호출하기 위해 보관하는 대화록 텍스트 */
   transcript: string;
 }
 
-/**
- * AI가 생성한 회의록 콘텐츠(Tiptap JSON)를 문서 최상단에서 한 번만
- * `aiMinutesBlock` 노드로 감싸준다. 이후에는 일반 노드처럼 문서에 저장되므로
- * 다시 불러올 때 이 함수를 또 호출할 필요는 없다 (재호출해도 이미 감싸져 있으면 그대로 반환).
- */
 export function wrapAiMinutesContent(content: any, meta: AiMinutesMeta) {
   const blocks = content && typeof content === 'object' && Array.isArray(content.content) ? content.content : [];
 

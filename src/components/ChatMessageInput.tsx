@@ -21,7 +21,10 @@ import {
 } from 'lucide-react';
 import { uploadFile } from '@/api/upload';
 import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
+import { createMentionExtension, mentionSuggestionPluginKey } from '@/components/mentionExtension';
+import { getCurrentUserId } from '@/constants/auth';
 import type { TiptapDoc } from '@/types/chat';
+import type { RoomMember } from '@/types/room';
 
 interface ToolbarButtonProps {
   onClick: () => void;
@@ -146,8 +149,10 @@ interface ChatMessageInputProps {
   onTyping?: () => void;
   /** AI 회의록 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다. */
   onOpenAiMinutes?: () => void;
-  /** 문서 아이콘 버튼. 이 채팅방 id로 된 동시문서편집 문서를 만들고 이동한다. 넘기지 않으면 버튼이 렌더링되지 않는다. */
-  onCreateDocument?: () => void;
+  /** 문서 아이콘 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다.*/
+  onCreateDocument?: (payload: { title: string; content: TiptapDoc; isContentEmpty: boolean }) => void | Promise<void>;
+  /** "@"로 멘션할 수 있는 현재 채팅방 멤버 목록. 넘기지 않으면 멘션 검색 결과가 항상 비어있다. */
+  roomMembers?: RoomMember[];
   placeholder?: string;
 }
 
@@ -163,10 +168,29 @@ export const ChatMessageInput = ({
   onTyping,
   onOpenAiMinutes,
   onCreateDocument,
+  roomMembers = [],
   placeholder = '메시지를 입력하세요.',
 }: ChatMessageInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // 멘션 검색이 항상 최신 멤버 목록을 보도록 ref로 들고 있는다.
+  // (editor extensions는 마운트 시 한 번만 만들어지므로, roomMembers가 바뀔 때마다
+  //  에디터를 통째로 재생성하지 않고 이 ref만 갱신한다)
+  const roomMembersRef = useRef<RoomMember[]>(roomMembers);
+  useEffect(() => {
+    roomMembersRef.current = roomMembers;
+  }, [roomMembers]);
+  const [mentionExtension] = useState(() =>
+    createMentionExtension(
+      () => roomMembersRef.current,
+      () => getCurrentUserId(),
+    ),
+  );
+  // 문서 아이콘을 누르면 바로 만들지 않고, 입력창 자리에 인라인 "문서 작성" 카드를 띄운다.
+  // 여기서 제목/내용을 쓰고 전송을 눌러야 실제로 문서가 생성된다.
+  const [isDocMode, setIsDocMode] = useState(false);
+  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+  const [docTitle, setDocTitle] = useState('');
   // 파일을 선택하면 바로 전송하지 않고, 업로드만 미리 해둔 채 입력창에 미리보기로 담아뒀다가
   // Enter/전송 버튼을 눌렀을 때 함께 전송한다.
   const [pendingAttachment, setPendingAttachment] = useState<{
@@ -191,6 +215,7 @@ export const ChatMessageInput = ({
         autolink: true,
       }),
       Placeholder.configure({ placeholder }),
+      mentionExtension,
     ],
     content: '',
     editorProps: {
@@ -199,7 +224,12 @@ export const ChatMessageInput = ({
       },
       // Enter는 전송, Shift+Enter는 기본 동작(줄바꿈)이 그대로 실행되도록 여기서만 가로챈다.
       // 단, 코드 블록이나 리스트 안에서는 Enter가 원래 하던 일(줄바꿈/새 목록 항목)을 해야 하므로 그대로 둔다.
-      handleKeyDown: (_view, event) => {
+      handleKeyDown: (view, event) => {
+        // 멘션 추천 목록(@)이 열려 있는 동안에는 Enter를 "사람 선택"에 그대로 넘겨줘야 한다.
+        // 여기서 먼저 가로채면 목록이 뜬 상태에서도 Enter가 메시지 전송으로 처리돼버린다.
+        const isMentionSuggestionOpen = !!mentionSuggestionPluginKey.getState(view.state)?.active;
+        if (isMentionSuggestionOpen) return false;
+
         const inCodeBlock = editor?.isActive('codeBlock');
         const inList = editor?.isActive('listItem');
 
@@ -220,6 +250,31 @@ export const ChatMessageInput = ({
     return () => editor?.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
+
+  // 인라인 문서 작성 카드용 별도 에디터. 메시지 입력창(editor)과 완전히 분리해서
+  // 문서 모드 중에는 서로 내용이 섞이지 않게 한다.
+  const docEditor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: false, blockquote: false, horizontalRule: false, code: false }),
+      Underline,
+      Link.configure({ openOnClick: false, autolink: true }),
+      Placeholder.configure({ placeholder: '내용을 입력하거나 아래 서식을 사용해보세요.' }),
+    ],
+    content: '',
+    editorProps: {
+      attributes: {
+        class: 'tiptap-content min-h-[96px] max-h-64 overflow-y-auto text-sm text-fg-primary outline-none',
+      },
+    },
+    onUpdate: () => {
+      onTyping?.();
+    },
+  });
+
+  useEffect(() => {
+    return () => docEditor?.destroy();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docEditor]);
 
   // 커서 위치나 선택 영역이 바뀔 때마다 툴바를 다시 그려서 "굵게/기울임/링크 등이 지금 켜져 있는지"가
   // 실시간으로 반영되도록 한다. (isActive()는 스냅샷이라 별도로 리렌더를 걸어줘야 함)
@@ -261,6 +316,36 @@ export const ChatMessageInput = ({
     editor?.commands.focus();
   };
 
+  // 문서 아이콘 클릭: 바로 문서를 만들지 않고 인라인 작성 카드만 연다.
+  const handleOpenDocumentComposer = () => {
+    setIsDocMode(true);
+    setTimeout(() => docEditor?.commands.focus(), 0);
+  };
+
+  const handleCancelDocumentComposer = () => {
+    setIsDocMode(false);
+    setDocTitle('');
+    docEditor?.commands.clearContent();
+  };
+
+  // 작성 카드 안의 "전송": 이 시점에 실제 문서 생성을 호출부에 위임한다.
+  const handleSendDocument = async () => {
+    if (!onCreateDocument || isCreatingDocument) return;
+
+    const isContentEmpty = !docEditor || docEditor.isEmpty;
+    const content = stripTrailingEmptyParagraphs((docEditor?.getJSON() as TiptapDoc) ?? { type: 'doc', content: [] });
+
+    setIsCreatingDocument(true);
+    try {
+      await onCreateDocument({ title: docTitle.trim(), content, isContentEmpty });
+      setIsDocMode(false);
+      setDocTitle('');
+      docEditor?.commands.clearContent();
+    } finally {
+      setIsCreatingDocument(false);
+    }
+  };
+
   // 파일 첨부: 선택 즉시 멀티파트 폼데이터로 업로드는 해두되, 전송은 Enter/전송 버튼을 누를 때까지 미룬다.
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -295,6 +380,54 @@ export const ChatMessageInput = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (isDocMode) {
+    return (
+      <div className="flex flex-col gap-2.5 rounded-lg border border-brand-primary px-3.5 py-3 shadow-[0_2px_0_0_var(--color-brand-primary)]">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-fg-tertiary">
+            <FileText size={14} className="text-brand-primary" />새 문서
+          </span>
+          <button
+            type="button"
+            onClick={handleCancelDocumentComposer}
+            className="rounded-md p-1 text-fg-tertiary hover:bg-bg-subtle"
+            title="작성 취소">
+            <X size={15} />
+          </button>
+        </div>
+
+        <Toolbar editor={docEditor} />
+
+        <div className="flex flex-col gap-1">
+          <input
+            value={docTitle}
+            onChange={(e) => setDocTitle(e.target.value)}
+            placeholder="제목을 입력하세요"
+            className="w-full border-none bg-transparent text-base font-semibold text-fg-primary outline-none placeholder:text-fg-tertiary placeholder:font-normal"
+          />
+
+          <EditorContent editor={docEditor} onClick={() => docEditor?.commands.focus()} />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border-default pt-2">
+          <button
+            type="button"
+            onClick={handleCancelDocumentComposer}
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-fg-tertiary hover:bg-bg-subtle">
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={handleSendDocument}
+            disabled={isCreatingDocument}
+            className="rounded-md bg-brand-primary px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-40">
+            {isCreatingDocument ? '만드는 중...' : '전송'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-1.5 rounded-lg border border-border-default px-3 py-2 transition-shadow focus-within:shadow-[0_2px_0_0_var(--color-brand-primary)]">
@@ -336,9 +469,9 @@ export const ChatMessageInput = ({
         {onCreateDocument && (
           <button
             type="button"
-            onClick={onCreateDocument}
+            onClick={handleOpenDocumentComposer}
             className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary"
-            title="동시문서편집 문서 만들기">
+            title="문서 작성하기">
             <FileText size={18} />
           </button>
         )}

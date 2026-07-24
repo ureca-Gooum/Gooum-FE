@@ -9,7 +9,7 @@ import { wrapAiMinutesContent } from '@/utils/tiptap';
 import { getDocuments, getDocumentById, createDocument, saveDocument, deleteDocument } from '@/api/documents';
 import type { Document } from '@/types/document';
 import type { Message } from '@/types/chat';
-import { connectSocket, sendMessage } from '@/socket/socket';
+import { connectSocket, joinRoom, sendMessage } from '@/socket/socket';
 import api from '@/api/axiosInstance';
 
 const AVATAR_COLORS = [
@@ -36,27 +36,27 @@ export const DocsPage = () => {
   // 내 정보 상태 관리
   const [myProfile, setMyProfile] = useState<{ id?: string; name: string; avatar: string }>({
     id: '',
-    name: "사용자",
-    avatar: "",
+    name: '사용자',
+    avatar: '',
   });
 
   // 1. 내 프로필 정보 불러오기 (/api/users/me)
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    const token = localStorage.getItem('accessToken');
     if (!token) return;
 
     const fetchMyProfile = async () => {
       try {
-        const response = await api.get("/api/users/me");
+        const response = await api.get('/api/users/me');
         const data = response.data;
 
         setMyProfile({
           id: data.id || data.userId || '',
-          name: data.name || "사용자",
-          avatar: data.profileImageUrl || "",
+          name: data.name || '사용자',
+          avatar: data.profileImageUrl || '',
         });
       } catch (error) {
-        console.error("DocsPage 내 프로필 조회 실패:", error);
+        console.error('DocsPage 내 프로필 조회 실패:', error);
       }
     };
 
@@ -72,7 +72,6 @@ export const DocsPage = () => {
     };
   }, [myProfile]);
 
-
   /* ── URL 쿼리 파라미터 (채팅 페이지의 AI 회의록 버튼에서 전달됨) ── */
   const [searchParams] = useSearchParams();
   const roomIdParam = searchParams.get('room');
@@ -83,7 +82,7 @@ export const DocsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const navState = (location.state as { roomId?: string; messages?: Message[] } | null) || null;
-  const aiSummaryRoomId = navState?.roomId || roomIdParam || "";
+  const aiSummaryRoomId = navState?.roomId || roomIdParam || '';
   const aiSummaryMessages = navState?.messages || [];
 
   /* ── 파일 목록 상태 ── */
@@ -129,21 +128,37 @@ export const DocsPage = () => {
     setIsAiMinutesOpen(false);
 
     // 채팅방에 "문서 카드" 메시지를 올려서, Teams의 Loop 카드처럼 바로 이동할 수 있게 한다.
-    // Docs 페이지로 넘어오면서 ChatPage가 언마운트되어 소켓이 끊겨있을 수 있어 다시 연결한다.
+    // Docs 페이지로 넘어오면서 ChatPage가 언마운트되어 소켓 룸에서 이미 leaveRoom된 상태다.
+    // (ChatPage의 방 이동/언마운트 cleanup이 leaveRoom을 호출함) 다시 연결만 해서는
+    // 이 소켓이 그 방의 브로드캐스트 대상이 아니라 내가 보낸 메시지의 echo(newMessage)를
+    // 못 받으므로, sendMessage 전에 반드시 joinRoom을 다시 해줘야 한다.
     try {
       connectSocket();
-      sendMessage({
-        roomId: meta.roomId,
-        type: 'text',
-        content: {
-          type: 'doc',
-          content: [
-            {
-              type: 'documentCard',
-              attrs: { documentId: doc.documentId, title: meta.title, roomId: meta.roomId },
+      joinRoom(meta.roomId, (joinResponse: any) => {
+        console.log('AI 회의록 카드 전송 전 joinRoom 응답:', joinResponse);
+        sendMessage(
+          {
+            roomId: meta.roomId,
+            type: 'ai_summary',
+            content: {
+              type: 'doc',
+              content: [
+                {
+                  type: 'documentCard',
+                  attrs: {
+                    documentId: doc.documentId,
+                    title: meta.title,
+                    roomId: meta.roomId,
+                    docType: 'ai_summary',
+                  },
+                },
+              ],
             },
-          ],
-        },
+          },
+          (response: any) => {
+            console.log('AI 회의록 카드 메시지 전송 응답:', response);
+          },
+        );
       });
     } catch (err) {
       console.error('문서 카드 메시지 전송 실패:', err);
@@ -327,7 +342,7 @@ export const DocsPage = () => {
     try {
       const newDoc = await createDocument({
         title: '새 문서',
-        type: "document"
+        type: 'document',
       });
 
       setFiles((prev) => prev.map((f) => (f.documentId === tempId ? newDoc : f)));
@@ -395,23 +410,18 @@ export const DocsPage = () => {
   return (
     /* ── 최외곽: Docs.png 연회색 배경 ── */
     <div className="relative flex h-full w-full flex-col bg-bg-canvas p-3 pb-4 font-sans">
-
-
       {/* ── 메인 카드 ── */}
       <div className="relative flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
-
         {/* ── 모바일 사이드바 오버레이 ── */}
         {isSidebarOpen && (
-          <div
-            className="absolute inset-0 bg-black/20 z-30 @md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={() => setIsSidebarOpen(false)} />
         )}
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
         <aside
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-            }`}>
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+          }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -489,8 +499,9 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
-                    }`}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
+                    isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
+                  }`}
                   onClick={() => {
                     if (!isEditing) {
                       handleTabSwitch(file.documentId);
@@ -499,8 +510,9 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-blue-500' : 'bg-transparent'
-                      }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
+                      isActive ? 'bg-blue-500' : 'bg-transparent'
+                    }`}
                   />
                   {/* 제목 */}
                   {isEditing ? (
@@ -534,8 +546,7 @@ export const DocsPage = () => {
                       className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white overflow-hidden"
                       style={{
                         backgroundColor: currentUser.color,
-                      }}
-                    >
+                      }}>
                       {currentUser.avatar ? (
                         <img
                           src={currentUser.avatar}
@@ -566,8 +577,6 @@ export const DocsPage = () => {
               );
             })}
           </nav>
-
-
         </aside>
 
         {/* ━━━ 우측 메인 에디터 ━━━ */}
@@ -580,8 +589,7 @@ export const DocsPage = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setIsSidebarOpen(true)}
-                    className="@md:hidden flex items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95"
-                  >
+                    className="@md:hidden flex items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
                     <Menu className="h-5 w-5" />
                   </button>
                   {editingTitleId === `header-${activeFile.documentId}` ? (
@@ -624,8 +632,7 @@ export const DocsPage = () => {
                         key={i}
                         className="relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] overflow-hidden transition-transform hover:z-10 hover:scale-110 flex-shrink-0"
                         style={{ backgroundColor: u.color }}
-                        title={u.name}
-                      >
+                        title={u.name}>
                         {u.avatar ? (
                           <img
                             src={u.avatar}

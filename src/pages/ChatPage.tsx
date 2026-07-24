@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Heart, MessageCircle } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
+import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
+import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -261,10 +263,10 @@ export const ChatPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <p className="text-sm text-fg-tertiary">파일 목록 준비 중이에요.</p>
-          ) : (
-            <p className="text-sm text-fg-tertiary">AI 회의록 목록 준비 중이에요.</p>
-          )
+            <RoomFilesTab messages={conversation.messages} />
+          ) : selectedRoomId ? (
+            <RoomDocumentsTab roomId={selectedRoomId} />
+          ) : null
         }
         isMuted={selectedRoom ? mutedRoomIds.includes(selectedRoom.id) : false}
         onToggleMute={selectedRoom ? () => toggleMute(selectedRoom.id) : undefined}

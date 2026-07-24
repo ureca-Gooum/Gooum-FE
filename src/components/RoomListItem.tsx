@@ -75,7 +75,14 @@ export function RoomListItem({
     <div
       onClick={onSelect}
       className="group relative flex items-center gap-3 px-4 py-2 hover:bg-bg-pressed cursor-pointer">
-      <Avatar seed={room.id} imageUrl={room.displayImage} presence={room.presence} alt={room.displayName} size={40} />
+      <Avatar
+        seed={room.id}
+        imageUrl={room.type === 'group' ? undefined : room.displayImage}
+        presence={room.type === 'group' ? undefined : room.presence}
+        memberCount={room.type === 'group' ? room.memberCount : undefined}
+        alt={room.displayName}
+        size={40}
+      />
 
       <div className="flex-1 min-w-0">
         <p className={`truncate ${isUnread ? 'font-bold text-fg-primary' : 'font-medium text-fg-primary'}`}>

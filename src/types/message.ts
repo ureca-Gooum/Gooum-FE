@@ -1,6 +1,6 @@
 import type { TiptapDoc } from '@/types/chat';
 
-export type MessageType = 'text' | 'image' | 'file' | 'document';
+export type MessageType = 'text' | 'image' | 'file' | 'document' | 'ai_summary';
 
 export interface MessageSender {
   userId: string;
@@ -12,7 +12,7 @@ export interface MessageApiResponse {
   messageId: string;
   roomId: string;
   sender: MessageSender;
-  content: TiptapDoc | null; // isDeleted거나 image/document 타입이면 null
+  content: TiptapDoc | null;
   type: MessageType;
   fileUrl: string | null;
   fileName: string | null;

@@ -4,18 +4,27 @@ import type { NodeViewProps } from '@tiptap/react';
 import { FileText, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+// 문서 카드 하단에 붙는 라벨. docType이 없는 기존(구) 메시지는 'document'로 취급한다.
+const CARD_LABEL: Record<'document' | 'ai_summary', string> = {
+  document: '문서 · 눌러서 문서 열기',
+  ai_summary: 'AI 회의록 · 눌러서 문서 열기',
+};
+
 function DocumentCardView({ node }: NodeViewProps) {
   const navigate = useNavigate();
-  const { documentId, title, roomId } = node.attrs as {
+  const { documentId, title, roomId, docType } = node.attrs as {
     documentId: string | null;
     title: string | null;
     roomId: string | null;
+    docType: 'document' | 'ai_summary' | null;
   };
 
   const handleClick = () => {
     if (!documentId) return;
     navigate(`/app/docs?room=${roomId ?? ''}&document=${documentId}`);
   };
+
+  const label = CARD_LABEL[docType ?? 'document'];
 
   return (
     <NodeViewWrapper contentEditable={false} className="my-0.5 block w-full max-w-[280px]">
@@ -27,8 +36,8 @@ function DocumentCardView({ node }: NodeViewProps) {
           <FileText size={17} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium text-fg-primary">{title || '회의록'}</span>
-          <span className="block text-xs text-fg-tertiary">AI 회의록 · 눌러서 문서 열기</span>
+          <span className="block truncate text-sm font-medium text-fg-primary">{title || '제목 없는 문서'}</span>
+          <span className="block text-xs text-fg-tertiary">{label}</span>
         </span>
         <ArrowRight size={14} className="shrink-0 text-fg-tertiary" />
       </div>
@@ -51,6 +60,8 @@ export const DocumentCardNode = Node.create({
       documentId: { default: null },
       title: { default: '' },
       roomId: { default: null },
+      // 'document' | 'ai_summary' - 카드 하단 라벨을 결정한다
+      docType: { default: 'document' },
     };
   },
 

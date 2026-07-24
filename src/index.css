@@ -24,6 +24,25 @@
   margin: 0;
 }
 
+.tiptap-content,
+.tiptap-content .ProseMirror {
+  min-width: 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tiptap-content p {
+  max-width: 100%;
+  margin: 0;
+}
+
+.tiptap-content a {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 .tiptap-content ul,
 .tiptap-content ol {
   padding-left: 1.25rem;
@@ -57,6 +76,22 @@
 .tiptap-content pre code {
   background: none;
   padding: 0;
+}
+
+/* ── 멘션(@) 하이라이트 ──
+   연한 버터색 배경 + 파란 글꼴로 "멘션됨"을 표시한다.
+   white-space: nowrap으로 멘션 자체는 항상 한 덩어리로 취급해서,
+   말풍선 안에서 멘션 텍스트 중간이 잘려 줄바꿈되는 문제를 막는다. */
+.tiptap-content .mention {
+  display: inline-block;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  border-radius: 4px;
+  padding: 0 3px;
+  background-color: var(--color-warning-bg, #fff8e8);
+  color: var(--color-brand-primary, #285ea8);
+  font-weight: 600;
 }
 
 /* ── Tiptap Placeholder ── */

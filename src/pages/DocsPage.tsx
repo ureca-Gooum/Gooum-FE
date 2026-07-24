@@ -419,9 +419,8 @@ export const DocsPage = () => {
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
         <aside
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
-            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-          }`}>
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+            }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -499,9 +498,8 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                    isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
-                  }`}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
+                    }`}
                   onClick={() => {
                     if (!isEditing) {
                       handleTabSwitch(file.documentId);
@@ -510,9 +508,8 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
-                      isActive ? 'bg-blue-500' : 'bg-transparent'
-                    }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-blue-500' : 'bg-transparent'
+                      }`}
                   />
                   {/* 제목 */}
                   {isEditing ? (
@@ -662,7 +659,7 @@ export const DocsPage = () => {
                             <path d="M4 12a8 8 0 018-8" stroke="white" strokeWidth="3" strokeLinecap="round" />
                           </svg>
                         )}
-                        저장
+                        내보내기
                       </button>
                       <button
                         onClick={() => setShowExportMenu(!showExportMenu)}

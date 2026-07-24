@@ -15,6 +15,7 @@ import { createDocument, saveDocument } from '@/api/documents';
 import { mapMessageFromApi } from '@/api/mappers/messageMapper';
 import { extractMentionedUserIds } from '@/utils/tiptap';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { triggerBadgeRefresh } from '@/hooks/useUnreadBadge';
 import type { Message, TiptapDoc } from '@/types/chat';
 import type { RoomMember } from '@/types/room';
 import type { NewMessagePayload, MessageDeletedPayload } from '@/types/socket';
@@ -108,6 +109,7 @@ export function useRoomConversation(
       .then((data) => {
         const mapped = data.messages.map(mapMessageFromApi).reverse();
         setRoomMessages(mapped);
+        triggerBadgeRefresh(); // DM 방 입장 시 읽음 처리로 인한 배지 갱신
       })
       .catch((err) => console.error(err))
       .finally(() => setIsMessagesLoading(false));

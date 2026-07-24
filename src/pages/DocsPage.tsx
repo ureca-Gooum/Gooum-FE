@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Menu } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { AiMinutesModal } from '@/components/AiMinutesModal';
@@ -31,6 +31,7 @@ const getUserColor = (idOrName: string) => {
 };
 
 export const DocsPage = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // 내 정보 상태 관리
   const [myProfile, setMyProfile] = useState<{ id?: string; name: string; avatar: string }>({
@@ -397,9 +398,21 @@ export const DocsPage = () => {
 
 
       {/* ── 메인 카드 ── */}
-      <div className="flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
+      <div className="relative flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
+        
+        {/* ── 모바일 사이드바 오버레이 ── */}
+        {isSidebarOpen && (
+          <div 
+            className="absolute inset-0 bg-black/20 z-30 @md:hidden" 
+            onClick={() => setIsSidebarOpen(false)} 
+          />
+        )}
+
         {/* ━━━ 좌측 사이드바 ━━━ */}
-        <aside className="flex w-[260px] min-w-[260px] flex-col border-r border-border-default bg-bg-canvas">
+        <aside 
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+          }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -480,7 +493,10 @@ export const DocsPage = () => {
                   className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
                     }`}
                   onClick={() => {
-                    if (!isEditing) handleTabSwitch(file.documentId);
+                    if (!isEditing) {
+                      handleTabSwitch(file.documentId);
+                      setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
+                    }
                   }}>
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
@@ -561,8 +577,14 @@ export const DocsPage = () => {
             <>
               {/* 상단 헤더바 */}
               <header className="flex min-h-[48px] items-center justify-between border-b border-border-default px-5 py-2.5">
-                {/* 왼쪽: 문서 제목 */}
-                <div className="flex items-center">
+                {/* 왼쪽: 햄버거 메뉴 + 문서 제목 */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="@md:hidden flex items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
                   {editingTitleId === `header-${activeFile.documentId}` ? (
                     <input
                       ref={titleInputRef}

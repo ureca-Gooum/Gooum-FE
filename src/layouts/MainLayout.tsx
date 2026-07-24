@@ -41,8 +41,8 @@ export const MainLayout = () => {
   const isWindowed = windowMode === 'windowed';
 
   const layoutClasses = isWindowed
-    ? 'flex flex-col bg-bg-canvas h-[85vh] w-[90vw] max-w-[1400px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden m-auto transition-all duration-300'
-    : 'flex h-screen w-screen flex-col overflow-hidden bg-bg-canvas transition-all duration-300';
+    ? '@container flex flex-col bg-bg-canvas h-[85vh] w-[90vw] max-w-[1400px] rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden m-auto transition-all duration-300'
+    : '@container flex h-screen w-screen flex-col overflow-hidden bg-bg-canvas transition-all duration-300';
 
   return (
     <div className={`transition-colors duration-300 ${isWindowed ? 'min-h-screen bg-gray-200/60 p-4 flex items-center justify-center' : ''}`}>

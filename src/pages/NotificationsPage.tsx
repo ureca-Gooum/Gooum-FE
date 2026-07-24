@@ -91,7 +91,7 @@ const DUMMY_MESSAGES: Message[] = [
 export const NotificationsPage = () => {
   const [notifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>('1');
-  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서'>('전체');
+  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<'채팅' | '파일' | 'AI 회의록'>('채팅');
 
   // 좌측 탭 필터링 로직

@@ -284,7 +284,7 @@ export const ChatPage = () => {
         onCancelSelecting={conversation.cancelSelecting}
         onResetSelection={conversation.resetSelection}
         onConfirmSelection={handleConfirmSelection}
-        typingLabel={conversation.typingLabel}
+        typingLabel={conversation.typingLabel ?? undefined}
         onSend={conversation.sendMessage}
         onSendFile={conversation.sendFile}
         onTyping={conversation.notifyTyping}

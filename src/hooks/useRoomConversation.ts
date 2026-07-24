@@ -36,7 +36,7 @@ interface UseRoomConversationOptions {
  */
 export function useRoomConversation(
   roomId: string | null,
-  currentUserId: string,
+  currentUserId: string | null,
   options: UseRoomConversationOptions = {},
 ) {
   // 매 렌더마다 새로 생성되는 콜백일 수 있으므로 ref에 최신 값만 담아두고, 아래 소켓 리스너 effect의

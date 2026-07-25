@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { createRoom } from '@/api/rooms';
 import type { RoomApiResponse, RoomType } from '@/types/room';
 import { fetchUsers, type UserApiResponse } from '@/api/users';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { Skeleton } from '@/components/Skeleton';
 
 interface NewChatModalProps {
   onClose: () => void;
@@ -98,7 +98,14 @@ export function NewChatModal({ onClose, onCreated }: NewChatModalProps) {
 
         <div className="mb-4 max-h-60 overflow-y-auto rounded-lg border border-border-default">
           {isLoadingUsers ? (
-            <LoadingSpinner message="유저 목록을 불러오는 중..." className="py-10" />
+            <div className="flex flex-col gap-1 p-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2 px-1 py-2">
+                  <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                  <Skeleton className="h-3.5 w-24" />
+                </div>
+              ))}
+            </div>
           ) : users.length === 0 ? (
             <p className="px-3 py-2 text-sm text-fg-tertiary">표시할 유저가 없어요.</p>
           ) : (

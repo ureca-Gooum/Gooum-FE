@@ -9,8 +9,12 @@ import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { getCurrentUserId } from '@/constants/auth';
 import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
+import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
+import { stripSenderPrefix } from '@/utils/notification';
+import { formatTime } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
+import type { NewNotificationPayload } from '@/types/socket';
 
 const DUMMY_NOTIFICATIONS: NotificationItem[] = [
   {
@@ -47,7 +51,7 @@ type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 export const NotificationsPage = () => {
   const currentUserId = getCurrentUserId();
 
-  const [notifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>('1');
   const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
@@ -58,6 +62,35 @@ export const NotificationsPage = () => {
   const [room, setRoom] = useState<Room | null>(null);
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
+
+  // 이 페이지로 이동해오면 ChatPage가 언마운트되며 소켓 연결이 끊기므로, 여기서도 다시 연결해줘야
+  // 실시간 알림(멘션 포함)을 받을 수 있다. connectSocket은 이미 연결돼있으면 그대로 재사용한다.
+  useEffect(() => {
+    connectSocket();
+    return () => disconnectSocket();
+  }, []);
+
+  // 실시간 알림 수신: 멘션/DM 등 새 알림이 오면 목록 맨 위에 바로 반영한다.
+  useEffect(() => {
+    const handleNewNotification = (payload: NewNotificationPayload) => {
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === payload.notificationId)) return prev;
+        const newItem: NotificationItem = {
+          id: payload.notificationId,
+          type: payload.type as NotificationItem['type'],
+          title: payload.title,
+          content: stripSenderPrefix(payload.body),
+          time: formatTime(payload.createdAt),
+          isRead: payload.isRead,
+          roomId: payload.roomId,
+        };
+        return [newItem, ...prev];
+      });
+    };
+
+    onNewNotification(handleNewNotification);
+    return () => offNewNotification(handleNewNotification);
+  }, []);
 
   const selectedNoti = notifications.find((n) => n.id === selectedNotiId) || notifications[0];
   const roomId = selectedNoti?.roomId ?? null;
@@ -118,7 +151,7 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 gap-3">
       <ListPanel
         header={
           <div className="flex flex-col gap-4">
@@ -200,6 +233,8 @@ export const NotificationsPage = () => {
                 presence: room.presence,
                 isGroup: room.type === 'group',
                 isFavorite: room.isFavorite,
+                userId: room.otherUserId,
+                memberCount: room.memberCount,
               }
             : selectedNoti
               ? {
@@ -231,6 +266,7 @@ export const NotificationsPage = () => {
         messages={conversation.messages}
         isMessagesLoading={conversation.isMessagesLoading}
         roomMembers={conversation.roomMembers}
+        mentionCandidates={conversation.allMembers}
         messagesEndRef={conversation.messagesEndRef}
         isSelectingMessages={conversation.isSelectingMessages}
         selectedMessageIds={conversation.selectedMessageIds}

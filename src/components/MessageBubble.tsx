@@ -23,6 +23,11 @@ interface MessageBubbleProps {
   onToggleSelect?: (messageId: string) => void;
   /** 메시지 안의 "@멘션"에 호버했을 때 보여줄 프로필 카드 + 상대방 아바타 표시용 방 멤버 목록 */
   roomMembers?: RoomMember[];
+  /**
+   * 멘션 호버카드용 조회 대상. 멘션은 방 멤버가 아닌 가입자도 될 수 있으므로, 넘겨주면
+   * 이 목록에서 우선 찾고 없으면 roomMembers에서 찾는다(둘 다 없으면 "알 수 없음"으로 표시됨).
+   */
+  mentionCandidates?: RoomMember[];
   /** 다른 사람의 멘션 카드에서 "메시지 보내기"를 눌렀을 때 호출 */
   onStartDirectMessage?: (userId: string) => void;
   /**
@@ -39,6 +44,7 @@ export function MessageBubble({
   isSelected = false,
   onToggleSelect,
   roomMembers,
+  mentionCandidates,
   onStartDirectMessage,
   showAvatar = true,
 }: MessageBubbleProps) {
@@ -47,6 +53,10 @@ export function MessageBubble({
   const hideTimeoutRef = useRef<number>();
 
   const senderMember = roomMembers?.find((m) => m.userId === message.senderId);
+  // 멘션 대상은 방 멤버가 아닐 수 있으므로 mentionCandidates(가입된 모든 사람)를 우선 찾고,
+  // 없으면 roomMembers에서 찾는다.
+  const findMentionedMember = (userId: string) =>
+    mentionCandidates?.find((m) => m.userId === userId) ?? roomMembers?.find((m) => m.userId === userId);
   const shouldShowAvatarColumn = !message.isMine && showAvatar;
 
   const clearHideTimeout = () => {
@@ -149,9 +159,9 @@ export function MessageBubble({
             <Avatar
               seed={message.senderId}
               imageUrl={senderMember?.profileImageUrl}
-              presence={senderMember?.presence?.status}
               alt={message.senderName}
               size={AVATAR_COLUMN_WIDTH}
+              showPresence={false}
             />
           )}
         </div>
@@ -162,14 +172,42 @@ export function MessageBubble({
           <span className="mb-0.5 px-1 text-xs font-medium text-fg-tertiary">{message.senderName}</span>
         )}
 
-        <div className={`flex w-full min-w-0 items-center gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex w-full min-w-0 items-end gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
           {selectable && (
             <span
-              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+              className={`flex h-4 w-4 shrink-0 self-center items-center justify-center rounded-full border transition-colors ${
                 isSelected ? 'border-brand-primary bg-brand-primary text-white' : 'border-border-default bg-bg-default'
               }`}>
               {isSelected && <Check size={10} />}
             </span>
+          )}
+
+          {!selectable && message.isMine && (
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(!showMenu);
+                }}
+                className="opacity-0 group-hover:opacity-100 rounded p-1 hover:bg-bg-canvas">
+                <MoreVertical size={14} className="text-fg-tertiary" />
+              </button>
+
+              {showMenu && (
+                <div className="absolute right-0 top-6 z-10 w-32 rounded-lg border border-border-default bg-bg-default shadow-md p-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      onDelete(message.id);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-error hover:bg-bg-subtle">
+                    <Trash2 size={14} />
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           <div
@@ -233,45 +271,17 @@ export function MessageBubble({
             <MentionHoverCard
               userId={hoveredMention.userId}
               anchorRect={hoveredMention.rect}
-              member={roomMembers?.find((m) => m.userId === hoveredMention.userId)}
+              member={findMentionedMember(hoveredMention.userId)}
               onMouseEnterCard={clearHideTimeout}
               onMouseLeaveCard={scheduleHideMention}
               onStartDirectMessage={onStartDirectMessage}
             />
           )}
 
-          {!selectable && message.isMine && (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMenu(!showMenu);
-                }}
-                className="opacity-0 group-hover:opacity-100 rounded p-1 hover:bg-bg-canvas">
-                <MoreVertical size={14} className="text-fg-tertiary" />
-              </button>
-
-              {showMenu && (
-                <div className="absolute right-0 top-6 z-10 w-32 rounded-lg border border-border-default bg-bg-default shadow-md p-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowMenu(false);
-                      onDelete(message.id);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-error hover:bg-bg-subtle">
-                    <Trash2 size={14} />
-                    삭제
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <span className="shrink-0 whitespace-nowrap text-xs text-fg-tertiary opacity-0 transition-opacity group-hover:opacity-100">
+            {message.time}
+          </span>
         </div>
-
-        <span className="mt-1 text-xs text-fg-tertiary opacity-0 transition-opacity group-hover:opacity-100">
-          {message.time}
-        </span>
       </div>
     </div>
   );

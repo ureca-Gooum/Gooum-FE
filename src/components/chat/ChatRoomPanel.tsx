@@ -1,11 +1,12 @@
-import type { ReactNode, RefObject } from 'react';
+import { useRef, useState, type ReactNode, type RefObject } from 'react';
 import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
 import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { MessageBubble } from '@/components/MessageBubble';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { MentionHoverCard } from '@/components/MentionHoverCard';
+import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
 import type { Message, PresenceStatus, TiptapDoc } from '@/types/chat';
 import type { RoomMember } from '@/types/room';
 
@@ -43,6 +44,10 @@ export interface ChatRoomPanelTarget {
   presence?: PresenceStatus;
   isGroup?: boolean;
   isFavorite?: boolean;
+  /** 1:1 채팅 상대의 userId. 헤더 프로필을 호버했을 때 프로필 카드를 띄우는 데 쓰인다. 그룹방이면 없어도 된다. */
+  userId?: string | null;
+  /** 그룹방 인원수. 그룹방 헤더 아바타는 이미지 대신 이 숫자 뱃지로 표시한다. */
+  memberCount?: number;
 }
 
 interface ChatRoomPanelProps {
@@ -65,6 +70,8 @@ interface ChatRoomPanelProps {
   messages: Message[];
   isMessagesLoading: boolean;
   roomMembers: RoomMember[];
+  /** "@" 멘션 자동완성에 띄울 전체 가입자 목록. 넘기지 않으면 roomMembers(현재 방 멤버)만 뜬다. */
+  mentionCandidates?: RoomMember[];
   messagesEndRef: RefObject<HTMLDivElement>;
 
   isSelectingMessages: boolean;
@@ -85,11 +92,6 @@ interface ChatRoomPanelProps {
   onStartDirectMessage?: (userId: string) => void;
 }
 
-/**
- * 채팅 메인패널: 상단 헤더(아바타/이름/탭/알림·즐겨찾기) + 메시지 목록 + 하단 입력창.
- * ChatPage(채팅 탭)와 NotificationsPage(알림 상세)가 동일하게 사용하도록 프레젠테이셔널로 분리했다.
- * 실제 데이터/소켓/전송 로직은 `useRoomConversation` 훅에서 가져와 그대로 props로 내려주면 된다.
- */
 export function ChatRoomPanel({
   target,
   emptyHeaderLabel = '채팅방을 선택해주세요',
@@ -105,6 +107,7 @@ export function ChatRoomPanel({
   messages,
   isMessagesLoading,
   roomMembers,
+  mentionCandidates,
   messagesEndRef,
   isSelectingMessages,
   selectedMessageIds,
@@ -123,20 +126,74 @@ export function ChatRoomPanel({
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
+  // 헤더의 상대 프로필(아바타+이름)에 호버했을 때 보여줄 프로필 카드 상태
+  const [isHeaderProfileHovered, setIsHeaderProfileHovered] = useState(false);
+  const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
+  const headerProfileHideTimeoutRef = useRef<number>();
+
+  const clearHeaderProfileHideTimeout = () => {
+    if (headerProfileHideTimeoutRef.current) {
+      window.clearTimeout(headerProfileHideTimeoutRef.current);
+      headerProfileHideTimeoutRef.current = undefined;
+    }
+  };
+
+  const scheduleHideHeaderProfile = () => {
+    clearHeaderProfileHideTimeout();
+    headerProfileHideTimeoutRef.current = window.setTimeout(() => setIsHeaderProfileHovered(false), 150);
+  };
+
+  // 그룹방은 상대가 여러 명이라 헤더 프로필 카드 대상이 아니다. 1:1일 때만, userId가 있을 때만 호버 카드를 띄운다.
+  const headerProfileMember: RoomMember | undefined =
+    !target?.isGroup && target?.userId
+      ? (mentionCandidates?.find((m) => m.userId === target.userId) ??
+        roomMembers.find((m) => m.userId === target.userId) ?? {
+          userId: target.userId,
+          name: target.displayName,
+          profileImageUrl: target.displayImage,
+          presence: target.presence ? { status: target.presence } : undefined,
+        })
+      : undefined;
+
   return (
     <MainPanel
       header={
         target ? (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-            <Avatar
-              seed={target.id}
-              imageUrl={target.displayImage}
-              presence={target.presence}
-              alt={target.displayName}
-              size={28}
-            />
+            <div
+              className={`flex items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
+              onMouseEnter={(e) => {
+                if (!headerProfileMember) return;
+                clearHeaderProfileHideTimeout();
+                setHeaderProfileRect(e.currentTarget.getBoundingClientRect());
+                setIsHeaderProfileHovered(true);
+              }}
+              onMouseLeave={() => {
+                if (!headerProfileMember) return;
+                scheduleHideHeaderProfile();
+              }}>
+              <Avatar
+                seed={target.id}
+                imageUrl={target.isGroup ? undefined : target.displayImage}
+                presence={target.isGroup ? undefined : target.presence}
+                memberCount={target.isGroup ? target.memberCount : undefined}
+                alt={target.displayName}
+                size={28}
+              />
 
-            <h2 className="shrink-0 font-semibold text-fg-primary">{target.displayName}</h2>
+              <h2 className="shrink-0 font-semibold text-fg-primary">{target.displayName}</h2>
+            </div>
+
+            {isHeaderProfileHovered && headerProfileMember && headerProfileRect && (
+              <MentionHoverCard
+                userId={headerProfileMember.userId}
+                anchorRect={headerProfileRect}
+                member={headerProfileMember}
+                onMouseEnterCard={clearHeaderProfileHideTimeout}
+                onMouseLeaveCard={scheduleHideHeaderProfile}
+                onStartDirectMessage={onStartDirectMessage}
+              />
+            )}
 
             {target.isGroup && onRenameGroup && (
               <button onClick={onRenameGroup} className="shrink-0 text-fg-tertiary hover:text-brand-primary">
@@ -167,18 +224,18 @@ export function ChatRoomPanel({
               {target.isGroup && roomMembers.length > 0 && (
                 <div className="flex shrink-0 items-center -space-x-2">
                   {roomMembers.slice(0, 5).map((member) => (
-                    <div key={member.userId} className="rounded-full ring-2 ring-bg-default">
+                    <div key={member.userId} className="rounded-full border-[3px] border-bg-default shadow-sm">
                       <Avatar
                         seed={member.userId}
                         imageUrl={member.profileImageUrl}
                         alt={member.name}
                         size={24}
-                        presence={member.presence?.status}
+                        showPresence={false}
                       />
                     </div>
                   ))}
                   {roomMembers.length > 5 && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-bg-subtle text-[10px] font-medium text-fg-tertiary ring-2 ring-bg-default">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-[3px] border-bg-default bg-bg-subtle text-[10px] font-medium text-fg-tertiary shadow-sm">
                       +{roomMembers.length - 5}
                     </div>
                   )}
@@ -259,6 +316,7 @@ export function ChatRoomPanel({
                   onOpenAiMinutes={onOpenAiMinutes}
                   onCreateDocument={onCreateDocument}
                   roomMembers={roomMembers}
+                  mentionCandidates={mentionCandidates}
                 />
               </div>
             )}
@@ -267,9 +325,7 @@ export function ChatRoomPanel({
       }>
       {isChatTab ? (
         isMessagesLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
+          <MessageAreaSkeleton />
         ) : (
           <div className="mx-auto flex min-w-0 w-full max-w-6xl flex-col gap-3">
             {isSelectingMessages && (
@@ -292,6 +348,7 @@ export function ChatRoomPanel({
                     isSelected={selectedMessageIds.includes(msg.id)}
                     onToggleSelect={onToggleMessageSelect}
                     roomMembers={roomMembers}
+                    mentionCandidates={mentionCandidates}
                     onStartDirectMessage={onStartDirectMessage}
                     showAvatar={showAvatar}
                   />

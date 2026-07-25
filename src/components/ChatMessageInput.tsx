@@ -478,7 +478,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={handleOpenDocumentComposer}
-            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary"
+            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="문서 작성하기">
             <FileText size={18} />
           </button>
@@ -487,7 +487,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={onOpenAiMinutes}
-            className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
+            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="AI 회의록 생성">
             <Sparkles size={18} />
           </button>
@@ -497,7 +497,7 @@ export const ChatMessageInput = ({
           type="button"
           onClick={handleSend}
           disabled={isUploading}
-          className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle disabled:opacity-40"
+          className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary disabled:opacity-40"
           title="전송">
           <Send size={18} />
         </button>

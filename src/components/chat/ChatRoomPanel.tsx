@@ -92,6 +92,11 @@ interface ChatRoomPanelProps {
   onStartDirectMessage?: (userId: string) => void;
 }
 
+/**
+ * 채팅 메인패널: 상단 헤더(아바타/이름/탭/알림·즐겨찾기) + 메시지 목록 + 하단 입력창.
+ * ChatPage(채팅 탭)와 NotificationsPage(알림 상세)가 동일하게 사용하도록 프레젠테이셔널로 분리했다.
+ * 실제 데이터/소켓/전송 로직은 `useRoomConversation` 훅에서 가져와 그대로 props로 내려주면 된다.
+ */
 export function ChatRoomPanel({
   target,
   emptyHeaderLabel = '채팅방을 선택해주세요',
@@ -250,7 +255,11 @@ export function ChatRoomPanel({
                   aria-label={isMuted ? '채팅방 알림 켜기' : '채팅방 알림 끄기'}
                   aria-pressed={!isMuted}
                   className="flex h-8 w-8 items-center justify-center rounded-md text-fg-tertiary transition-colors hover:bg-bg-subtle hover:text-brand-primary">
-                  {isMuted ? <BellOff size={18} /> : <Bell size={18} className="text-brand-primary" />}
+                  {isMuted ? (
+                    <BellOff size={18} />
+                  ) : (
+                    <Bell size={18} fill="currentColor" className="text-brand-primary" />
+                  )}
                 </button>
               )}
 

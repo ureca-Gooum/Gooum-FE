@@ -114,7 +114,7 @@ export function MessageBubble({
 
   if (message.isDeleted) {
     return (
-      <div className={`flex w-full items-end gap-2 ${message.isMine ? 'flex-row-reverse' : ''}`}>
+      <div className={`flex w-full items-end gap-2 ${message.isMine ? 'justify-end' : ''}`}>
         {!message.isMine && (
           <div className="shrink-0 self-start" style={{ width: AVATAR_COLUMN_WIDTH }}>
             {shouldShowAvatarColumn && (
@@ -128,17 +128,20 @@ export function MessageBubble({
           </div>
         )}
         <div className={`flex min-w-0 flex-1 flex-col ${message.isMine ? 'items-end' : 'items-start'}`}>
-          <div
-            style={{
-              display: 'block',
-              width: 'fit-content',
-              minWidth: '2.25rem',
-              maxWidth: '60%',
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word',
-            }}
-            className="rounded-lg px-4 py-2 text-sm italic text-fg-tertiary bg-bg-subtle">
-            이 메시지가 삭제되었습니다.
+          <div className={`flex w-full min-w-0 items-end gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
+            <div
+              style={{
+                display: 'block',
+                width: 'fit-content',
+                minWidth: '2.25rem',
+                maxWidth: '60%',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+              }}
+              className="rounded-lg px-4 py-2 text-sm italic text-fg-tertiary bg-bg-subtle">
+              이 메시지가 삭제되었습니다.
+            </div>
+            <span className="shrink-0 whitespace-nowrap text-xs text-fg-tertiary">{message.time}</span>
           </div>
         </div>
       </div>

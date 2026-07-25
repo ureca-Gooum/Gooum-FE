@@ -3,6 +3,11 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type R
 interface ListPanelProps {
   header: ReactNode;
   children: ReactNode;
+  /**
+   * 헤더 높이(px)를 고정하고 싶을 때 지정한다. (예: 메인패널 헤더와 높이를 맞춰서
+   * 헤더 아래 보더가 정확히 같은 줄에서 이어지도록)
+   * 지정하면 ListPanel과 메인패널 사이 gap 구간까지 보더 선을 이어 그려준다.
+   */
   headerHeight?: number;
 }
 
@@ -68,9 +73,10 @@ export function ListPanel({ header, children, headerHeight }: ListPanelProps) {
       {headerHeight && (
         <div className="absolute -right-3 w-3 bg-border-default" style={{ top: headerHeight - 1, height: 1 }} />
       )}
+
       <div
         onMouseDown={handleResizeStart}
-        className={`absolute -right-3 bottom-0 top-0 w-3 cursor-col-resize transition-colors hover:bg-brand-primary/30 ${
+        className={`absolute -right-[9px] bottom-0 top-0 w-1.5 cursor-col-resize transition-colors hover:bg-brand-primary/30 ${
           isDragging ? 'bg-brand-primary/30' : ''
         }`}
       />

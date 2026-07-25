@@ -165,7 +165,7 @@ export function NewChatModal({ onClose, onCreated }: NewChatModalProps) {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-2.5 px-3 py-2">
                   <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-                  <Skeleton className="h-3.5 w-24" />
+                  <Skeleton className="h-3.5 w-24 rounded-full" />
                 </div>
               ))}
             </div>

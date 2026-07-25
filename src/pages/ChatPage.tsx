@@ -186,7 +186,7 @@ export const ChatPage = () => {
   if (isLoading) {
     return (
       <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
-        <ListPanel headerHeight={63} header={<Skeleton className="h-5 w-14" />}>
+        <ListPanel headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
           <div className="flex flex-col gap-1 py-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <RoomListItemSkeleton key={i} />
@@ -197,7 +197,7 @@ export const ChatPage = () => {
         <section className="flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default shadow-md">
           <div className="flex h-[63px] shrink-0 items-center gap-3 border-b border-border-default px-4">
             <Skeleton className="h-7 w-7 rounded-full" />
-            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24 rounded-full" />
           </div>
           <div className="flex-1 overflow-hidden px-6 py-4">
             <MessageAreaSkeleton />
@@ -312,7 +312,7 @@ export const ChatPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <RoomFilesTab messages={conversation.messages} />
+            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
           ) : selectedRoomId ? (
             <RoomDocumentsTab roomId={selectedRoomId} />
           ) : null

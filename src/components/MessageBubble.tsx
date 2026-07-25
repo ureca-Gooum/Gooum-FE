@@ -129,6 +129,12 @@ export function MessageBubble({
         )}
         <div className={`flex min-w-0 flex-1 flex-col ${message.isMine ? 'items-end' : 'items-start'}`}>
           <div className={`flex w-full min-w-0 items-end gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
+            {/*
+              일반 메시지는 내 메시지일 때 삭제 메뉴(⋮) 버튼이 이 자리를 차지하고 있어서,
+              그만큼 말풍선이 오른쪽 끝에서 살짝 떨어져 있다. 삭제된 메시지는 메뉴가 없지만
+              똑같이 우측 정렬을 맞추기 위해 같은 크기의 빈 자리를 예약해둔다.
+            */}
+            {message.isMine && <div className="h-[22px] w-[22px] shrink-0" />}
             <div
               style={{
                 display: 'block',
@@ -141,7 +147,8 @@ export function MessageBubble({
               className="rounded-lg px-4 py-2 text-sm italic text-fg-tertiary bg-bg-subtle">
               이 메시지가 삭제되었습니다.
             </div>
-            <span className="shrink-0 whitespace-nowrap text-xs text-fg-tertiary">{message.time}</span>
+            {/* 삭제된 메시지는 시간을 보여주지 않는다 (호버해도 안 나옴). 자리만 예약해서 정렬은 맞춘다. */}
+            <span className="shrink-0 whitespace-nowrap text-xs text-fg-tertiary opacity-0">{message.time}</span>
           </div>
         </div>
       </div>

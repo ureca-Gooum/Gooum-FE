@@ -36,20 +36,22 @@ export const deleteDocument = async (documentId: string): Promise<{ message: str
 };
 
 import type { Message } from '../types/chat';
-import { buildTranscript, callGeminiForMinutes } from '../utils/aiSummary';
+import { buildTranscript, callGeminiForMinutes, collectAttachmentParts } from '../utils/aiSummary';
 
 export const createAiSummaryClientOnly = async (params: {
   roomId: string;
   title: string;
   messages: Message[];
-}): Promise<Document> => {
+}): Promise<Document & { skippedAttachmentNotes?: string[] }> => {
   const transcript = buildTranscript(params.messages);
-  const content = await callGeminiForMinutes(transcript, params.title);
+  // 선택된 메시지 중 이미지/파일이 있으면 함께 읽어서 요약에 반영한다.
+  const { parts, skippedNotes } = await collectAttachmentParts(params.messages);
+  const content = await callGeminiForMinutes(transcript, params.title, parts);
 
   // 1) 빈 문서를 하나 만들고 (기존 "새 문서 추가" 버튼과 동일한 API)
-  const newDoc = await createDocument({ title: params.title, roomId: params.roomId, type: "ai_summary" });
+  const newDoc = await createDocument({ title: params.title, roomId: params.roomId, type: 'ai_summary' });
   // 2) AI가 만든 콘텐츠를 그 문서에 저장한다 (기존 자동저장과 동일한 API)
   await saveDocument(newDoc.documentId, { title: params.title, content });
 
-  return { ...newDoc, content };
+  return { ...newDoc, content, skippedAttachmentNotes: skippedNotes.length > 0 ? skippedNotes : undefined };
 };

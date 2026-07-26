@@ -1,12 +1,28 @@
 import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { OnboardingModal } from '@/components/OnboardingModal';
 
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
   const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const hideOnboarding = localStorage.getItem('gooum_hide_onboarding');
+    const state = location.state as { justLoggedIn?: boolean } | null;
+    
+    if (!hideOnboarding && state?.justLoggedIn) {
+      setShowOnboarding(true);
+      // state 초기화 (새로고침 시 다시 뜨지 않도록)
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // 창 모드 위치 및 크기 상태
   const [rect, setRect] = useState(() => {
@@ -175,6 +191,7 @@ export const MainLayout = () => {
           <Outlet />
         </div>
       </div>
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
     </div>
   );
 };

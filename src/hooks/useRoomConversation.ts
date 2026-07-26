@@ -280,7 +280,6 @@ export function useRoomConversation(
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (!confirm('메시지를 삭제하시겠어요?')) return;
     try {
       await deleteMessageApi(messageId);
       updateMessageAsDeleted(messageId);

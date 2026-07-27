@@ -126,7 +126,7 @@ export function ProfileDropdown({
         {isSelf && onLogout && (
           <button
             onClick={onLogout}
-            className="text-[12px] text-gray-500 hover:text-red-500 transition-colors pt-0.5 font-medium shrink-0">
+            className="text-[12px] text-gray-500 hover:text-brand-primary transition-colors pt-0.5 font-medium shrink-0">
             로그아웃
           </button>
         )}

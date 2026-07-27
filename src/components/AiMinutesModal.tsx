@@ -27,6 +27,9 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
   const [error, setError] = useState<string | null>(null);
 
   const hasMessages = messages.length > 0;
+  const attachmentCount = messages.filter(
+    (m) => !m.isDeleted && (m.type === 'image' || m.type === 'file') && !!m.fileUrl,
+  ).length;
 
   const handleGenerate = async () => {
     setError(null);
@@ -40,6 +43,11 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
     try {
       const doc = await createAiSummaryClientOnly({ roomId, title: finalTitle, messages });
       const transcript = buildTranscript(messages);
+      if (doc.skippedAttachmentNotes?.length) {
+        alert(
+          `일부 첨부파일은 분석에 포함하지 못했어요:\n${doc.skippedAttachmentNotes.join('\n')}\n\n나머지 내용으로 회의록을 만들었어요.`,
+        );
+      }
       onCreated(doc, { roomId, title: finalTitle, transcript });
     } catch (err: any) {
       setError(err.message ?? '회의록 생성 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.');
@@ -70,6 +78,13 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
           <p className="mb-4 text-[13px] text-slate-500">
             채팅에서 선택한 <span className="font-semibold text-blue-600">{messages.length}개</span> 메시지를 요약해서
             새 문서로 만들어 드려요.
+            {attachmentCount > 0 && (
+              <>
+                {' '}
+                첨부된 <span className="font-semibold text-blue-600">{attachmentCount}개</span> 파일/이미지도 함께
+                읽어서 반영해요.
+              </>
+            )}
           </p>
         ) : (
           <div className="mb-4 rounded-lg bg-red-50 px-3 py-2.5 text-[12px] text-red-500">
@@ -103,7 +118,7 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
           {isGenerating ? (
             <>
               <Loader2 size={14} className="animate-spin" />
-              회의록 생성 중...
+              {attachmentCount > 0 ? '첨부파일 분석 + 회의록 생성 중...' : '회의록 생성 중...'}
             </>
           ) : (
             <>

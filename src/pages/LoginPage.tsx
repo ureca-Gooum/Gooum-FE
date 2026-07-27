@@ -1,20 +1,20 @@
 import { useKakaoAuth } from '@/hooks/useKakaoAuth';
 import illustrationImage from '@/assets/login.png';
-import mascotIcon from '/favicon.png';
+import mascotIcon from '/GOOUM.png';
 
 export const LoginPage = () => {
   const { loginWithKakao } = useKakaoAuth();
 
   return (
-    <div className="relative flex flex-1 flex-col overflow-hidden bg-gradient-to-br from-[#eef2ff] via-[#f2eefe] to-[#eaf4ff] @3xl:flex-row">
+    <div className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto bg-[image:var(--gradient-brand-soft)] @3xl:flex-row @3xl:overflow-hidden @3xl:bg-[image:var(--gradient-brand-soft-diagonal)]">
       {/* 왼쪽: 로고 + 문구 + 로그인 버튼 */}
-      <div className="relative z-10 flex w-full flex-col justify-center overflow-y-auto px-6 py-10 @sm:px-10 @lg:px-16 @3xl:w-[46%] @3xl:px-20">
-        <img src={mascotIcon} alt="구움" className="mb-6 h-12 w-12 @lg:mb-8 @lg:h-14 @lg:w-14" />
+      <div className="relative z-10 flex w-full flex-col items-center justify-center overflow-y-auto px-6 py-10 text-center @sm:px-10 @lg:px-16 @3xl:w-[46%] @3xl:items-start @3xl:px-20 @3xl:text-left">
+        <img src={mascotIcon} alt="구움" className="mb-6 h-12 w-12 self-start @lg:mb-8 @lg:h-14 @lg:w-14" />
 
         <h1 className="mb-3 text-[26px] font-bold leading-tight tracking-tight text-[#1f2937] @lg:mb-4 @lg:text-[32px] @3xl:text-[38px]">
           매일 갓 구운
           <br />
-          <span className="text-[#3b82f6]">이야기</span>가 있는 곳
+          <span className="text-brand-primary">이야기</span>가 있는 곳
         </h1>
         <p className="mb-8 max-w-[360px] text-[13.5px] font-medium leading-relaxed text-gray-500 @lg:mb-10 @lg:text-[14.5px]">
           좋은 아이디어는 함께 구울수록 더 맛있어집니다.
@@ -38,17 +38,17 @@ export const LoginPage = () => {
         </button>
       </div>
 
-      <div className="relative hidden flex-1 items-center justify-center @3xl:flex">
+      <div className="relative flex shrink-0 items-center justify-center px-6 py-8 @3xl:flex-1 @3xl:px-0 @3xl:py-0">
         {/* 여러 겹의 은은한 브랜드 컬러 글로우로 입체감을 더함 */}
         <div className="absolute -right-20 top-[15%] h-[420px] w-[420px] rounded-full bg-[#c7d9ff] opacity-50 blur-3xl" />
         <div className="absolute left-[8%] bottom-[10%] h-[320px] w-[320px] rounded-full bg-[#e3d6ff] opacity-40 blur-3xl" />
         <div className="absolute right-[18%] top-1/2 h-[520px] w-[520px] -translate-y-1/2 rounded-full bg-white/50 blur-3xl" />
 
-        <div className="relative z-10 flex flex-col items-center">
+        <div className="relative z-10 flex w-full flex-col items-center @3xl:px-10">
           <img
             src={illustrationImage}
             alt="구움 마스코트 일러스트"
-            className="w-full max-w-[440px] object-contain drop-shadow-[0_30px_40px_rgba(76,143,225,0.25)] @5xl:max-w-[580px] @7xl:max-w-[720px]"
+            className="w-full max-w-[280px] object-contain drop-shadow-[0_30px_40px_rgba(76,143,225,0.25)] @sm:max-w-[360px] @3xl:max-w-[560px] @5xl:max-w-[720px] @7xl:max-w-[880px]"
           />
         </div>
       </div>

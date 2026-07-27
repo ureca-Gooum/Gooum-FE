@@ -3,6 +3,8 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2 } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
+import { DocsEditorSkeleton } from '@/components/DocsEditorSkeleton';
+import { Skeleton } from '@/components/Skeleton';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { AiMinutesModal } from '@/components/AiMinutesModal';
 import { wrapAiMinutesContent } from '@/utils/tiptap';
@@ -195,7 +197,6 @@ export const DocsPage = () => {
     fetchDocs();
   }, []);
 
-
   useEffect(() => {
     if (!activeFileId) return;
 
@@ -204,9 +205,7 @@ export const DocsPage = () => {
         const detailDoc = await getDocumentById(activeFileId);
 
         // files 배열에서 현재 activeFileId에 해당하는 문서를 최신 상세 데이터로 교체
-        setFiles((prevFiles) =>
-          prevFiles.map((doc) => (doc.documentId === activeFileId ? detailDoc : doc))
-        );
+        setFiles((prevFiles) => prevFiles.map((doc) => (doc.documentId === activeFileId ? detailDoc : doc)));
       } catch (error) {
         console.error('문서 상세 정보를 불러오는 데 실패했습니다:', error);
       }
@@ -325,7 +324,7 @@ export const DocsPage = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
-  
+
   const handleExportTXT = () => {
     setShowExportMenu(false);
     if (!editorRef.current || !activeFile) return;
@@ -479,8 +478,9 @@ export const DocsPage = () => {
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
         <aside
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-            }`}>
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+          }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -532,8 +532,8 @@ export const DocsPage = () => {
               <div className="flex flex-col gap-1 py-1">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="flex items-center gap-2 rounded-lg px-2.5 py-2.5">
-                    <div className="h-4 w-4 shrink-0 rounded bg-gray-300 animate-pulse" />
-                    <div className="h-3.5 w-2/3 rounded bg-gray-300 animate-pulse" />
+                    <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                    <Skeleton className="h-3.5 w-2/3 rounded-full" />
                   </div>
                 ))}
               </div>
@@ -546,72 +546,69 @@ export const DocsPage = () => {
               const isEditing = editingTitleId === file.documentId;
 
               return (
-                      <div
-                        key={file.documentId}
-                        className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                          isActive ? 'bg-[var(--color-bg-default)] shadow-sm' : 'hover:bg-[var(--color-bg-subtle)]'
-                        }`}
-                        onClick={() => {
-                          if (!isEditing) {
-                            handleTabSwitch(file.documentId);
-                            setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
-                          }
-                        }}
-                      >
-                        {/* 왼쪽 테마 바 (활성 시) */}
-                        <div
-                          className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
-                            isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
-                          }`}
-                        />
+                <div
+                  key={file.documentId}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
+                    isActive ? 'bg-[var(--color-bg-default)] shadow-sm' : 'hover:bg-[var(--color-bg-subtle)]'
+                  }`}
+                  onClick={() => {
+                    if (!isEditing) {
+                      handleTabSwitch(file.documentId);
+                      setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
+                    }
+                  }}>
+                  {/* 왼쪽 테마 바 (활성 시) */}
+                  <div
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
+                      isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
+                    }`}
+                  />
 
-                        {/* 제목 영역 */}
-                        {isEditing ? (
-                          <input
-                            ref={titleInputRef}
-                            type="text"
-                            value={file.title}
-                            onChange={(e) => handleTitleChange(file.documentId, e.target.value)}
-                            onBlur={() => finishEditing(file.documentId)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') finishEditing(file.documentId);
-                            }}
-                            className="flex-1 rounded border border-[var(--color-border-brand)] bg-[var(--color-brand-soft)] px-1.5 py-0.5 text-[13px] outline-none text-[var(--color-fg-primary)]"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        ) : (
-                          <span
-                            className={`flex-1 truncate ${
-                              isActive ? 'font-medium text-[var(--color-fg-primary)]' : 'text-[var(--color-fg-secondary)]'
-                            }`}
-                            onDoubleClick={(e) => {
-                              e.stopPropagation();
-                              startEditing(file.documentId);
-                            }}
-                            title="더블클릭하여 제목 수정"
-                          >
-                            {file.title || '새 문서'}
-                          </span>
-                        )}
+                  {/* 제목 영역 */}
+                  {isEditing ? (
+                    <input
+                      ref={titleInputRef}
+                      type="text"
+                      value={file.title}
+                      onChange={(e) => handleTitleChange(file.documentId, e.target.value)}
+                      onBlur={() => finishEditing(file.documentId)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') finishEditing(file.documentId);
+                      }}
+                      className="flex-1 rounded border border-[var(--color-border-brand)] bg-[var(--color-brand-soft)] px-1.5 py-0.5 text-[13px] outline-none text-[var(--color-fg-primary)]"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span
+                      className={`flex-1 truncate ${
+                        isActive ? 'font-medium text-[var(--color-fg-primary)]' : 'text-[var(--color-fg-secondary)]'
+                      }`}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(file.documentId);
+                      }}
+                      title="더블클릭하여 제목 수정">
+                      {file.title || '새 문서'}
+                    </span>
+                  )}
 
-                        {/* 우측: 삭제 버튼 (편집 중이 아닐 때, 호버하거나 활성 상태면 노출) */}
-                        {!isEditing && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFileClick(file.documentId);
-                            }}
-                            className={`h-5 w-5 shrink-0 items-center justify-center rounded text-[var(--color-fg-tertiary)] hover:bg-[var(--color-bg-pressed)] hover:text-[var(--color-error)] transition-colors ${
-                              isActive ? 'flex' : 'hidden group-hover:flex'
-                            }`}
-                            title="삭제"
-                          >
-                            {/* Lucide Trash2 아이콘 */}
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
+                  {/* 우측: 삭제 버튼 (편집 중이 아닐 때, 호버하거나 활성 상태면 노출) */}
+                  {!isEditing && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFileClick(file.documentId);
+                      }}
+                      className={`h-5 w-5 shrink-0 items-center justify-center rounded text-[var(--color-fg-tertiary)] hover:bg-[var(--color-bg-pressed)] hover:text-[var(--color-error)] transition-colors ${
+                        isActive ? 'flex' : 'hidden group-hover:flex'
+                      }`}
+                      title="삭제">
+                      {/* Lucide Trash2 아이콘 */}
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -668,7 +665,7 @@ export const DocsPage = () => {
                     {[
                       // 1) 현재 문서에 함께 들어와 있는 사용자 (이 문서 참여 중)
                       ...activeUsers.map((u) => ({ ...u, isOnline: true })),
-                      
+
                       // 2) 이 문서의 협업자/작성자 중 현재 이 문서를 보고 있지 않은 사용자 (미참여)
                       ...offlineMembers,
                     ].map((u, i) => (
@@ -676,12 +673,9 @@ export const DocsPage = () => {
                         key={u.userId || u.id || u.name || i}
                         /* group 클래스로 호버 시 커스텀 툴팁 노출 제어 */
                         className={`group relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] transition-all hover:z-30 hover:scale-110 flex-shrink-0 ${
-                          u.isOnline 
-                            ? 'z-10' 
-                            : 'opacity-60 saturate-75' // 미참여 사용자는 투명도 조절
+                          u.isOnline ? 'z-10' : 'opacity-60 saturate-75' // 미참여 사용자는 투명도 조절
                         }`}
-                        style={{ backgroundColor: u.color || 'var(--color-avatar-1)' }}
-                      >
+                        style={{ backgroundColor: u.color || 'var(--color-avatar-1)' }}>
                         {/* 1. 이니셜 (기본/fallback) */}
                         <span>{u.name?.charAt(0)}</span>
 
@@ -706,65 +700,58 @@ export const DocsPage = () => {
                         {/* 4. 커스텀 툴팁 (호버 시) */}
                         <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-fg-primary)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-bg-default)] shadow-lg opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:-translate-y-1 z-40 flex items-center gap-1.5">
                           {/* 상태 indicator 점(Dot) */}
-                          <span 
+                          <span
                             className={`h-1.5 w-1.5 rounded-full ${
-                              u.isOnline 
-                                ? 'bg-[var(--color-presence-online)]' 
-                                : 'bg-[var(--color-fg-disabled)]'
-                            }`} 
+                              u.isOnline ? 'bg-[var(--color-presence-online)]' : 'bg-[var(--color-fg-disabled)]'
+                            }`}
                           />
                           {/* 이름 & 상태 텍스트 */}
                           <span>{u.name}</span>
-                          <span className="text-[10px] opacity-75">
-                            {u.isOnline ? '이 문서 참여 중' : '미참여'}
-                          </span>
+                          <span className="text-[10px] opacity-75">{u.isOnline ? '이 문서 참여 중' : '미참여'}</span>
 
                           {/* 툴팁 상단 화살표 */}
                           <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-b-4 border-b-[var(--color-fg-primary)]" />
                         </div>
                       </div>
                     ))}
-                </div>
+                  </div>
 
-                <div className="relative flex items-center export-menu-container">
-                  {/* 단일 내보내기 버튼 */}
-                  <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    disabled={isSaving}
-                    className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
-                    title="내보내기 옵션"
-                  >
-                    {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    <span>내보내기</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="relative flex items-center export-menu-container">
+                    {/* 단일 내보내기 버튼 */}
+                    <button
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      disabled={isSaving}
+                      className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                      title="내보내기 옵션">
+                      {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      <span>내보내기</span>
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
 
-                  {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}
-                  {showExportMenu && (
-                    <div className="absolute right-0 top-[110%] w-32 rounded-lg border border-[var(--color-border-default,#e5e7eb)] bg-[var(--color-bg-default,#ffffff)] p-1 shadow-[0_8px_20px_rgba(0,0,0,0.1)] z-50">
-                      <button
-                        onClick={() => {
-                          handleExportPDF();
-                          setShowExportMenu(false);
-                        }}
-                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600"
-                      >
-                        <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" />
-                        <span>PDF로 저장</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleExportTXT();
-                          setShowExportMenu(false);
-                        }}
-                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600"
-                      >
-                        <FileCode className="h-3.5 w-3.5 text-gray-500 shrink-0" />
-                        <span>TXT로 저장</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}
+                    {showExportMenu && (
+                      <div className="absolute right-0 top-[110%] w-32 rounded-lg border border-[var(--color-border-default,#e5e7eb)] bg-[var(--color-bg-default,#ffffff)] p-1 shadow-[0_8px_20px_rgba(0,0,0,0.1)] z-50">
+                        <button
+                          onClick={() => {
+                            handleExportPDF();
+                            setShowExportMenu(false);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600">
+                          <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                          <span>PDF로 저장</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleExportTXT();
+                            setShowExportMenu(false);
+                          }}
+                          className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600">
+                          <FileCode className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                          <span>TXT로 저장</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </header>
 
@@ -800,7 +787,7 @@ export const DocsPage = () => {
 
                   {/* Tiptap 에디터 (DocsEditor 컴포넌트) */}
                   {isContentLoading ? (
-                    <div className="py-10 text-gray-400">문서 로딩 중...</div>
+                    <DocsEditorSkeleton />
                   ) : (
                     <DocsEditor
                       key={activeFile.documentId}
@@ -817,6 +804,12 @@ export const DocsPage = () => {
                 </div>
               </div>
             </>
+          ) : isLoading ? (
+            <div className="flex-1 overflow-y-auto px-16 py-10">
+              <div className="mx-auto max-w-[720px]">
+                <DocsEditorSkeleton />
+              </div>
+            </div>
           ) : (
             <div className="flex h-full w-full items-center justify-center text-gray-400">
               문서를 선택하거나 새로 만들어주세요.

@@ -24,6 +24,8 @@ function formatGeneratedAt(iso?: string | null) {
 
 function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeViewProps) {
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showPromptInput, setShowPromptInput] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
   const status: 'streaming' | 'done' = node.attrs.status ?? 'done';
   const isStreaming = status === 'streaming' || isRegenerating;
 
@@ -44,7 +46,12 @@ function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeView
     updateAttributes({ status: 'streaming' });
 
     try {
-      const newContent = await callGeminiForMinutes(transcript, title ?? '회의록');
+      const { content: newContent } = await callGeminiForMinutes(
+        transcript,
+        title ?? '회의록',
+        [],
+        customPrompt.trim() || undefined,
+      );
       const newBlocks =
         newContent.content && newContent.content.length > 0 ? newContent.content : [{ type: 'paragraph' }];
 
@@ -91,6 +98,16 @@ function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeView
           <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
             <button
               type="button"
+              onClick={() => setShowPromptInput((prev) => !prev)}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium hover:bg-white hover:text-blue-600 ${
+                showPromptInput ? 'bg-white text-blue-600' : 'text-slate-500'
+              }`}
+              title="다시 생성할 때 반영할 요청사항 입력">
+              <Sparkles size={11} />
+              요청사항
+            </button>
+            <button
+              type="button"
               onClick={handleRegenerate}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 hover:bg-white hover:text-blue-600"
               title="같은 조건으로 다시 생성">
@@ -108,6 +125,17 @@ function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeView
           </div>
         )}
       </div>
+
+      {showPromptInput && !isStreaming && (
+        <textarea
+          contentEditable={false}
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+          placeholder="예: 영어로 요약해줘, 결정사항 위주로만 정리해줘 등 (다시 생성 시 반영돼요)"
+          rows={2}
+          className="mb-2 w-full resize-none rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[12px] text-slate-700 outline-none focus:border-blue-400"
+        />
+      )}
 
       <NodeViewContent
         className={`ai-minutes-block-content text-[14px] leading-relaxed text-slate-700 ${isStreaming ? 'pointer-events-none opacity-60' : ''}`}

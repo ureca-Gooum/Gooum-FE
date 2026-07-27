@@ -3,6 +3,8 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
+import { DocsEditorSkeleton } from '@/components/DocsEditorSkeleton';
+import { Skeleton } from '@/components/Skeleton';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { AiMinutesModal } from '@/components/AiMinutesModal';
 import { wrapAiMinutesContent } from '@/utils/tiptap';
@@ -429,8 +431,9 @@ export const DocsPage = () => {
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
         <aside
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-            }`}>
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+          }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -492,8 +495,8 @@ export const DocsPage = () => {
               <div className="flex flex-col gap-1 py-1">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="flex items-center gap-2 rounded-lg px-2.5 py-2.5">
-                    <div className="h-4 w-4 shrink-0 rounded bg-gray-300 animate-pulse" />
-                    <div className="h-3.5 w-2/3 rounded bg-gray-300 animate-pulse" />
+                    <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                    <Skeleton className="h-3.5 w-2/3 rounded-full" />
                   </div>
                 ))}
               </div>
@@ -508,8 +511,9 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
-                    }`}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
+                    isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
+                  }`}
                   onClick={() => {
                     if (!isEditing) {
                       handleTabSwitch(file.documentId);
@@ -518,8 +522,9 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 파란 바 (활성 시) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-blue-500' : 'bg-transparent'
-                      }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
+                      isActive ? 'bg-blue-500' : 'bg-transparent'
+                    }`}
                   />
                   {/* 제목 */}
                   {isEditing ? (
@@ -740,7 +745,7 @@ export const DocsPage = () => {
 
                   {/* Tiptap 에디터 (DocsEditor 컴포넌트) */}
                   {isContentLoading ? (
-                    <div className="py-10 text-gray-400">문서 로딩 중...</div>
+                    <DocsEditorSkeleton />
                   ) : (
                     <DocsEditor
                       key={activeFile.documentId}
@@ -757,6 +762,12 @@ export const DocsPage = () => {
                 </div>
               </div>
             </>
+          ) : isLoading ? (
+            <div className="flex-1 overflow-y-auto px-16 py-10">
+              <div className="mx-auto max-w-[720px]">
+                <DocsEditorSkeleton />
+              </div>
+            </div>
           ) : (
             <div className="flex h-full w-full items-center justify-center text-gray-400">
               문서를 선택하거나 새로 만들어주세요.

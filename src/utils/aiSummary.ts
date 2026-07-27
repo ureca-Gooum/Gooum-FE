@@ -71,12 +71,46 @@ const SYSTEM_INSTRUCTION = `당신은 팀 채팅 대화를 분석해서 업무 �
 /**
  * 선택된 메시지들을 "[시간] 이름: 내용" 형태의 텍스트로 변환한다.
  * Gemini에게 넘길 대화록 원문이자, "다시 생성" 시 재사용할 원본 텍스트가 된다.
+ *
+ * 문서/AI 회의록 카드 메시지(documentCard)는 실제 텍스트 내용이 없이 documentId 참조만 갖고 있어서
+ * 그대로 넣으면 "(내용 없음)" 같은 의미 없는 줄만 남는다. 선택 범위에 이전 회의록이 포함되더라도
+ * 여기서는 제외하고, 대신 buildPreviousMinutesRefs()로 따로 추려서 문서 참조 링크로 처리한다.
  */
 export function buildTranscript(messages: Message[]): string {
   return messages
-    .filter((m) => !m.isDeleted)
+    .filter((m) => !m.isDeleted && m.type !== 'document' && m.type !== 'ai_summary')
     .map((m) => `[${m.time}] ${m.senderName}: ${extractPreviewText(m.content) || '(내용 없음)'}`)
     .join('\n');
+}
+
+export interface PreviousMinutesRef {
+  documentId: string;
+  title: string;
+  roomId: string | null;
+}
+
+/**
+ * 선택된 메시지 범위 안에 예전에 만든 AI 회의록 카드가 껴 있으면 뽑아낸다.
+ * (요약 대상 텍스트에 섞어 넣지 않고, 새 문서 상단에 "이전 회의록" 참조 카드로만 링크해주기 위함)
+ */
+export function buildPreviousMinutesRefs(messages: Message[]): PreviousMinutesRef[] {
+  const refs: PreviousMinutesRef[] = [];
+  const seen = new Set<string>();
+
+  for (const m of messages) {
+    if (m.isDeleted || m.type !== 'ai_summary' || !m.content) continue;
+    const card = m.content.content?.find((node) => node.type === 'documentCard');
+    const documentId = card?.attrs?.documentId as string | undefined;
+    if (!documentId || seen.has(documentId)) continue;
+    seen.add(documentId);
+    refs.push({
+      documentId,
+      title: (card?.attrs?.title as string) || '이전 회의록',
+      roomId: (card?.attrs?.roomId as string) ?? null,
+    });
+  }
+
+  return refs;
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -322,14 +356,22 @@ function summaryResultToTiptapDoc(result: AiSummaryResult): TiptapDoc {
 
 /**
  * Gemini API를 브라우저에서 직접 호출해 대화록(transcript)을 구조화된 회의록 Tiptap JSON으로 변환한다.
- * title 파라미터는 문서 메타데이터(사이드바 표시용 제목)로만 쓰이고, 문서 안 제목(heading1)은
- * AI가 대화 내용을 보고 직접 지어낸 result.title을 사용한다.
+ * _title 파라미터는 이제 쓰이지 않는다 (과거엔 문서 메타 제목으로 썼지만, 지금은 AI가 지어낸
+ * result.title을 문서 제목/본문 헤딩 양쪽에 다 쓰도록 바뀌었다 - suggestedTitle로 반환).
  */
+export interface AiSummaryGenerationResult {
+  content: TiptapDoc;
+  /** AI가 대화 내용을 보고 직접 지어낸 제목. 사용자가 제목을 안 적었을 때 문서 제목으로 쓴다. */
+  suggestedTitle: string;
+}
+
 export async function callGeminiForMinutes(
   transcript: string,
   _title: string,
   attachmentParts: GeminiPart[] = [],
-): Promise<TiptapDoc> {
+  customPrompt?: string,
+  previousMinutesContext?: { title: string; content: string }[],
+): Promise<AiSummaryGenerationResult> {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API 키가 설정되지 않았어요. .env 파일의 VITE_GEMINI_API_KEY를 확인해주세요.');
   }
@@ -337,10 +379,30 @@ export async function callGeminiForMinutes(
     throw new Error('요약할 대화 내용이 없어요.');
   }
 
-  const promptText =
+  const attachmentNote =
     attachmentParts.length > 0
-      ? `${SYSTEM_INSTRUCTION}\n\n이 대화에는 ${attachmentParts.length}개의 이미지/파일이 첨부되어 함께 제공됩니다. 첨부 내용도 실제로 읽고 분석해서 요약에 반영하세요.\n\n대화 내용:\n${transcript}`
-      : `${SYSTEM_INSTRUCTION}\n\n대화 내용:\n${transcript}`;
+      ? `\n\n이 대화에는 ${attachmentParts.length}개의 이미지/파일이 첨부되어 함께 제공됩니다. 첨부 내용도 실제로 읽고 분석해서 요약에 반영하세요.`
+      : '';
+
+  // 이전 회의록은 이미 AI가 압축해둔 결과물(요약/결정사항 등)이라 그대로 참고자료로 넣어도 비용이 크지 않다.
+  // 단, 항상 반영하라는 게 아니라 "필요할 때만" 쓰라고 명확히 선을 그어서, 매번 이전 내용이 중복 등장하는 걸 막는다.
+  const previousMinutesNote =
+    previousMinutesContext && previousMinutesContext.length > 0
+      ? `\n\n참고자료 (이전에 작성된 회의록 - 이번 대화를 요약하는 데 필요할 때만, 특히 사용자가 "이어서", "붙여줘", "참고해줘" 같은 요청을 했을 때만 반영하세요. 별다른 요청이 없다면 무시하고 아래 "대화 내용"만 요약하세요):\n${previousMinutesContext
+          .map((p) => `[${p.title}]\n${p.content}`)
+          .join('\n\n')}`
+      : '';
+
+  // 사용자의 추가 요청사항은 프롬프트 맨 끝(대화 내용 바로 뒤, 생성 직전)에 한 번 더 강하게 못박아둔다.
+  // 이유: 위 SYSTEM_INSTRUCTION의 "표준 업무 보고서 톤(문어체)으로 작성" 같은 규칙이 이미 한국어 출력을
+  // 강하게 암시하고 있어서, 중간에 한 줄로만 끼워두면 "영어로 요약해줘" 같은 요청이 그 규칙에 묻혀
+  // 실제로 반영되지 않는 경우가 있었다. 그래서 (1) 다른 규칙보다 우선한다고 명시하고, (2) 모델이 텍스트를
+  // 생성하기 직전인 프롬프트 맨 끝에 다시 한번 반복해서 최종 지시로 작동하게 한다.
+  const customOverrideNote = customPrompt?.trim()
+    ? `\n\n---\n위 모든 규칙 중 톤/언어/분량처럼 사용자 요청과 충돌하는 부분이 있다면, 아래 사용자 요청을 최우선으로 따르세요.\n다만 JSON 키(title, summary, decisions 등 필드명)와 전체 구조는 그대로 유지하고, 각 필드 "안의 텍스트 내용"만 요청에 맞게 작성하세요.\n사용자 요청: "${customPrompt.trim()}"`
+    : '';
+
+  const promptText = `${SYSTEM_INSTRUCTION}${attachmentNote}${previousMinutesNote}\n\n대화 내용:\n${transcript}${customOverrideNote}`;
 
   const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
     method: 'POST',
@@ -364,5 +426,5 @@ export async function callGeminiForMinutes(
   const data = await res.json();
   const rawText: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
   const result = parseAiSummaryResult(rawText);
-  return summaryResultToTiptapDoc(result);
+  return { content: summaryResultToTiptapDoc(result), suggestedTitle: result.title };
 }

@@ -24,19 +24,38 @@ import type { NewMessagePayload, MessageDeletedPayload } from '@/types/socket';
 interface UseRoomConversationOptions {
   /** 방 안에서 새 메시지를 "내가" 보냈을 때, 사이드바 미리보기 등을 갱신하고 싶을 때 사용 (raw 소켓 payload를 그대로 전달) */
   onMessageSent?: (payload: NewMessagePayload) => void;
-
+  /**
+   * 지금 열려있는 방에서 메시지가 삭제됐을 때 호출된다. 삭제된 메시지가 그 방의 "마지막 메시지"였는지
+   * (=사이드바 미리보기를 갱신해야 하는지)를 wasLastMessage로 함께 알려준다.
+   * 주의: 이 훅은 roomId(현재 열려있는 방)에 대해서만 소켓 이벤트를 구독하므로, 다른 방에서 벌어진
+   * 삭제는 여기로 오지 않는다. 다른 방 미리보기까지 실시간으로 갱신하려면 서버가 삭제 이벤트도
+   * new_notification처럼 전체 브로드캐스트해줘야 한다.
+   */
   onMessageDeleted?: (payload: { roomId: string; messageId: string; wasLastMessage: boolean }) => void;
 }
 
+/**
+ * 특정 채팅방(roomId) 하나에 대한 대화 상태를 전부 관리하는 훅.
+ * - 과거 메시지 로딩 + 실시간 수신/삭제 소켓
+ * - 방 멤버 목록(멘션용)
+ * - 메시지 전송(텍스트/파일/문서카드), 삭제
+ * - 타이핑 인디케이터
+ * - AI 회의록용 "카톡 캡쳐처럼 메시지 범위 선택" 모드
+ *
+ * roomId만 다르면 채팅 페이지, 알림 페이지 등 어디서든 동일하게 동작한다.
+ */
 export function useRoomConversation(
   roomId: string | null,
   currentUserId: string | null,
   options: UseRoomConversationOptions = {},
 ) {
+  // 매 렌더마다 새로 생성되는 콜백일 수 있으므로 ref에 최신 값만 담아두고, 아래 소켓 리스너 effect의
+  // 의존성 배열에는 넣지 않는다 (넣으면 렌더될 때마다 리스너가 재등록된다).
   const onMessageSentRef = useRef(options.onMessageSent);
   onMessageSentRef.current = options.onMessageSent;
   const onMessageDeletedRef = useRef(options.onMessageDeleted);
   onMessageDeletedRef.current = options.onMessageDeleted;
+  // 현재 방에서 가장 최근에 도착한 메시지의 id를 기억해둔다 (삭제된 메시지가 "마지막 메시지"였는지 판단하기 위함)
   const lastMessageIdRef = useRef<string | null>(null);
 
   const [roomMessages, setRoomMessages] = useState<Message[]>([]);
@@ -126,10 +145,21 @@ export function useRoomConversation(
     // usePresence의 beforeunload 처리와 동일한 이유로, 여기서도 leaveRoom을 명시적으로 한 번 더 보내야
     // 서버가 "읽음" 처리를 확정한다. 이게 없으면 방을 나가지 않고 새로고침했을 때 방금 내가 보낸
     // 메시지까지 안읽음으로 남는다.
-    const handleBeforeUnload = () => {
+    //
+    // 주의: beforeunload 시점의 소켓(WebSocket) emit은 전송이 보장되지 않는다 - 브라우저가 페이지를
+    // 정리하면서 emit이 실제로 서버까지 도달하기 전에 연결을 끊어버릴 수 있다 (fetch의 keepalive나
+    // navigator.sendBeacon과 달리 WebSocket엔 그런 보장이 없다). 그래서 beforeunload 하나만 믿지 않고,
+    // 그보다 먼저 발생하고(소켓이 아직 완전히 살아있는 시점) 새로고침/탭 닫기 모두에서 안정적으로 발생하는
+    // visibilitychange('hidden')·pagehide 시점에도 같은 이벤트를 보내서 실제로 도달할 확률을 높인다.
+    const confirmLeaveOnUnload = () => {
       leaveSocketRoom(roomId);
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') confirmLeaveOnUnload();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', confirmLeaveOnUnload);
+    window.addEventListener('beforeunload', confirmLeaveOnUnload);
 
     setIsMessagesLoading(true);
     lastMessageIdRef.current = null;
@@ -145,7 +175,9 @@ export function useRoomConversation(
       .finally(() => setIsMessagesLoading(false));
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', confirmLeaveOnUnload);
+      window.removeEventListener('beforeunload', confirmLeaveOnUnload);
       leaveSocketRoom(roomId, (response: any) => {
         console.log('leaveRoom 응답:', response);
       });

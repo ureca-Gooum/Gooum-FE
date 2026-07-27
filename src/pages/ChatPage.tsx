@@ -125,7 +125,7 @@ export const ChatPage = () => {
   // 실시간 알림 수신 (다른 방에서 온 메시지의 미리보기/안읽음 배지 갱신 - 방 목록 소유 상태라 여기 유지)
   useEffect(() => {
     const handleNewNotification = (payload: NewNotificationPayload) => {
-      if (payload.type !== 'message') return;
+      if (payload.type !== 'message' && payload.type !== 'mention') return;
 
       setRooms((prev) => {
         const index = prev.findIndex((r) => r.id === payload.roomId);

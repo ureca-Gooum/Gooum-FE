@@ -147,12 +147,9 @@ export function useRoomConversation(
       .then((data) => {
         const mapped = data.messages.map(mapMessageFromApi).reverse();
         setRoomMessages(mapped);
-<<<<<<< HEAD
         const lastMessage = mapped[mapped.length - 1];
         lastMessageIdRef.current = lastMessage && !lastMessage.isDeleted ? lastMessage.id : null;
-=======
         triggerBadgeRefresh(); // DM 방 입장 시 읽음 처리로 인한 배지 갱신
->>>>>>> develop
       })
       .catch((err) => console.error(err))
       .finally(() => setIsMessagesLoading(false));

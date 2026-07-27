@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
 import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 import { NewChatModal } from '@/components/NewChatModal';
 import { RoomListItem } from '@/components/RoomListItem';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { RoomListItemSkeleton } from '@/components/RoomListItemSkeleton';
+import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
+import { Skeleton } from '@/components/Skeleton';
 import { fetchRooms, toggleFavorite, leaveRoom, createRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
@@ -35,6 +37,8 @@ export const ChatPage = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PanelTab>('chat');
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(true);
+  const [isChatsOpen, setIsChatsOpen] = useState(true);
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
 
@@ -61,6 +65,12 @@ export const ChatPage = () => {
         const rest = prev.filter((r) => r.id !== payload.roomId);
         return [updatedRoom, ...rest];
       });
+    },
+    // 지금 열려있는 방의 "마지막 메시지"가 삭제된 경우에만 사이드바 미리보기를 갱신한다.
+    // (마지막 메시지가 아닌 과거 메시지를 지운 거라면 미리보기는 그대로 둬도 된다)
+    onMessageDeleted: ({ roomId, wasLastMessage }) => {
+      if (!wasLastMessage) return;
+      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, lastMessagePreview: '삭제된 메시지입니다' } : r)));
     },
   });
 
@@ -175,8 +185,24 @@ export const ChatPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <LoadingSpinner />
+      <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
+        <ListPanel headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
+          <div className="flex flex-col gap-1 py-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <RoomListItemSkeleton key={i} />
+            ))}
+          </div>
+        </ListPanel>
+
+        <section className="flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default shadow-md">
+          <div className="flex h-[63px] shrink-0 items-center gap-3 border-b border-border-default px-4">
+            <Skeleton className="h-7 w-7 rounded-full" />
+            <Skeleton className="h-4 w-24 rounded-full" />
+          </div>
+          <div className="flex-1 overflow-hidden px-6 py-4">
+            <MessageAreaSkeleton />
+          </div>
+        </section>
       </div>
     );
   }
@@ -196,49 +222,70 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden">
+    <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
       <ListPanel
+        headerHeight={63}
         header={
-          <div className="flex items-center justify-between">
+          <div className="flex w-full items-center justify-between">
             <h2 className="font-semibold text-fg-primary">채팅</h2>
             <button
               onClick={() => setIsModalOpen(true)}
               className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle">
-              <Plus size={18} />
+              <SquarePen size={18} />
             </button>
           </div>
         }>
-        <div className="flex items-center gap-1.5 px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => setIsFavoritesOpen((prev) => !prev)}
+          className="flex w-full items-center gap-1.5 px-4 py-3.5 text-left hover:bg-bg-subtle">
           <Heart size={14} className="text-fg-tertiary" />
-          <p className="text-xs font-medium text-fg-tertiary">즐겨찾기</p>
-        </div>
-        {favoriteRooms.map((room) => (
-          <RoomListItem
-            key={room.id}
-            room={room}
-            onSelect={() => handleSelectRoom(room.id)}
-            onToggleFavorite={handleToggleFavorite}
-            onLeave={handleLeave}
-            isMenuOpen={openMenuRoomId === room.id}
-            onMenuToggle={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
-          />
-        ))}
+          <p className="flex-1 text-xs font-medium text-fg-tertiary">즐겨찾기</p>
+          {isFavoritesOpen ? (
+            <ChevronDown size={14} className="text-fg-tertiary" />
+          ) : (
+            <ChevronRight size={14} className="text-fg-tertiary" />
+          )}
+        </button>
+        {isFavoritesOpen &&
+          favoriteRooms.map((room) => (
+            <RoomListItem
+              key={room.id}
+              room={room}
+              onSelect={() => handleSelectRoom(room.id)}
+              onToggleFavorite={handleToggleFavorite}
+              onLeave={handleLeave}
+              isMenuOpen={openMenuRoomId === room.id}
+              onMenuToggle={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
+              isActive={selectedRoomId === room.id}
+            />
+          ))}
 
-        <div className="flex items-center gap-1.5 px-4 py-3.5">
+        <button
+          type="button"
+          onClick={() => setIsChatsOpen((prev) => !prev)}
+          className="flex w-full items-center gap-1.5 px-4 py-3.5 text-left hover:bg-bg-subtle">
           <MessageCircle size={14} className="text-fg-tertiary" />
-          <p className="text-xs font-medium text-fg-tertiary">채팅</p>
-        </div>
-        {otherRooms.map((room) => (
-          <RoomListItem
-            key={room.id}
-            room={room}
-            onSelect={() => handleSelectRoom(room.id)}
-            onToggleFavorite={handleToggleFavorite}
-            onLeave={handleLeave}
-            isMenuOpen={openMenuRoomId === room.id}
-            onMenuToggle={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
-          />
-        ))}
+          <p className="flex-1 text-xs font-medium text-fg-tertiary">채팅</p>
+          {isChatsOpen ? (
+            <ChevronDown size={14} className="text-fg-tertiary" />
+          ) : (
+            <ChevronRight size={14} className="text-fg-tertiary" />
+          )}
+        </button>
+        {isChatsOpen &&
+          otherRooms.map((room) => (
+            <RoomListItem
+              key={room.id}
+              room={room}
+              onSelect={() => handleSelectRoom(room.id)}
+              onToggleFavorite={handleToggleFavorite}
+              onLeave={handleLeave}
+              isMenuOpen={openMenuRoomId === room.id}
+              onMenuToggle={() => setOpenMenuRoomId(openMenuRoomId === room.id ? null : room.id)}
+              isActive={selectedRoomId === room.id}
+            />
+          ))}
       </ListPanel>
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
@@ -253,6 +300,8 @@ export const ChatPage = () => {
                 presence: selectedRoom.presence,
                 isGroup: selectedRoom.type === 'group',
                 isFavorite: selectedRoom.isFavorite,
+                userId: selectedRoom.otherUserId,
+                memberCount: selectedRoom.memberCount,
               }
             : null
         }
@@ -263,7 +312,7 @@ export const ChatPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <RoomFilesTab messages={conversation.messages} />
+            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
           ) : selectedRoomId ? (
             <RoomDocumentsTab roomId={selectedRoomId} />
           ) : null
@@ -276,6 +325,7 @@ export const ChatPage = () => {
         messages={conversation.messages}
         isMessagesLoading={conversation.isMessagesLoading}
         roomMembers={conversation.roomMembers}
+        mentionCandidates={conversation.allMembers}
         messagesEndRef={conversation.messagesEndRef}
         isSelectingMessages={conversation.isSelectingMessages}
         selectedMessageIds={conversation.selectedMessageIds}

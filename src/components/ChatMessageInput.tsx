@@ -151,8 +151,13 @@ interface ChatMessageInputProps {
   onOpenAiMinutes?: () => void;
   /** 문서 아이콘 버튼. 넘기지 않으면 버튼이 렌더링되지 않는다.*/
   onCreateDocument?: (payload: { title: string; content: TiptapDoc; isContentEmpty: boolean }) => void | Promise<void>;
-  /** "@"로 멘션할 수 있는 현재 채팅방 멤버 목록. 넘기지 않으면 멘션 검색 결과가 항상 비어있다. */
+  /** 채팅방 헤더 아바타 등 "이 방 멤버" 표시에 쓰이는 목록. */
   roomMembers?: RoomMember[];
+  /**
+   * "@" 멘션 자동완성에 띄울 대상 목록. 가입된 모든 사람을 보여주고 싶다면 이 prop에
+   * 전체 사용자 목록을 넘긴다. 넘기지 않으면 roomMembers(=현재 방 멤버)로 fallback한다.
+   */
+  mentionCandidates?: RoomMember[];
   placeholder?: string;
 }
 
@@ -169,17 +174,20 @@ export const ChatMessageInput = ({
   onOpenAiMinutes,
   onCreateDocument,
   roomMembers = [],
+  mentionCandidates,
   placeholder = '메시지를 입력하세요.',
 }: ChatMessageInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  // 멘션 후보: mentionCandidates가 넘어오면 그걸(=가입된 모든 사람), 없으면 roomMembers(=이 방 멤버)로 fallback.
+  const mentionMembers = mentionCandidates ?? roomMembers;
   // 멘션 검색이 항상 최신 멤버 목록을 보도록 ref로 들고 있는다.
-  // (editor extensions는 마운트 시 한 번만 만들어지므로, roomMembers가 바뀔 때마다
+  // (editor extensions는 마운트 시 한 번만 만들어지므로, 목록이 바뀔 때마다
   //  에디터를 통째로 재생성하지 않고 이 ref만 갱신한다)
-  const roomMembersRef = useRef<RoomMember[]>(roomMembers);
+  const roomMembersRef = useRef<RoomMember[]>(mentionMembers);
   useEffect(() => {
-    roomMembersRef.current = roomMembers;
-  }, [roomMembers]);
+    roomMembersRef.current = mentionMembers;
+  }, [mentionMembers]);
   const [mentionExtension] = useState(() =>
     createMentionExtension(
       () => roomMembersRef.current,
@@ -470,7 +478,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={handleOpenDocumentComposer}
-            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary"
+            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="문서 작성하기">
             <FileText size={18} />
           </button>
@@ -479,7 +487,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={onOpenAiMinutes}
-            className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle"
+            className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="AI 회의록 생성">
             <Sparkles size={18} />
           </button>
@@ -489,7 +497,7 @@ export const ChatMessageInput = ({
           type="button"
           onClick={handleSend}
           disabled={isUploading}
-          className="rounded-md p-1.5 text-brand-primary hover:bg-bg-subtle disabled:opacity-40"
+          className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary disabled:opacity-40"
           title="전송">
           <Send size={18} />
         </button>

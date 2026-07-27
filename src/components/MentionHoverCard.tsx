@@ -101,7 +101,7 @@ export function MentionHoverCard({
           <button
             type="button"
             onClick={() => onStartDirectMessage?.(userId)}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-primary py-2 text-[13px] font-medium text-white transition-colors hover:opacity-90">
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border-default bg-white py-2 text-[13px] font-medium text-fg-primary transition-colors hover:border-brand-primary hover:bg-brand-soft hover:text-brand-primary">
             <MessageCircle size={14} />
             메시지 보내기
           </button>

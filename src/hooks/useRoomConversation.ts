@@ -10,6 +10,7 @@ import {
   offMessageDeleted,
 } from '@/socket/socket';
 import { fetchRoomDetail } from '@/api/rooms';
+import { fetchUsers } from '@/api/users';
 import { fetchMessages, deleteMessage as deleteMessageApi } from '@/api/messages';
 import { createDocument, saveDocument } from '@/api/documents';
 import { mapMessageFromApi } from '@/api/mappers/messageMapper';
@@ -23,6 +24,14 @@ import type { NewMessagePayload, MessageDeletedPayload } from '@/types/socket';
 interface UseRoomConversationOptions {
   /** 방 안에서 새 메시지를 "내가" 보냈을 때, 사이드바 미리보기 등을 갱신하고 싶을 때 사용 (raw 소켓 payload를 그대로 전달) */
   onMessageSent?: (payload: NewMessagePayload) => void;
+  /**
+   * 지금 열려있는 방에서 메시지가 삭제됐을 때 호출된다. 삭제된 메시지가 그 방의 "마지막 메시지"였는지
+   * (=사이드바 미리보기를 갱신해야 하는지)를 wasLastMessage로 함께 알려준다.
+   * 주의: 이 훅은 roomId(현재 열려있는 방)에 대해서만 소켓 이벤트를 구독하므로, 다른 방에서 벌어진
+   * 삭제는 여기로 오지 않는다. 다른 방 미리보기까지 실시간으로 갱신하려면 서버가 삭제 이벤트도
+   * new_notification처럼 전체 브로드캐스트해줘야 한다.
+   */
+  onMessageDeleted?: (payload: { roomId: string; messageId: string; wasLastMessage: boolean }) => void;
 }
 
 /**
@@ -44,11 +53,17 @@ export function useRoomConversation(
   // 의존성 배열에는 넣지 않는다 (넣으면 렌더될 때마다 리스너가 재등록된다).
   const onMessageSentRef = useRef(options.onMessageSent);
   onMessageSentRef.current = options.onMessageSent;
+  const onMessageDeletedRef = useRef(options.onMessageDeleted);
+  onMessageDeletedRef.current = options.onMessageDeleted;
+  // 현재 방에서 가장 최근에 도착한 메시지의 id를 기억해둔다 (삭제된 메시지가 "마지막 메시지"였는지 판단하기 위함)
+  const lastMessageIdRef = useRef<string | null>(null);
 
   const [roomMessages, setRoomMessages] = useState<Message[]>([]);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
+  // 멘션 자동완성용 "가입된 모든 사람" 목록. 방과 무관하므로 컴포넌트 마운트 시 한 번만 불러온다.
+  const [allMembers, setAllMembers] = useState<RoomMember[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { typingLabel, notifyTyping } = useTypingIndicator(roomId);
 
@@ -64,6 +79,28 @@ export function useRoomConversation(
     setSelectedMessageIds([]);
     setSelectionAnchorId(null);
   }, [roomId]);
+
+  // 가입된 모든 사용자 목록 (멘션 자동완성에서 "이 방 멤버만"이 아니라 전체 가입자를 보여주기 위함)
+  useEffect(() => {
+    let isMounted = true;
+    fetchUsers()
+      .then((users) => {
+        if (!isMounted) return;
+        setAllMembers(
+          users.map((u) => ({
+            userId: u.userId,
+            name: u.name,
+            profileImageUrl: u.profileImageUrl,
+            presence: u.presence,
+            statusMessage: u.statusMessage ?? undefined,
+          })),
+        );
+      })
+      .catch((err) => console.error('전체 사용자 목록을 불러오지 못했어요:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // 방 멤버 목록 (멘션 자동완성용)
   useEffect(() => {
@@ -105,10 +142,13 @@ export function useRoomConversation(
     }
 
     setIsMessagesLoading(true);
+    lastMessageIdRef.current = null;
     fetchMessages({ roomId })
       .then((data) => {
         const mapped = data.messages.map(mapMessageFromApi).reverse();
         setRoomMessages(mapped);
+        const lastMessage = mapped[mapped.length - 1];
+        lastMessageIdRef.current = lastMessage && !lastMessage.isDeleted ? lastMessage.id : null;
         triggerBadgeRefresh(); // DM 방 입장 시 읽음 처리로 인한 배지 갱신
       })
       .catch((err) => console.error(err))
@@ -145,6 +185,7 @@ export function useRoomConversation(
         };
         return [...prev, receivedMessage];
       });
+      lastMessageIdRef.current = payload.messageId;
 
       if (payload.sender.userId === currentUserId) {
         onMessageSentRef.current?.(payload);
@@ -161,10 +202,18 @@ export function useRoomConversation(
     setLocalMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, isDeleted: true } : m)));
   };
 
+  // 소켓으로 삭제 이벤트를 받았을 때든, 내가 직접 삭제 버튼을 눌렀을 때든 동일하게 타는 공용 처리.
+  // (같은 messageId로 두 번 호출돼도 상태 갱신 자체는 멱등이라 문제 없다)
+  const applyMessageDeleted = (targetRoomId: string, messageId: string) => {
+    updateMessageAsDeleted(messageId);
+    const wasLastMessage = lastMessageIdRef.current === messageId;
+    onMessageDeletedRef.current?.({ roomId: targetRoomId, messageId, wasLastMessage });
+  };
+
   useEffect(() => {
     const handleMessageDeleted = (payload: MessageDeletedPayload) => {
       if (payload.roomId !== roomId) return;
-      updateMessageAsDeleted(payload.messageId);
+      applyMessageDeleted(payload.roomId, payload.messageId);
     };
 
     onMessageDeleted(handleMessageDeleted);
@@ -281,9 +330,10 @@ export function useRoomConversation(
 
   const deleteMessage = async (messageId: string) => {
     if (!confirm('메시지를 삭제하시겠어요?')) return;
+    if (!roomId) return;
     try {
       await deleteMessageApi(messageId);
-      updateMessageAsDeleted(messageId);
+      applyMessageDeleted(roomId, messageId);
     } catch (err: any) {
       alert(err.message);
     }
@@ -352,6 +402,7 @@ export function useRoomConversation(
     messages,
     isMessagesLoading,
     roomMembers,
+    allMembers,
     messagesEndRef,
     typingLabel,
     notifyTyping,

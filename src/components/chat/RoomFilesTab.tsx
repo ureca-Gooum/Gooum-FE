@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Paperclip, FolderOpen } from 'lucide-react';
 import { formatDateShort } from '@/utils/formatTime';
+import { RoomFilesTabSkeleton } from '@/components/chat/RoomFilesTabSkeleton';
 import type { Message } from '@/types/chat';
 
 type FileFilter = 'all' | 'file' | 'image';
@@ -16,14 +17,11 @@ const FILTERS: { key: FileFilter; label: string }[] = [
 
 interface RoomFilesTabProps {
   messages: Message[];
+  /** 방 메시지를 아직 불러오는 중이면(같은 conversation.isMessagesLoading) 스켈레톤을 보여준다. */
+  isLoading?: boolean;
 }
 
-/**
- * 채팅방 상단 "파일" 탭 콘텐츠.
- * 채팅 메시지 중 type이 image/file 인 것들만 모아 최신순으로 보여준다.
- * 이미지는 썸네일 그리드로, 파일은 아이콘 + 제목/보낸사람 + 날짜의 리스트로 표시한다.
- */
-export function RoomFilesTab({ messages }: RoomFilesTabProps) {
+export function RoomFilesTab({ messages, isLoading = false }: RoomFilesTabProps) {
   const [filter, setFilter] = useState<FileFilter>('all');
 
   const { images, files } = useMemo(() => {
@@ -37,6 +35,10 @@ export function RoomFilesTab({ messages }: RoomFilesTabProps) {
       files: reversed.filter((m) => m.type === 'file'),
     };
   }, [messages]);
+
+  if (isLoading) {
+    return <RoomFilesTabSkeleton />;
+  }
 
   const showImages = (filter === 'all' || filter === 'image') && images.length > 0;
   const showFiles = (filter === 'all' || filter === 'file') && files.length > 0;

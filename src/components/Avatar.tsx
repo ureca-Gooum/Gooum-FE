@@ -63,7 +63,11 @@ export function Avatar({
         (presence !== 'offline' ? (
           <span
             className={`absolute right-0 bottom-0 rounded-full border-2 border-bg-default ${
-              presence === 'online' ? 'bg-presence-online' : 'bg-presence-away'
+              presence === 'online'
+                ? 'bg-presence-online'
+                : presence === 'busy'
+                  ? 'bg-presence-dnd'
+                  : 'bg-presence-away'
             }`}
             style={{ width: size * 0.28, height: size * 0.28 }}
           />

@@ -1,23 +1,36 @@
 import { useEffect } from 'react';
+import api from '@/api/axiosInstance';
 import { updatePresence, onPresenceChanged, offPresenceChanged } from '@/socket/socket';
 import type { PresenceChangedPayload } from '@/types/socket';
-import type { Room } from '@/types/chat';
+import type { Room, PresenceStatus } from '@/types/chat';
 
-/**
- * 탭 가시성에 따라 내 상태를 online/away로 전송하고,
- * 서버로부터 오는 presenceChanged를 받아 rooms 목록의 presence를 갱신한다.
- *
- * roomId 매칭은 Room.otherUserId(1:1 채팅 상대방 userId) 기준.
- * 그룹채팅은 대상이 여러 명이라 헤더 표시 대상이 모호하므로 갱신 대상에서 제외한다.
- */
 export function usePresence(setRooms: React.Dispatch<React.SetStateAction<Room[]>>) {
-  // 내 상태 전송: 최초 online, 탭 벗어나면 away, 창 닫을 때 offline(베스트 에포트)
   useEffect(() => {
-    updatePresence('online', (response) => {
-      if (!response.success) {
-        console.error('presence 업데이트 실패:', response.message);
+    let cancelled = false;
+
+    (async () => {
+      let savedStatus: PresenceStatus | undefined;
+      try {
+        const res = await api.get('/api/users/me');
+        savedStatus = res.data?.presence?.status || res.data?.status;
+      } catch (error) {
+        console.error('저장된 presence 조회 실패:', error);
       }
-    });
+      if (cancelled) return;
+
+      const nextStatus: PresenceStatus =
+        savedStatus === 'busy' || savedStatus === 'away'
+          ? savedStatus
+          : document.visibilityState === 'visible'
+            ? 'online'
+            : 'away';
+
+      updatePresence(nextStatus, (response) => {
+        if (!response.success) {
+          console.error('presence 업데이트 실패:', response.message);
+        }
+      });
+    })();
 
     const handleVisibilityChange = () => {
       updatePresence(document.visibilityState === 'visible' ? 'online' : 'away');
@@ -30,6 +43,7 @@ export function usePresence(setRooms: React.Dispatch<React.SetStateAction<Room[]
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      cancelled = true;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };

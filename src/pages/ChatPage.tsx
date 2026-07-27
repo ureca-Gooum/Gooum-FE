@@ -248,8 +248,9 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
       <ListPanel
+        className={selectedRoomId ? 'hidden @md:flex' : 'flex'}
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         headerHeight={63}
@@ -318,6 +319,7 @@ export const ChatPage = () => {
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
+      <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
         target={
           selectedRoom
@@ -371,8 +373,9 @@ export const ChatPage = () => {
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={targetMessageId}
-        onSidebarToggle={() => setIsSidebarOpen(true)}
+        onBack={() => setSelectedRoomId(null)}
       />
+      </div>
     </div>
   );
 };

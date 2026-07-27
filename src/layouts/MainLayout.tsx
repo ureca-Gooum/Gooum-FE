@@ -190,9 +190,11 @@ export const MainLayout = () => {
             onMouseDown={handleHeaderMouseDown}
           />
         )}
-        <div className={`flex flex-1 overflow-hidden gap-4 ${isLoginPage ? '' : 'pt-1 pb-2.5 pr-2.5'}`}>
+        <div className={`flex flex-1 overflow-hidden @md:gap-4 flex-col-reverse @md:flex-row ${isLoginPage ? '' : 'pt-0 @md:pt-1 pb-0 @md:pb-2.5 pr-0 @md:pr-2.5'}`}>
           {!isLoginPage && <Sidebar />}
-          <Outlet />
+          <div className="flex-1 overflow-hidden flex flex-col w-full h-full relative">
+            <Outlet />
+          </div>
         </div>
       </div>
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}

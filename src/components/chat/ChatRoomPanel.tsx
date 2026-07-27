@@ -1,5 +1,6 @@
-import { useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
+import { useRef, useState, useEffect, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
+import { Heart, Pencil, Bell, BellOff, ChevronLeft } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -92,7 +93,7 @@ interface ChatRoomPanelProps {
   onDeleteMessage: (messageId: string) => void;
   onStartDirectMessage?: (userId: string) => void;
   targetMessageId?: string | null;
-  onSidebarToggle?: () => void;
+  onBack?: () => void;
 }
 
 /**
@@ -132,14 +133,19 @@ export function ChatRoomPanel({
   onDeleteMessage,
   onStartDirectMessage,
   targetMessageId,
-  onSidebarToggle,
+  onBack,
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
   // 헤더의 상대 프로필(아바타+이름)에 호버했을 때 보여줄 프로필 카드 상태
   const [isHeaderProfileHovered, setIsHeaderProfileHovered] = useState(false);
   const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const headerProfileHideTimeoutRef = useRef<number>();
+
+  useEffect(() => {
+    setPortalContainer(document.getElementById('header-tabs-portal'));
+  }, []);
 
   const clearHeaderProfileHideTimeout = () => {
     if (headerProfileHideTimeoutRef.current) {
@@ -169,12 +175,12 @@ export function ChatRoomPanel({
     <MainPanel
       header={
         target ? (
-          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-            {onSidebarToggle && (
+          <div className="flex h-[63px] items-center gap-2 @md:gap-3 border-b border-border-default px-3 @md:px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden">
+            {onBack && (
               <button
-                onClick={onSidebarToggle}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
+                onClick={onBack}
+                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95 mr-1">
+                <ChevronLeft className="h-6 w-6" />
               </button>
             )}
             <div
@@ -218,7 +224,8 @@ export function ChatRoomPanel({
               </button>
             )}
 
-            <div className="flex items-center gap-4">
+            {/* PC 버전: 기존 탭 유지 (모바일에서는 숨김) */}
+            <div className="hidden @md:flex items-center gap-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
@@ -237,27 +244,29 @@ export function ChatRoomPanel({
               ))}
             </div>
 
-            <div className="ml-auto flex shrink-0 items-center gap-2">
-              {target.isGroup && roomMembers.length > 0 && (
-                <div className="flex shrink-0 items-center -space-x-2">
-                  {roomMembers.slice(0, 5).map((member) => (
-                    <div key={member.userId} className="rounded-full border-[3px] border-bg-default shadow-sm">
-                      <Avatar
-                        seed={member.userId}
-                        imageUrl={member.profileImageUrl}
-                        alt={member.name}
-                        size={24}
-                        showPresence={false}
+            {/* 모바일 버전: 글로벌 헤더 검색창 우측으로 포탈 (PC에서는 숨김) */}
+            {portalContainer && createPortal(
+              <div className="flex @md:hidden h-full items-center gap-3 ml-4">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => onTabChange(tab.key)}
+                    className={`relative h-full text-[13px] font-medium transition-colors px-1 shrink-0 ${
+                      activeTab === tab.key ? 'text-brand-primary' : 'text-fg-tertiary hover:text-fg-primary'
+                    }`}>
+                    {tab.label}
+                    {activeTab === tab.key && (
+                      <span
+                        className="absolute left-0 right-0 bottom-0 bg-brand-primary h-[3px] rounded-t-sm"
                       />
-                    </div>
-                  ))}
-                  {roomMembers.length > 5 && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-[3px] border-bg-default bg-bg-subtle text-[10px] font-medium text-fg-tertiary shadow-sm">
-                      +{roomMembers.length - 5}
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </button>
+                ))}
+              </div>,
+              portalContainer
+            )}
+
+            <div className="ml-auto flex shrink-0 items-center gap-2">
 
               {onToggleMute && (
                 <button
@@ -293,11 +302,11 @@ export function ChatRoomPanel({
           </div>
         ) : (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
-            {onSidebarToggle && (
+            {onBack && (
               <button
-                onClick={onSidebarToggle}
+                onClick={onBack}
                 className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
             )}
             {emptyHeaderLabel}

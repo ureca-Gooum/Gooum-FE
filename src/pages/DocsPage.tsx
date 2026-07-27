@@ -633,7 +633,7 @@ export const DocsPage = () => {
 
                 {/* 오른쪽: 접속자 아바타 그룹 + 저장 버튼 */}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center -space-x-2">
+                  <div className="hidden @md:flex items-center -space-x-2">
                     {activeUsers.map((u, i) => (
                       <div
                         key={i}
@@ -662,14 +662,18 @@ export const DocsPage = () => {
                       <button
                         onClick={handleHeaderSave}
                         disabled={isSaving}
-                        className="flex items-center gap-1.5 rounded-l-lg bg-gradient-to-r from-[#4f8ef7] to-[#5984f9] px-4 py-2 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-60 border-r border-blue-400/30">
-                        {isSaving && (
+                        className="flex items-center gap-1.5 rounded-l-lg bg-gradient-to-r from-[#4f8ef7] to-[#5984f9] px-3 @md:px-4 py-2 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-60 border-r border-blue-400/30">
+                        {isSaving ? (
                           <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" opacity="0.3" />
                             <path d="M4 12a8 8 0 018-8" stroke="white" strokeWidth="3" strokeLinecap="round" />
                           </svg>
+                        ) : (
+                          <svg className="h-3.5 w-3.5 @md:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                          </svg>
                         )}
-                        내보내기
+                        <span className="hidden @md:inline">내보내기</span>
                       </button>
                       <button
                         onClick={() => setShowExportMenu(!showExportMenu)}

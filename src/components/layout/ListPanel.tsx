@@ -5,23 +5,26 @@ interface ListPanelProps {
   children: ReactNode;
   isSidebarOpen?: boolean;
   onClose?: () => void;
-  /**
-   * 헤더 높이(px)를 고정하고 싶을 때 지정한다. (예: 메인패널 헤더와 높이를 맞춰서
-   * 헤더 아래 보더가 정확히 같은 줄에서 이어지도록)
-   * 지정하면 ListPanel과 메인패널 사이 gap 구간까지 보더 선을 이어 그려준다.
-   */
   headerHeight?: number;
+  className?: string;
 }
 
 const MIN_WIDTH = 260;
 const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 320;
 
-export function ListPanel({ header, children, isSidebarOpen = false, onClose, headerHeight }: ListPanelProps) {
+export function ListPanel({ header, children, isSidebarOpen = false, onClose, headerHeight, className }: ListPanelProps) {
   // 오른쪽 가장자리를 드래그해서 너비를 조절할 수 있게 한다. (MIN_WIDTH ~ MAX_WIDTH 사이로 제한)
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const dragStartRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -38,7 +41,6 @@ export function ListPanel({ header, children, isSidebarOpen = false, onClose, he
       dragStartRef.current = null;
     };
 
-    // 드래그 중엔 커서를 고정하고, 텍스트가 드래그되며 선택되는 걸 막는다.
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', handleMouseMove);
@@ -60,16 +62,9 @@ export function ListPanel({ header, children, isSidebarOpen = false, onClose, he
 
   return (
     <>
-      {/* 모바일 환경: 사이드바 뒷 배경 오버레이 */}
-      {isSidebarOpen && onClose && (
-        <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />
-      )}
-      
       <section 
-        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
-          isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-        }`}
-        style={{ width }}
+        className={`z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default flex w-full @md:w-auto transition-transform duration-300 ${className || ''}`}
+        style={{ width: isMobile ? '100%' : width }}
       >
         {headerHeight ? (
           <div

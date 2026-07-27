@@ -165,8 +165,9 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
       <ListPanel
+        className={selectedNotiId ? 'hidden @md:flex' : 'flex'}
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         header={
@@ -246,7 +247,9 @@ export const NotificationsPage = () => {
         </div>
       </ListPanel>
 
+      <div className={`flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
+        onBack={() => setSelectedNotiId(null)}
         target={
           room
             ? {
@@ -308,6 +311,7 @@ export const NotificationsPage = () => {
         targetMessageId={selectedNoti?.messageId}
         onSidebarToggle={() => setIsSidebarOpen(true)}
       />
+      </div>
     </div>
   );
 };

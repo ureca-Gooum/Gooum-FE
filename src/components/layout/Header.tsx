@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchSearch } from '@/api/search';
 import type { SearchApiResponse } from '@/types/search';
 import { HeaderLogo } from './HeaderLogo';
+import { ProfileButton } from './ProfileButton';
 
 interface HeaderProps {
   onMinimize?: () => void;
@@ -91,20 +92,25 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
 
   return (
     <header
-      className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
+      className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 gap-2 ${!isMaximized ? 'cursor-move' : ''}`}
       onMouseDown={onMouseDown}>
-      {/* 왼쪽: 로고 */}
-      <HeaderLogo />
+      {/* 왼쪽: 로고 및 모바일 프로필 */}
+      <div className="flex items-center gap-2">
+        <ProfileButton className="flex @md:hidden" dropdownClassName="absolute left-0 top-12 z-50" />
+        <div className="hidden @md:block">
+          <HeaderLogo />
+        </div>
+      </div>
 
-      <div className="flex flex-1 items-center justify-center gap-2">
-        <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
+      <div className="flex flex-1 @md:flex-1 items-center justify-start @md:justify-center gap-2">
+        <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
           <ChevronLeft size={18} />
         </button>
-        <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(1)}>
+        <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(1)}>
           <ChevronRight size={18} />
         </button>
 
-        <div className="relative w-full max-w-md" ref={dropdownRef}>
+        <div className="relative w-full max-w-[200px] @md:max-w-[280px]" ref={dropdownRef}>
           <div
             className={`flex w-full items-center gap-2 rounded-lg border bg-bg-default px-3 py-1.5 transition-colors ${
               isFocused ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-border-default'
@@ -210,7 +216,9 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div id="header-tabs-portal" className="flex @md:hidden flex-1 h-full items-center min-w-0 pl-2 overflow-x-auto [&::-webkit-scrollbar]:hidden" />
+
+      <div className="hidden @md:flex items-center gap-1 ml-auto">
         <button
           className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
           title="도움말">

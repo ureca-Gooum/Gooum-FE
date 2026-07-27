@@ -325,14 +325,7 @@ export const DocsPage = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
-
-  const handleHeaderSave = () => {
-    if (editorRef.current) {
-      editorRef.current.handleSave();
-    }
-    setShowExportMenu(false);
-  };
-
+  
   const handleExportTXT = () => {
     setShowExportMenu(false);
     if (!editorRef.current || !activeFile) return;

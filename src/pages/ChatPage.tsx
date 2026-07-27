@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen, Plus } from 'lucide-react';
+import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';

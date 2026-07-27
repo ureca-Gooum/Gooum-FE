@@ -60,12 +60,10 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md transition-opacity">
       <div className="relative w-[480px] overflow-hidden rounded-[2rem] bg-bg-default p-8 shadow-2xl transition-all duration-500">
-        
         <div className="absolute right-6 top-6 z-10">
           <button
             onClick={handleClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-subtle text-fg-tertiary transition-colors hover:bg-bg-muted hover:text-fg-primary"
-          >
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-subtle text-fg-tertiary transition-colors hover:bg-bg-muted hover:text-fg-primary">
             <X size={18} />
           </button>
         </div>
@@ -74,24 +72,24 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
           <div className="flex flex-col items-center py-6">
             <div className="relative mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-soft shadow-inner">
               <div className="absolute inset-0 rounded-3xl bg-brand-primary/10 animate-ping opacity-20"></div>
-              <img src="/favicon.svg" alt="Gooum Logo" className="h-14 w-14 drop-shadow-md" />
+              <img src="/favicon.png" alt="Gooum Logo" className="h-14 w-14 drop-shadow-md" />
             </div>
             <h2 className="mb-3 text-3xl font-bold tracking-tight text-fg-primary">구움이 처음이신가요?</h2>
             <p className="mb-10 text-center text-[15px] leading-relaxed text-fg-secondary">
-              구움만의 특별한 기능들을 모아<br/>간단한 온보딩 가이드를 준비했어요.
+              구움만의 특별한 기능들을 모아
+              <br />
+              간단한 온보딩 가이드를 준비했어요.
             </p>
 
             <div className="flex w-full gap-4 px-2">
               <button
                 onClick={handleNo}
-                className="flex-1 rounded-2xl bg-bg-canvas py-4 text-[15px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95 border border-border-default"
-              >
+                className="flex-1 rounded-2xl bg-bg-canvas py-4 text-[15px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95 border border-border-default">
                 아니요, 괜찮아요
               </button>
               <button
                 onClick={handleYes}
-                className="flex-1 rounded-2xl bg-brand-primary py-4 text-[15px] font-semibold text-white shadow-lg shadow-brand-primary/30 transition-all hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-xl active:translate-y-0 active:scale-95"
-              >
+                className="flex-1 rounded-2xl bg-brand-primary py-4 text-[15px] font-semibold text-white shadow-lg shadow-brand-primary/30 transition-all hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-xl active:translate-y-0 active:scale-95">
                 네, 볼래요!
               </button>
             </div>
@@ -102,17 +100,15 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
             <div className="relative w-full overflow-hidden">
               <div
                 className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${slide * 100}%)` }}
-              >
+                style={{ transform: `translateX(-${slide * 100}%)` }}>
                 {slides.map((s, i) => (
                   <div key={i} className="min-w-full flex-shrink-0 flex flex-col items-center px-4 pt-4 pb-2">
-                    <div className={`mb-8 flex h-28 w-28 items-center justify-center rounded-3xl shadow-xl ${s.bg} ${s.shadow} transform transition-transform duration-700 ${slide === i ? 'scale-100' : 'scale-75 opacity-50'}`}>
+                    <div
+                      className={`mb-8 flex h-28 w-28 items-center justify-center rounded-3xl shadow-xl ${s.bg} ${s.shadow} transform transition-transform duration-700 ${slide === i ? 'scale-100' : 'scale-75 opacity-50'}`}>
                       {s.icon}
                     </div>
                     <h3 className="mb-4 text-2xl font-bold tracking-tight text-fg-primary text-center">{s.title}</h3>
-                    <p className="max-w-[280px] text-center text-[15px] leading-relaxed text-fg-secondary">
-                      {s.desc}
-                    </p>
+                    <p className="max-w-[280px] text-center text-[15px] leading-relaxed text-fg-secondary">{s.desc}</p>
                   </div>
                 ))}
               </div>
@@ -136,15 +132,13 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
             <div className="flex w-full items-center justify-between">
               <button
                 onClick={handleClose}
-                className="px-4 py-2 text-[14px] font-medium text-fg-tertiary transition-colors hover:text-fg-primary"
-              >
+                className="px-4 py-2 text-[14px] font-medium text-fg-tertiary transition-colors hover:text-fg-primary">
                 건너뛰기
               </button>
-              
+
               <button
                 onClick={handleNext}
-                className="group flex items-center gap-2 rounded-2xl bg-fg-primary px-7 py-3.5 text-[15px] font-semibold text-bg-default shadow-lg transition-all hover:-translate-y-0.5 hover:bg-black hover:shadow-xl active:translate-y-0 active:scale-95"
-              >
+                className="group flex items-center gap-2 rounded-2xl bg-fg-primary px-7 py-3.5 text-[15px] font-semibold text-bg-default shadow-lg transition-all hover:-translate-y-0.5 hover:bg-black hover:shadow-xl active:translate-y-0 active:scale-95">
                 {slide === slides.length - 1 ? '시작하기' : '다음'}
                 {slide === slides.length - 1 ? (
                   <Check size={18} className="transition-transform group-hover:scale-110" />
@@ -165,12 +159,15 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
                 onChange={(e) => setHideNextTime(e.target.checked)}
                 className="peer h-4 w-4 appearance-none rounded border border-border-default bg-bg-canvas checked:border-brand-primary checked:bg-brand-primary transition-all cursor-pointer"
               />
-              <Check size={12} className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none" strokeWidth={3} />
+              <Check
+                size={12}
+                className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none"
+                strokeWidth={3}
+              />
             </div>
             다시 표시하지 않음
           </label>
         </div>
-
       </div>
     </div>
   );

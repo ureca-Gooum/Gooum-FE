@@ -59,9 +59,11 @@ export function RoomDocumentsTab({ roomId }: RoomDocumentsTabProps) {
 
   if (documents.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-fg-tertiary">
-        <FileText size={28} strokeWidth={1.5} />
-        <p className="text-sm">이 채팅방에서 만든 문서가 없어요.</p>
+      <div className="relative h-full w-full">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-fg-tertiary">
+          <FileText size={28} strokeWidth={1.5} />
+          <p className="text-sm">이 채팅방에서 만든 문서가 없어요.</p>
+        </div>
       </div>
     );
   }

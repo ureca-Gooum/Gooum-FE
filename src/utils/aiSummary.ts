@@ -1,5 +1,7 @@
 import type { TiptapDoc, TiptapNode, Message } from '@/types/chat';
 import { extractPreviewText } from '@/utils/tiptap';
+import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 const GEMINI_MODEL = 'gemini-3.5-flash';
@@ -12,8 +14,14 @@ export interface GeminiInlinePart {
   inline_data: { mime_type: string; data: string };
 }
 
+export interface GeminiTextPart {
+  text: string;
+}
+
+export type GeminiPart = GeminiInlinePart | GeminiTextPart;
+
 export interface CollectedAttachments {
-  parts: GeminiInlinePart[];
+  parts: GeminiPart[];
   /** 실제로 첨부되어 함께 분석된 파일/이미지 이름들 */
   includedNames: string[];
   /** 용량 초과 등으로 첨부하지 못하고 건너뛴 항목에 대한 안내 문구들 */
@@ -82,11 +90,43 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 }
 
 // Gemini가 inline_data로 직접 이해할 수 있는 파일 형식들. 이미지는 type이 'image'인 메시지는 항상 시도하고,
-// type이 'file'인 첨부는 이 목록에 있는 확장자일 때만 시도한다. (docx/pptx/hwp 등은 Gemini가 못 읽음)
+// type이 'file'인 첨부는 이 목록에 있는 확장자일 때만 시도한다.
 const SUPPORTED_FILE_EXTENSIONS = new Set(['pdf', 'txt', 'md', 'csv', 'json', 'html', 'js', 'ts', 'py']);
+
+// Gemini API에는 직접 못 넣지만, 프론트에서 텍스트만 추출해서 text part로 넘길 수 있는 형식들
+const TEXT_EXTRACTABLE_EXTENSIONS = new Set(['docx', 'xlsx', 'xls']);
 
 function getExtension(fileName: string | null): string {
   return fileName?.split('.').pop()?.toLowerCase() ?? '';
+}
+
+/** docx 파일을 순수 텍스트로 변환한다 (mammoth, 브라우저에서 동작). */
+async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
+  const { value } = await mammoth.extractRawText({ arrayBuffer: buffer });
+  return value.trim();
+}
+
+/** xlsx/xls 파일의 모든 시트를 "[시트명]\nCSV" 형태의 텍스트로 변환한다 (SheetJS, 브라우저에서 동작). */
+function extractXlsxText(buffer: ArrayBuffer): string {
+  const workbook = XLSX.read(buffer, { type: 'array' });
+  return workbook.SheetNames.map((name) => {
+    const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[name]);
+    return `[시트: ${name}]\n${csv}`;
+  })
+    .join('\n\n')
+    .trim();
+}
+
+/** 파일 확장자에 맞는 방식으로 텍스트를 추출한다. 실패하면 null. */
+async function extractTextFromFile(buffer: ArrayBuffer, extension: string): Promise<string | null> {
+  try {
+    if (extension === 'docx') return await extractDocxText(buffer);
+    if (extension === 'xlsx' || extension === 'xls') return extractXlsxText(buffer);
+    return null;
+  } catch {
+    // 손상된 파일, 암호 보호된 파일 등 파싱 자체가 실패하는 경우
+    return null;
+  }
 }
 
 /** 파일 하나를 fetch해서 Gemini의 inline_data 파트로 쓸 수 있는 base64로 변환한다. 실패/용량초과 시 null. */
@@ -107,24 +147,58 @@ async function fetchAsInlinePart(fileUrl: string): Promise<{ mime_type: string; 
   }
 }
 
+/** docx/xlsx처럼 Gemini에 직접 못 넣는 파일을 fetch해서 원본 ArrayBuffer로 가져온다. 실패/용량초과 시 null. */
+async function fetchAsArrayBuffer(fileUrl: string): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(fileUrl);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    if (blob.size === 0 || blob.size > MAX_ATTACHMENT_BYTES) return null;
+    return await blob.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * 선택된 메시지들 중 이미지/파일 첨부를 모아 Gemini에 함께 보낼 수 있는 형태로 변환한다.
  * 요청이 너무 무거워지지 않도록 최대 개수(MAX_ATTACHMENTS)와 파일당 최대 용량(MAX_ATTACHMENT_BYTES)을 둔다.
+ * docx/xlsx는 Gemini API가 직접 못 읽기 때문에, 브라우저에서 텍스트로 변환한 뒤 text part로 넘긴다.
  */
 export async function collectAttachmentParts(messages: Message[]): Promise<CollectedAttachments> {
   const candidates = messages.filter((m) => !m.isDeleted && (m.type === 'image' || m.type === 'file') && !!m.fileUrl);
   const limited = candidates.slice(0, MAX_ATTACHMENTS);
 
-  const parts: GeminiInlinePart[] = [];
+  const parts: GeminiPart[] = [];
   const includedNames: string[] = [];
   const skippedNotes: string[] = [];
 
   for (const m of limited) {
     const label = m.fileName || (m.type === 'image' ? '이미지' : '파일');
+    const extension = getExtension(m.fileName);
 
-    // 파일(문서류)은 Gemini가 이해하는 형식인지 먼저 확인한다. 이미지 메시지는 항상 시도.
-    if (m.type === 'file' && !SUPPORTED_FILE_EXTENSIONS.has(getExtension(m.fileName))) {
-      skippedNotes.push(`${label} (지원하지 않는 파일 형식이에요 - 이미지·PDF·텍스트 파일만 분석할 수 있어요)`);
+    // 1) docx/xlsx: 브라우저에서 텍스트로 변환해서 text part로 넘긴다
+    if (m.type === 'file' && TEXT_EXTRACTABLE_EXTENSIONS.has(extension)) {
+      const buffer = await fetchAsArrayBuffer(m.fileUrl!);
+      if (!buffer) {
+        skippedNotes.push(`${label} (파일을 가져오지 못했어요 - 파일 서버 접근 권한 문제일 수 있어요)`);
+        continue;
+      }
+      const text = await extractTextFromFile(buffer, extension);
+      if (!text) {
+        skippedNotes.push(`${label} (파일 내용을 읽지 못했어요 - 손상되었거나 암호로 보호된 파일일 수 있어요)`);
+        continue;
+      }
+      parts.push({ text: `--- 첨부파일 "${label}" 내용 ---\n${text}` });
+      includedNames.push(label);
+      continue;
+    }
+
+    // 2) 그 외 파일(문서류)은 Gemini가 이해하는 형식인지 확인한다. 이미지 메시지는 항상 시도.
+    if (m.type === 'file' && !SUPPORTED_FILE_EXTENSIONS.has(extension)) {
+      skippedNotes.push(
+        `${label} (지원하지 않는 파일 형식이에요 - 이미지·PDF·텍스트·워드·엑셀 파일만 분석할 수 있어요)`,
+      );
       continue;
     }
 
@@ -254,7 +328,7 @@ function summaryResultToTiptapDoc(result: AiSummaryResult): TiptapDoc {
 export async function callGeminiForMinutes(
   transcript: string,
   _title: string,
-  attachmentParts: GeminiInlinePart[] = [],
+  attachmentParts: GeminiPart[] = [],
 ): Promise<TiptapDoc> {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API 키가 설정되지 않았어요. .env 파일의 VITE_GEMINI_API_KEY를 확인해주세요.');

@@ -42,8 +42,6 @@ export const ChatPage = () => {
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
 
-  // 채팅방 하나(selectedRoomId)에 대한 메시지/소켓/입력/AI캡쳐선택 로직은 전부 이 훅이 담당한다.
-  // 내가 보낸 메시지가 도착하면 사이드바 미리보기(rooms 목록)를 갱신해야 하므로 onMessageSent로 위임받는다.
   const conversation = useRoomConversation(selectedRoomId, currentUserId, {
     onMessageSent: (payload) => {
       setRooms((prev) => {
@@ -66,8 +64,7 @@ export const ChatPage = () => {
         return [updatedRoom, ...rest];
       });
     },
-    // 지금 열려있는 방의 "마지막 메시지"가 삭제된 경우에만 사이드바 미리보기를 갱신한다.
-    // (마지막 메시지가 아닌 과거 메시지를 지운 거라면 미리보기는 그대로 둬도 된다)
+
     onMessageDeleted: ({ roomId, wasLastMessage }) => {
       if (!wasLastMessage) return;
       setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, lastMessagePreview: '삭제된 메시지입니다' } : r)));
@@ -116,7 +113,7 @@ export const ChatPage = () => {
           ...room,
           lastMessagePreview: preview,
           lastMessageTime: formatTime(payload.createdAt),
-          unreadCount: isRoomOpen ? room.unreadCount : room.unreadCount + 1,
+          unreadCount: isRoomOpen || payload.isRead ? room.unreadCount : room.unreadCount + 1,
         };
 
         const rest = prev.filter((r) => r.id !== payload.roomId);
@@ -158,7 +155,6 @@ export const ChatPage = () => {
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
   };
 
-  // 멘션 호버 카드의 "메시지 보내기": 이미 DM방이 있으면 그 방을 열고, 없으면 새로 만들어서 연다.
   const handleStartDirectMessage = async (userId: string) => {
     if (!userId || userId === currentUserId) return;
 

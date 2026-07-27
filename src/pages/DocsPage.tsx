@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Menu } from 'lucide-react';
+import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2 } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { ConfirmModal } from '@/components/ConfirmModal';
@@ -195,6 +195,26 @@ export const DocsPage = () => {
     fetchDocs();
   }, []);
 
+
+  useEffect(() => {
+    if (!activeFileId) return;
+
+    const fetchActiveFileDetail = async () => {
+      try {
+        const detailDoc = await getDocumentById(activeFileId);
+
+        // files 배열에서 현재 activeFileId에 해당하는 문서를 최신 상세 데이터로 교체
+        setFiles((prevFiles) =>
+          prevFiles.map((doc) => (doc.documentId === activeFileId ? detailDoc : doc))
+        );
+      } catch (error) {
+        console.error('문서 상세 정보를 불러오는 데 실패했습니다:', error);
+      }
+    };
+
+    fetchActiveFileDetail();
+  }, [activeFileId]);
+
   // 활성 파일 객체
   const activeFile = files.find((f) => f.documentId === activeFileId) || null;
   const filteredFiles = files.filter((f) => f.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -257,6 +277,43 @@ export const DocsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // 온라인 접속자 이름 목록 (Set)
+  const activeUserNames = useMemo(() => {
+    return new Set(activeUsers.map((u) => u.name?.trim()).filter(Boolean));
+  }, [activeUsers]);
+
+  // 현재 활성화된 문서의 collaborators 중 오프라인 사용자들만 추출
+  const offlineMembers = useMemo(() => {
+    if (!activeFile) return [];
+
+    // 1. collaborators가 배열 형태로 존재하면 우선 사용
+    let rawCollaborators: Array<{ userId?: string; name: string; avatar?: string | null }> = [];
+
+    if (Array.isArray(activeFile.collaborators) && activeFile.collaborators.length > 0) {
+      rawCollaborators = activeFile.collaborators;
+    } else if (activeFile.createdBy) {
+      // createdBy가 string이 아닌 객체(UserInfo)일 때만 배열로 대체
+      if (typeof activeFile.createdBy === 'object' && 'name' in activeFile.createdBy) {
+        rawCollaborators = [activeFile.createdBy as { userId?: string; name: string; avatar?: string | null }];
+      }
+    }
+
+    if (rawCollaborators.length === 0) return [];
+
+    // activeUserNames(온라인 목록)에 없는 오프라인 유저만 필터링
+    return rawCollaborators
+      .filter((collab) => {
+        const name = collab?.name?.trim();
+        return name && !activeUserNames.has(name);
+      })
+      .map((collab) => ({
+        name: collab.name,
+        color: getUserColor(collab.name),
+        avatar: collab.avatar || '',
+        isOnline: false,
+      }));
+  }, [activeFile, activeUserNames]);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -457,16 +514,6 @@ export const DocsPage = () => {
                 className="w-full border-none bg-transparent text-[13px] text-fg-primary outline-none placeholder:text-fg-tertiary"
               />
             </div>
-            {/* 필터 아이콘 */}
-            <button
-              className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md text-gray-400 hover:bg-black/5"
-              title="필터">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <line x1="4" y1="6" x2="20" y2="6" />
-                <line x1="8" y1="12" x2="16" y2="12" />
-                <line x1="11" y1="18" x2="13" y2="18" />
-              </svg>
-            </button>
             {/* + 버튼 */}
             <button
               className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md text-gray-400 hover:bg-black/5 hover:text-blue-500"
@@ -506,81 +553,72 @@ export const DocsPage = () => {
               const isEditing = editingTitleId === file.documentId;
 
               return (
-                <div
-                  key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-bg-default shadow-sm' : 'hover:bg-bg-subtle'
-                    }`}
-                  onClick={() => {
-                    if (!isEditing) {
-                      handleTabSwitch(file.documentId);
-                      setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
-                    }
-                  }}>
-                  {/* 왼쪽 파란 바 (활성 시) */}
-                  <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-blue-500' : 'bg-transparent'
-                      }`}
-                  />
-                  {/* 제목 */}
-                  {isEditing ? (
-                    <input
-                      ref={titleInputRef}
-                      type="text"
-                      value={file.title}
-                      onChange={(e) => handleTitleChange(file.documentId, e.target.value)}
-                      onBlur={() => finishEditing(file.documentId)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') finishEditing(file.documentId);
-                      }}
-                      className="flex-1 rounded border border-blue-300 bg-blue-50 px-1.5 py-0.5 text-[13px] outline-none"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    <span
-                      className={`flex-1 truncate ${isActive ? 'font-medium text-fg-primary' : 'text-fg-secondary'}`}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        startEditing(file.documentId);
-                      }}
-                      title="더블클릭하여 제목 수정">
-                      {file.title || '새 문서'}
-                    </span>
-                  )}
-
-                  {/* 우측: 사용자 아바타 (활성) or 삭제 */}
-                  {isActive && !isEditing && (
-                    <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white overflow-hidden"
-                      style={{
-                        backgroundColor: currentUser.color,
-                      }}>
-                      {currentUser.avatar ? (
-                        <img
-                          src={currentUser.avatar}
-                          alt={currentUser.name}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            // 이미지 로드 실패 시 이니셜로 대체
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
+                      <div
+                        key={file.documentId}
+                        className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
+                          isActive ? 'bg-[var(--color-bg-default)] shadow-sm' : 'hover:bg-[var(--color-bg-subtle)]'
+                        }`}
+                        onClick={() => {
+                          if (!isEditing) {
+                            handleTabSwitch(file.documentId);
+                            setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
+                          }
+                        }}
+                      >
+                        {/* 왼쪽 테마 바 (활성 시) */}
+                        <div
+                          className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
+                            isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
+                          }`}
                         />
-                      ) : (
-                        currentUser.name.charAt(0)
-                      )}
-                    </span>
-                  )}
-                  {!isEditing && !isActive && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFileClick(file.documentId);
-                      }}
-                      className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 hover:text-red-500 group-hover:flex"
-                      title="삭제">
-                      ×
-                    </button>
-                  )}
-                </div>
+
+                        {/* 제목 영역 */}
+                        {isEditing ? (
+                          <input
+                            ref={titleInputRef}
+                            type="text"
+                            value={file.title}
+                            onChange={(e) => handleTitleChange(file.documentId, e.target.value)}
+                            onBlur={() => finishEditing(file.documentId)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') finishEditing(file.documentId);
+                            }}
+                            className="flex-1 rounded border border-[var(--color-border-brand)] bg-[var(--color-brand-soft)] px-1.5 py-0.5 text-[13px] outline-none text-[var(--color-fg-primary)]"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span
+                            className={`flex-1 truncate ${
+                              isActive ? 'font-medium text-[var(--color-fg-primary)]' : 'text-[var(--color-fg-secondary)]'
+                            }`}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              startEditing(file.documentId);
+                            }}
+                            title="더블클릭하여 제목 수정"
+                          >
+                            {file.title || '새 문서'}
+                          </span>
+                        )}
+
+                        {/* 우측: 삭제 버튼 (편집 중이 아닐 때, 호버하거나 활성 상태면 노출) */}
+                        {!isEditing && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFileClick(file.documentId);
+                            }}
+                            className={`h-5 w-5 shrink-0 items-center justify-center rounded text-[var(--color-fg-tertiary)] hover:bg-[var(--color-bg-pressed)] hover:text-[var(--color-error)] transition-colors ${
+                              isActive ? 'flex' : 'hidden group-hover:flex'
+                            }`}
+                            title="삭제"
+                          >
+                            {/* Lucide Trash2 아이콘 */}
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
               );
             })}
           </nav>
@@ -634,77 +672,106 @@ export const DocsPage = () => {
                 {/* 오른쪽: 접속자 아바타 그룹 + 저장 버튼 */}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center -space-x-2">
-                    {activeUsers.map((u, i) => (
+                    {[
+                      // 1) 현재 문서에 함께 들어와 있는 사용자 (이 문서 참여 중)
+                      ...activeUsers.map((u) => ({ ...u, isOnline: true })),
+                      
+                      // 2) 이 문서의 협업자/작성자 중 현재 이 문서를 보고 있지 않은 사용자 (미참여)
+                      ...offlineMembers,
+                    ].map((u, i) => (
                       <div
-                        key={i}
-                        className="relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] overflow-hidden transition-transform hover:z-10 hover:scale-110 flex-shrink-0"
-                        style={{ backgroundColor: u.color }}
-                        title={u.name}>
-                        {u.avatar ? (
+                        key={u.userId || u.id || u.name || i}
+                        /* group 클래스로 호버 시 커스텀 툴팁 노출 제어 */
+                        className={`group relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] transition-all hover:z-30 hover:scale-110 flex-shrink-0 ${
+                          u.isOnline 
+                            ? 'z-10' 
+                            : 'opacity-60 saturate-75' // 미참여 사용자는 투명도 조절
+                        }`}
+                        style={{ backgroundColor: u.color || 'var(--color-avatar-1)' }}
+                      >
+                        {/* 1. 이니셜 (기본/fallback) */}
+                        <span>{u.name?.charAt(0)}</span>
+
+                        {/* 2. 프로필 이미지 (있을 경우 이니셜 위에 레이어로 배치) */}
+                        {u.avatar && (
                           <img
                             src={u.avatar}
                             alt={u.name}
-                            className="h-full w-full object-cover"
+                            className="absolute inset-0 h-full w-full rounded-full object-cover"
                             onError={(e) => {
-                              // 이미지 로드 실패 시 이니셜로 대체 렌더링
+                              // 이미지 로드 실패 시 이니셜이 보이도록 이미지 숨김
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
-                        ) : (
-                          u.name.charAt(0)
                         )}
+
+                        {/* 3. 이 문서 참여 중인 유저 전용 초록색 테두리 링 */}
+                        {u.isOnline && (
+                          <div className="absolute inset-0 rounded-full ring-2 ring-[var(--color-presence-online)] ring-offset-1 ring-offset-[var(--color-bg-default)] pointer-events-none" />
+                        )}
+
+                        {/* 4. 커스텀 툴팁 (호버 시) */}
+                        <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-fg-primary)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-bg-default)] shadow-lg opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:-translate-y-1 z-40 flex items-center gap-1.5">
+                          {/* 상태 indicator 점(Dot) */}
+                          <span 
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              u.isOnline 
+                                ? 'bg-[var(--color-presence-online)]' 
+                                : 'bg-[var(--color-fg-disabled)]'
+                            }`} 
+                          />
+                          {/* 이름 & 상태 텍스트 */}
+                          <span>{u.name}</span>
+                          <span className="text-[10px] opacity-75">
+                            {u.isOnline ? '이 문서 참여 중' : '미참여'}
+                          </span>
+
+                          {/* 툴팁 상단 화살표 */}
+                          <div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-b-4 border-b-[var(--color-fg-primary)]" />
+                        </div>
                       </div>
                     ))}
-                  </div>
+                </div>
 
-                  <div className="relative flex items-center export-menu-container">
-                    <div className="flex rounded-lg shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:shadow-[0_4px_12px_rgba(79,142,247,0.4)]">
+                <div className="relative flex items-center export-menu-container">
+                  {/* 단일 내보내기 버튼 */}
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    disabled={isSaving}
+                    className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                    title="내보내기 옵션"
+                  >
+                    {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    <span>내보내기</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+
+                  {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}
+                  {showExportMenu && (
+                    <div className="absolute right-0 top-[110%] w-32 rounded-lg border border-[var(--color-border-default,#e5e7eb)] bg-[var(--color-bg-default,#ffffff)] p-1 shadow-[0_8px_20px_rgba(0,0,0,0.1)] z-50">
                       <button
-                        onClick={handleHeaderSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-1.5 rounded-l-lg bg-gradient-to-r from-[#4f8ef7] to-[#5984f9] px-4 py-2 text-[13px] font-semibold text-white active:scale-95 disabled:opacity-60 border-r border-blue-400/30">
-                        {isSaving && (
-                          <svg className="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" opacity="0.3" />
-                            <path d="M4 12a8 8 0 018-8" stroke="white" strokeWidth="3" strokeLinecap="round" />
-                          </svg>
-                        )}
-                        내보내기
+                        onClick={() => {
+                          handleExportPDF();
+                          setShowExportMenu(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600"
+                      >
+                        <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                        <span>PDF로 저장</span>
                       </button>
                       <button
-                        onClick={() => setShowExportMenu(!showExportMenu)}
-                        disabled={isSaving}
-                        className="flex items-center justify-center rounded-r-lg bg-gradient-to-r from-[#5984f9] to-[#6c7bfa] px-2 py-2 text-white active:scale-95 disabled:opacity-60 hover:brightness-110"
-                        title="내보내기 옵션">
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}>
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
+                        onClick={() => {
+                          handleExportTXT();
+                          setShowExportMenu(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] font-medium text-[var(--color-fg-primary,#111827)] transition-colors hover:bg-[var(--color-bg-subtle,#f3f4f6)] hover:text-blue-600"
+                      >
+                        <FileCode className="h-3.5 w-3.5 text-gray-500 shrink-0" />
+                        <span>TXT로 저장</span>
                       </button>
                     </div>
-
-                    {/* 내보내기 드롭다운 메뉴 */}
-                    {showExportMenu && (
-                      <div className="absolute right-0 top-[110%] w-40 rounded-xl border border-border-default bg-bg-default p-1.5 shadow-[0_10px_25px_rgba(0,0,0,0.1)] z-50">
-                        <button
-                          onClick={handleExportPDF}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-fg-primary transition-colors hover:bg-bg-subtle hover:text-blue-600">
-                          <span className="text-sm">📄</span>
-                          PDF로 저장
-                        </button>
-                        <button
-                          onClick={handleExportTXT}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-[13px] font-medium text-fg-primary transition-colors hover:bg-bg-subtle hover:text-blue-600">
-                          <span className="text-sm">📝</span>
-                          TXT로 저장
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  )}
+                </div>
                 </div>
               </header>
 

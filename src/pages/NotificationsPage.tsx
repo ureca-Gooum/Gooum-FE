@@ -14,6 +14,7 @@ import { stripSenderPrefix } from '@/utils/notification';
 import { formatTime } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
+<<<<<<< HEAD
 import type { NewNotificationPayload } from '@/types/socket';
 
 const DUMMY_NOTIFICATIONS: NotificationItem[] = [
@@ -45,14 +46,23 @@ const DUMMY_NOTIFICATIONS: NotificationItem[] = [
     isRead: false,
   },
 ];
+=======
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
+import { triggerBadgeRefresh } from '@/hooks/useUnreadBadge';
+>>>>>>> develop
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
 export const NotificationsPage = () => {
   const currentUserId = getCurrentUserId();
 
+<<<<<<< HEAD
   const [notifications, setNotifications] = useState<NotificationItem[]>(DUMMY_NOTIFICATIONS);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>('1');
+=======
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [selectedNotiId, setSelectedNotiId] = useState<string | null>(null);
+>>>>>>> develop
   const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
 
@@ -96,6 +106,23 @@ export const NotificationsPage = () => {
   const roomId = selectedNoti?.roomId ?? null;
 
   useEffect(() => {
+    let isMounted = true;
+    fetchNotifications()
+      .then((res) => {
+        if (isMounted) {
+          setNotifications(res.data);
+          if (res.data.length > 0) {
+            setSelectedNotiId(res.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.error('알림을 불러오지 못했어요:', err));
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!roomId) {
       setRoom(null);
       return;
@@ -125,8 +152,6 @@ export const NotificationsPage = () => {
     }
   };
 
-  // 좌측 탭 필터링 로직
-  // '멘션' 탭이 새로 생기면서 DM은 message만, 멘션은 mention만 보여주도록 분리했다.
   const filteredNotifications = notifications.filter((noti) => {
     if (activeTab === '전체') return true;
     if (activeTab === 'DM') return noti.type === 'message';
@@ -134,6 +159,31 @@ export const NotificationsPage = () => {
     if (activeTab === '문서') return noti.type === 'document';
     return true;
   });
+
+  const handleSelectNoti = async (noti: NotificationItem) => {
+    setSelectedNotiId(noti.id);
+    if (!noti.isRead) {
+      try {
+        await markNotificationAsRead(noti.id);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n))
+        );
+        triggerBadgeRefresh();
+      } catch (err) {
+        console.error('알림 읽음 처리 실패:', err);
+      }
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      triggerBadgeRefresh();
+    } catch (err) {
+      console.error('전체 읽음 처리 실패:', err);
+    }
+  };
 
   const isLoggedIn = !!localStorage.getItem('accessToken');
   if (!isLoggedIn) {
@@ -155,7 +205,15 @@ export const NotificationsPage = () => {
       <ListPanel
         header={
           <div className="flex flex-col gap-4">
-            <h2 className="text-[20px] font-bold text-fg-primary">내 활동</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-[20px] font-bold text-fg-primary">내 활동</h2>
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-xs text-fg-tertiary hover:text-fg-primary transition-colors"
+              >
+                모두 읽음
+              </button>
+            </div>
             <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
@@ -210,7 +268,7 @@ export const NotificationsPage = () => {
                     key={noti.id}
                     notification={noti}
                     isSelected={selectedNotiId === noti.id}
-                    onSelect={() => setSelectedNotiId(noti.id)}
+                    onSelect={() => handleSelectNoti(noti)}
                   />
                 ))}
               </div>

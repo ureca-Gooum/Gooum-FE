@@ -1,16 +1,30 @@
 import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { OnboardingModal } from '@/components/OnboardingModal';
 
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   // 로그인 화면에서는 헤더(검색/창 컨트롤)와 사이드바(아이콘 레일)를 아예 안 보여준다.
   const isLoginPage = location.pathname === '/login';
 
   const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hideOnboarding = localStorage.getItem('gooum_hide_onboarding');
+    const state = location.state as { justLoggedIn?: boolean } | null;
+
+    if (!hideOnboarding && state?.justLoggedIn) {
+      setShowOnboarding(true);
+      // state 초기화 (새로고침 시 다시 뜨지 않도록)
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // 창 모드 위치 및 크기 상태
   const [rect, setRect] = useState(() => {
@@ -130,7 +144,7 @@ export const MainLayout = () => {
         <button
           onClick={() => setWindowMode('maximized')}
           className="px-6 py-3 bg-bg-default shadow-2xl rounded-2xl border border-border-default font-bold text-brand-primary flex items-center gap-3 hover:scale-105 transition-transform">
-          <img src="/favicon.svg" alt="logo" className="w-6 h-6 animate-pulse" />
+          <img src="/favicon.png" alt="logo" className="w-6 h-6 animate-pulse" />
           구움 앱 열기
         </button>
       </div>
@@ -181,6 +195,7 @@ export const MainLayout = () => {
           <Outlet />
         </div>
       </div>
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MoreVertical, Heart, LogOut } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import type { Room } from '@/types/chat';
 
 interface RoomListItemProps {
@@ -28,6 +29,7 @@ export function RoomListItem({
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [hoveredItem, setHoveredItem] = useState<'favorite' | 'leave' | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   // 메뉴가 열릴 때마다 위치를 다시 계산 (버튼 위치 기준)
   useEffect(() => {
@@ -61,9 +63,12 @@ export function RoomListItem({
     };
   }, [isMenuOpen]);
 
-  const handleLeave = () => {
+  const handleLeaveClick = () => {
     onMenuToggle();
-    if (!confirm(`${room.displayName}님과의 채팅방을 나가시겠어요?`)) return;
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmLeave = () => {
     onLeave(room.id);
   };
 
@@ -186,7 +191,7 @@ export function RoomListItem({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleLeave();
+              handleLeaveClick();
             }}
             onMouseEnter={() => setHoveredItem('leave')}
             onMouseLeave={() => setHoveredItem(null)}
@@ -213,6 +218,17 @@ export function RoomListItem({
         </div>,
         document.body,
       )}
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="채팅방 나가기"
+        message={`${room.displayName}님과의 채팅방을 나가시겠어요?\n방을 나가면 대화 내용이 모두 삭제됩니다.`}
+        confirmText="나가기"
+        cancelText="취소"
+        isDestructive={true}
+        onConfirm={handleConfirmLeave}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   );
 }

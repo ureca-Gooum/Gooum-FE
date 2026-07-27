@@ -11,6 +11,7 @@ import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
 import { DocumentCardNode } from '@/components/DocumentCardNode';
 import { MentionHoverCard } from '@/components/MentionHoverCard';
 import { Avatar } from '@/components/Avatar';
+import { DeleteMessageModal } from '@/components/DeleteMessageModal';
 
 const AVATAR_COLUMN_WIDTH = 28;
 
@@ -49,6 +50,7 @@ export function MessageBubble({
   showAvatar = true,
 }: MessageBubbleProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [hoveredMention, setHoveredMention] = useState<{ userId: string; rect: DOMRect } | null>(null);
   const hideTimeoutRef = useRef<number>();
 
@@ -209,7 +211,7 @@ export function MessageBubble({
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowMenu(false);
-                      onDelete(message.id);
+                      setIsDeleteModalOpen(true);
                     }}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-error hover:bg-bg-subtle">
                     <Trash2 size={14} />
@@ -293,6 +295,14 @@ export function MessageBubble({
           </span>
         </div>
       </div>
+
+      <DeleteMessageModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => onDelete(message.id)}
+        message={message}
+        senderMember={senderMember}
+      />
     </div>
   );
 }

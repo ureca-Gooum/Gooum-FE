@@ -1,5 +1,5 @@
 import type { ReactNode, RefObject } from 'react';
-import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
+import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -83,6 +83,8 @@ interface ChatRoomPanelProps {
   onCreateDocument: (payload: { title: string; content: TiptapDoc; isContentEmpty: boolean }) => void;
   onDeleteMessage: (messageId: string) => void;
   onStartDirectMessage?: (userId: string) => void;
+  targetMessageId?: string | null;
+  onSidebarToggle?: () => void;
 }
 
 /**
@@ -120,6 +122,8 @@ export function ChatRoomPanel({
   onCreateDocument,
   onDeleteMessage,
   onStartDirectMessage,
+  targetMessageId,
+  onSidebarToggle,
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
@@ -128,6 +132,13 @@ export function ChatRoomPanel({
       header={
         target ? (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
+            {onSidebarToggle && (
+              <button
+                onClick={onSidebarToggle}
+                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
             <Avatar
               seed={target.id}
               imageUrl={target.displayImage}
@@ -214,8 +225,15 @@ export function ChatRoomPanel({
             </div>
           </div>
         ) : (
-          <div className="flex h-[63px] items-center border-b border-border-default px-4">
-            <h2 className="text-fg-tertiary">{emptyHeaderLabel}</h2>
+          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
+            {onSidebarToggle && (
+              <button
+                onClick={onSidebarToggle}
+                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
+            {emptyHeaderLabel}
           </div>
         )
       }
@@ -283,9 +301,10 @@ export function ChatRoomPanel({
               const showAvatar = showDateDivider || !isSameMessageGroup(prevMsg, msg);
 
               return (
-                <div key={msg.id} className="w-full min-w-0">
+                <div key={msg.id} id={`message-${msg.id}`} className="w-full min-w-0">
                   {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
-                  <MessageBubble
+                  <div className={`transition-all duration-1000 ${msg.id === targetMessageId ? 'bg-brand-soft/50 rounded-xl py-1 px-2 -mx-2' : 'py-1'}`}>
+                    <MessageBubble
                     message={msg}
                     onDelete={onDeleteMessage}
                     selectable={isSelectingMessages}
@@ -293,8 +312,9 @@ export function ChatRoomPanel({
                     onToggleSelect={onToggleMessageSelect}
                     roomMembers={roomMembers}
                     onStartDirectMessage={onStartDirectMessage}
-                    showAvatar={showAvatar}
-                  />
+                      showAvatar={showAvatar}
+                    />
+                  </div>
                 </div>
               );
             })}

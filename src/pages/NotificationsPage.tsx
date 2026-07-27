@@ -23,6 +23,7 @@ export const NotificationsPage = () => {
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // 알림에 연결된 채팅방 상세 (아바타/이름/즐겨찾기 등 헤더 표시용) - ChatPage의 rooms 리스트 대신
   // 선택된 알림 하나에 대해서만 fetchRoomDetail로 가져온다. mapRoomFromApi를 그대로 재사용해서
@@ -68,7 +69,7 @@ export const NotificationsPage = () => {
   }, [roomId]);
 
   // ChatPage의 useRoomConversation과 완전히 동일한 훅. roomId만 다를 뿐 메시지/전송/타이핑/AI캡쳐선택 로직이 그대로 재사용된다.
-  const conversation = useRoomConversation(roomId, currentUserId);
+  const conversation = useRoomConversation(roomId, currentUserId, { targetMessageId: selectedNoti?.messageId });
 
   const handleToggleFavorite = async () => {
     if (!room) return;
@@ -91,6 +92,7 @@ export const NotificationsPage = () => {
 
   const handleSelectNoti = async (noti: NotificationItem) => {
     setSelectedNotiId(noti.id);
+    setIsSidebarOpen(false);
     if (!noti.isRead) {
       try {
         await markNotificationAsRead(noti.id);
@@ -130,8 +132,10 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex flex-1">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative">
       <ListPanel
+        isSidebarOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         header={
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -266,6 +270,8 @@ export const NotificationsPage = () => {
         onOpenAiMinutes={conversation.startSelecting}
         onCreateDocument={conversation.createDocumentMessage}
         onDeleteMessage={conversation.deleteMessage}
+        targetMessageId={selectedNoti?.messageId}
+        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
     </div>
   );

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { fetchNotifications } from '@/api/notifications';
 import { fetchRooms } from '@/api/rooms';
+import { onNewNotification, offNewNotification, connectSocket } from '@/socket/socket';
+import type { NewNotificationPayload } from '@/types/socket';
 
 export const triggerBadgeRefresh = () => {
   window.dispatchEvent(new Event('refreshUnreadBadge'));
@@ -30,14 +32,31 @@ export function useUnreadBadge() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return;
+
+    // 소켓 연결을 여기서도 보장하여 전역적으로 알림을 받을 수 있게 함
+    connectSocket();
+
     fetchCounts();
 
     // Fetch on window focus
     const handleFocus = () => fetchCounts();
     const handleForceRefresh = () => fetchCounts();
 
+    // 실시간 웹소켓 이벤트 수신 시 뱃지 즉시 업데이트 (API 폴링 대기시간 없앰)
+    const handleNewNotification = (payload: NewNotificationPayload) => {
+      setUnreadNotiCount((prev) => prev + 1);
+      
+      // 채팅 메시지 알림인 경우 DM 뱃지도 즉시 증가
+      if (payload.type === 'message') {
+        setUnreadDMCount((prev) => prev + 1);
+      }
+    };
+
     window.addEventListener('focus', handleFocus);
     window.addEventListener('refreshUnreadBadge', handleForceRefresh);
+    onNewNotification(handleNewNotification);
 
     // Fetch periodically (e.g., every 30 seconds)
     const interval = setInterval(fetchCounts, 30000);
@@ -45,6 +64,7 @@ export function useUnreadBadge() {
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('refreshUnreadBadge', handleForceRefresh);
+      offNewNotification(handleNewNotification);
       clearInterval(interval);
     };
   }, []);

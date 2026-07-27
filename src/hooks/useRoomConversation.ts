@@ -23,6 +23,7 @@ import type { NewMessagePayload, MessageDeletedPayload } from '@/types/socket';
 interface UseRoomConversationOptions {
   /** 방 안에서 새 메시지를 "내가" 보냈을 때, 사이드바 미리보기 등을 갱신하고 싶을 때 사용 (raw 소켓 payload를 그대로 전달) */
   onMessageSent?: (payload: NewMessagePayload) => void;
+  targetMessageId?: string | null;
 }
 
 /**
@@ -173,8 +174,9 @@ export function useRoomConversation(
 
   const messages = [...roomMessages, ...localMessages.filter((m) => m.roomId === roomId)];
 
-  // 스크롤을 항상 맨 아래로
+  // 스크롤을 맨 아래로 하거나, 타겟 메시지가 있으면 거기로 스크롤
   const prevRoomIdRef = useRef<string | null>(null);
+  const prevTargetMessageIdRef = useRef<string | null | undefined>(null);
   const wasLoadingRef = useRef(false);
 
   useEffect(() => {
@@ -182,24 +184,36 @@ export function useRoomConversation(
     wasLoadingRef.current = isMessagesLoading;
     const roomChanged = prevRoomIdRef.current !== roomId;
     prevRoomIdRef.current = roomId;
+    const targetChanged = prevTargetMessageIdRef.current !== options.targetMessageId;
+    prevTargetMessageIdRef.current = options.targetMessageId;
 
     if (isMessagesLoading) return;
 
-    const behavior: ScrollBehavior = justEnteredRoom || roomChanged ? 'auto' : 'smooth';
-    const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior });
+    const behavior: ScrollBehavior = justEnteredRoom || roomChanged || targetChanged ? 'auto' : 'smooth';
+    
+    const scroll = () => {
+      if (options.targetMessageId) {
+        const el = document.getElementById(`message-${options.targetMessageId}`);
+        if (el) {
+          el.scrollIntoView({ behavior, block: 'center' });
+          return;
+        }
+      }
+      messagesEndRef.current?.scrollIntoView({ behavior });
+    };
 
-    scrollToBottom();
+    scroll();
     const raf1 = requestAnimationFrame(() => {
-      scrollToBottom();
-      requestAnimationFrame(scrollToBottom);
+      scroll();
+      requestAnimationFrame(scroll);
     });
-    const timer = window.setTimeout(scrollToBottom, 150);
+    const timer = window.setTimeout(scroll, 150);
 
     return () => {
       cancelAnimationFrame(raf1);
       window.clearTimeout(timer);
     };
-  }, [messages.length, isMessagesLoading, roomId]);
+  }, [messages.length, isMessagesLoading, roomId, options.targetMessageId]);
 
   const sendMessage = (content: TiptapDoc) => {
     if (!roomId) return;

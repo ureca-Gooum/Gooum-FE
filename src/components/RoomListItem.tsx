@@ -12,6 +12,8 @@ interface RoomListItemProps {
   onLeave: (roomId: string) => void;
   isMenuOpen: boolean;
   onMenuToggle: () => void;
+  /** 지금 열려있는 채팅방인지 (리스트에서 활성 상태로 표시) */
+  isActive?: boolean;
 }
 
 export function RoomListItem({
@@ -21,6 +23,7 @@ export function RoomListItem({
   onLeave,
   isMenuOpen,
   onMenuToggle,
+  isActive = false,
 }: RoomListItemProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -79,7 +82,9 @@ export function RoomListItem({
   return (
     <div
       onClick={onSelect}
-      className="group relative flex items-center gap-3 px-4 py-2 hover:bg-bg-pressed cursor-pointer">
+      className={`group relative mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+        isActive ? 'border border-border-default bg-bg-default' : 'border border-transparent hover:bg-bg-pressed'
+      }`}>
       <Avatar
         seed={room.id}
         imageUrl={room.type === 'group' ? undefined : room.displayImage}
@@ -115,7 +120,7 @@ export function RoomListItem({
             e.stopPropagation();
             onMenuToggle();
           }}
-          className={`group/menubtn absolute inset-0 flex items-center justify-end rounded p-1 transition-opacity duration-150 ${
+          className={`group/menubtn absolute right-0 top-1/2 flex -translate-y-1/2 items-center justify-center rounded p-1 transition-opacity duration-150 ${
             isMenuOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100'

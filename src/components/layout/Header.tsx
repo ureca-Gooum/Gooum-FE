@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Search, FileText, MessageCircle, HelpCircle,
 import { useNavigate } from 'react-router-dom';
 import { fetchSearch } from '@/api/search';
 import type { SearchApiResponse } from '@/types/search';
+import { HeaderLogo } from './HeaderLogo';
 
 interface HeaderProps {
   onMinimize?: () => void;
@@ -19,7 +20,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
   const [searchResults, setSearchResults] = useState<SearchApiResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const isLoggedIn = !!localStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -89,12 +90,11 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
   };
 
   return (
-    <header 
+    <header
       className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
-      onMouseDown={onMouseDown}
-    >
+      onMouseDown={onMouseDown}>
       {/* 왼쪽: 로고 */}
-      <img src="/favicon.svg" alt="구움" className="h-10 w-10" />
+      <HeaderLogo />
 
       <div className="flex flex-1 items-center justify-center gap-2">
         <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
@@ -105,15 +105,18 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
         </button>
 
         <div className="relative w-full max-w-md" ref={dropdownRef}>
-          <div className={`flex w-full items-center gap-2 rounded-lg border bg-bg-default px-3 py-1.5 transition-colors ${
-            isFocused ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-border-default'
-          }`}>
+          <div
+            className={`flex w-full items-center gap-2 rounded-lg border bg-bg-default px-3 py-1.5 transition-colors ${
+              isFocused ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-border-default'
+            }`}>
             <Search size={16} className={isFocused ? 'text-brand-primary' : 'text-fg-tertiary'} />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => { if (isLoggedIn) setIsFocused(true) }}
-              placeholder={isLoggedIn ? "검색" : "로그인 후 이용 가능"}
+              onFocus={() => {
+                if (isLoggedIn) setIsFocused(true);
+              }}
+              placeholder={isLoggedIn ? '검색' : '로그인 후 이용 가능'}
               disabled={!isLoggedIn}
               className="w-full bg-transparent text-sm outline-none placeholder:text-fg-tertiary text-fg-primary disabled:opacity-50"
             />
@@ -128,7 +131,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
                 </span>
                 {isSearching && <span className="text-xs text-brand-primary">검색 중...</span>}
               </div>
-              
+
               <div className="flex flex-col py-1">
                 {!searchResults && !isSearching && (
                   <div className="px-3 py-6 text-center text-sm text-fg-tertiary">검색 결과가 없습니다.</div>
@@ -208,29 +211,28 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
       </div>
 
       <div className="flex items-center gap-1">
-        <button className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary" title="도움말">
+        <button
+          className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
+          title="도움말">
           <HelpCircle size={16} />
         </button>
         <div className="w-px h-4 bg-border-default mx-1" />
-        <button 
+        <button
           onClick={onMinimize}
-          className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary" 
-          title="최소화"
-        >
+          className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
+          title="최소화">
           <Minus size={16} />
         </button>
-        <button 
+        <button
           onClick={onMaximize}
-          className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary" 
-          title={isMaximized ? "이전 크기로 복원" : "최대화"}
-        >
+          className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
+          title={isMaximized ? '이전 크기로 복원' : '최대화'}>
           {isMaximized ? <Copy size={14} /> : <Square size={14} />}
         </button>
-        <button 
+        <button
           onClick={onClose}
-          className="flex h-7 w-7 items-center justify-center rounded hover:bg-error hover:text-white text-fg-tertiary transition-colors" 
-          title="닫기"
-        >
+          className="flex h-7 w-7 items-center justify-center rounded hover:bg-error hover:text-white text-fg-tertiary transition-colors"
+          title="닫기">
           <X size={16} />
         </button>
       </div>

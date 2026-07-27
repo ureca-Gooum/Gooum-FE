@@ -12,7 +12,7 @@ import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
 import { Skeleton } from '@/components/Skeleton';
 import { fetchRooms, toggleFavorite, leaveRoom, createRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
-import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
+import { connectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { getCurrentUserId } from '@/constants/auth';
 import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
@@ -107,7 +107,7 @@ export const ChatPage = () => {
     }
   }, [location.state, rooms.length]);
 
-  // 소켓 연결 - 앱 진입 시 한 번만
+  // 소켓은 Sidebar 배지도 같이 구독하는 전역 연결이라 페이지 언마운트로 끊으면 안 된다
   useEffect(() => {
     const socket = connectSocket();
 
@@ -118,8 +118,6 @@ export const ChatPage = () => {
     socket.on('disconnect', (reason) => {
       console.log('❌ 소켓 끊김:', reason);
     });
-
-    return () => disconnectSocket();
   }, []);
 
   usePresence(setRooms);

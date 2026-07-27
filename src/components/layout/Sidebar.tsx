@@ -8,6 +8,7 @@ import { getAvatarColorClass } from '@/utils/avatar';
 import { getCurrentUserId } from '@/constants/auth';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useUnreadBadge } from '@/hooks/useUnreadBadge';
+import { disconnectSocket } from '@/socket/socket';
 import { logout } from '@/api/users';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
@@ -80,16 +81,19 @@ export function Sidebar() {
       // 이미 토큰이 만료되었거나 실패해도 사용자 측 로그아웃은 진행되어야 함
       console.warn('백엔드 로그아웃 처리 중 에러 발생 (이미 만료된 토큰 등):', error);
     } finally {
-      // 1. 스토리지 정리
+      // 1. 소켓 연결 종료 (로그아웃 시점에만 - 페이지 이동만으로는 끊지 않는다)
+      disconnectSocket();
+
+      // 2. 스토리지 정리
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userName');
       localStorage.removeItem('gooum_cached_documents');
       localStorage.removeItem('gooum_doc_files');
 
-      // 2. 프로필 및 사용자 상태 초기화 (이미지 잔상 제거)
+      // 3. 프로필 및 사용자 상태 초기화 (이미지 잔상 제거)
       resetLocalState();
 
-      // 3. 로그인 페이지로 이동
+      // 4. 로그인 페이지로 이동
       navigate('/login');
     }
   };

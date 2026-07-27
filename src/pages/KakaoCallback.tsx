@@ -23,7 +23,7 @@ export const KakaoCallback = () => {
                     localStorage.setItem("userName", userName);
                 }
 
-                navigate("/app");
+                navigate("/app", { state: { justLoggedIn: true }, replace: true });
             }
         } catch (error) {
             console.error("백엔드 로그인 연동 실패:", error);

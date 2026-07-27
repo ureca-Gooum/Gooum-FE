@@ -329,7 +329,8 @@ export function useRoomConversation(
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (!confirm('메시지를 삭제하시겠어요?')) return;
+    // 이제 UI 쪽(DeleteMessageModal)에서 삭제 확인을 받기 때문에, 여기서 또 confirm()으로
+    // 이중 확인시키지 않는다.
     if (!roomId) return;
     try {
       await deleteMessageApi(messageId);

@@ -3,6 +3,7 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
+import { ConfirmModal } from '@/components/ConfirmModal';
 import { AiMinutesModal } from '@/components/AiMinutesModal';
 import { wrapAiMinutesContent } from '@/utils/tiptap';
 
@@ -381,8 +382,17 @@ export const DocsPage = () => {
   };
 
   /* ── 파일 삭제 (낙관적 업데이트) ── */
-  const handleDeleteFile = async (id: string) => {
-    if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) return;
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [docToDeleteId, setDocToDeleteId] = useState<string | null>(null);
+
+  const handleDeleteFileClick = (id: string) => {
+    setDocToDeleteId(id);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!docToDeleteId) return;
+    const id = docToDeleteId;
 
     const previousFiles = [...files];
     const next = files.filter((f) => f.documentId !== id);
@@ -563,7 +573,7 @@ export const DocsPage = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteFile(file.documentId);
+                        handleDeleteFileClick(file.documentId);
                       }}
                       className="hidden h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 hover:text-red-500 group-hover:flex"
                       title="삭제">
@@ -789,6 +799,17 @@ export const DocsPage = () => {
           onGoToChat={() => navigate('/app')}
         />
       )}
+
+      <ConfirmModal
+        isOpen={isDeleteConfirmOpen}
+        title="문서 삭제"
+        message={'정말로 이 문서를 삭제하시겠습니까?\n삭제된 문서는 복구할 수 없습니다.'}
+        confirmText="삭제하기"
+        cancelText="취소"
+        isDestructive={true}
+        onConfirm={confirmDeleteFile}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+      />
     </div>
   );
 };

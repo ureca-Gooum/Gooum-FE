@@ -58,3 +58,15 @@ export async function toggleFavorite(roomId: string, isFavorite: boolean): Promi
     handleApiError(err, '즐겨찾기 변경에 실패했어요.');
   }
 }
+
+export async function updateRoomNotificationSettings(
+  roomId: string,
+  settings: { message: boolean; mention: boolean }
+): Promise<{ roomId: string; notificationSettings: { message: boolean; mention: boolean } }> {
+  try {
+    const res = await axios.patch(`/api/rooms/${roomId}/notifications`, settings);
+    return res.data;
+  } catch (err: any) {
+    handleApiError(err, '채팅방 알림 설정에 실패했어요.');
+  }
+}

@@ -9,13 +9,15 @@ interface ListPanelProps {
    * 지정하면 ListPanel과 메인패널 사이 gap 구간까지 보더 선을 이어 그려준다.
    */
   headerHeight?: number;
+  isSidebarOpen?: boolean;
+  onClose?: () => void;
 }
 
 const MIN_WIDTH = 260;
 const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 320;
 
-export function ListPanel({ header, children, headerHeight }: ListPanelProps) {
+export function ListPanel({ header, children, headerHeight, isSidebarOpen = false, onClose }: ListPanelProps) {
   // 오른쪽 가장자리를 드래그해서 너비를 조절할 수 있게 한다. (MIN_WIDTH ~ MAX_WIDTH 사이로 제한)
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,29 +59,45 @@ export function ListPanel({ header, children, headerHeight }: ListPanelProps) {
   };
 
   return (
-    <section className="relative flex shrink-0 flex-col bg-bg-canvas" style={{ width }}>
-      {headerHeight ? (
-        <div
-          className="flex shrink-0 items-center border-b border-border-default px-4"
-          style={{ height: headerHeight }}>
-          {header}
-        </div>
-      ) : (
-        <div className="border-b border-border-default p-4">{header}</div>
+    <>
+      {/* 모바일 환경: 사이드바 뒷 배경 오버레이 */}
+      {isSidebarOpen && onClose && (
+        <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />
       )}
-      <div className="flex-1 overflow-y-auto">{children}</div>
-
-      {/* 헤더 높이가 고정된 경우, 그 보더가 gap 너머 메인패널까지 끊기지 않고 이어지도록 다리를 놓는다. */}
-      {headerHeight && (
-        <div className="absolute -right-3 w-3 bg-border-default" style={{ top: headerHeight - 1, height: 1 }} />
-      )}
-
-      <div
-        onMouseDown={handleResizeStart}
-        className={`absolute -right-[9px] bottom-0 top-0 w-1.5 cursor-col-resize transition-colors hover:bg-brand-primary/30 ${
-          isDragging ? 'bg-brand-primary/30' : ''
+      
+      {/* 
+        모바일(@md 미만): absolute로 띄우고 translate로 슬라이드 처리 
+        데스크탑(@md 이상): relative로 띄우고 항상 보임
+      */}
+      <section 
+        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+          isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
         }`}
-      />
-    </section>
+        style={{ width: `${width}px` }}
+      >
+        {headerHeight ? (
+          <div
+            className="flex shrink-0 items-center border-b border-border-default px-4"
+            style={{ height: headerHeight }}>
+            {header}
+          </div>
+        ) : (
+          <div className="border-b border-border-default p-4">{header}</div>
+        )}
+        <div className="flex-1 overflow-y-auto">{children}</div>
+
+        {/* 헤더 높이가 고정된 경우, 그 보더가 gap 너머 메인패널까지 끊기지 않고 이어지도록 다리를 놓는다. */}
+        {headerHeight && (
+          <div className="absolute -right-3 w-3 bg-border-default hidden @md:block" style={{ top: headerHeight - 1, height: 1 }} />
+        )}
+
+        <div
+          onMouseDown={handleResizeStart}
+          className={`absolute -right-[9px] bottom-0 top-0 w-1.5 cursor-col-resize transition-colors hover:bg-brand-primary/30 hidden @md:block ${
+            isDragging ? 'bg-brand-primary/30' : ''
+          }`}
+        />
+      </section>
+    </>
   );
 }

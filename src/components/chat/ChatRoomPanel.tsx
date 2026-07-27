@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { motion } from 'framer-motion';
 import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
@@ -228,9 +229,11 @@ export function ChatRoomPanel({
                   }`}>
                   {tab.label}
                   {activeTab === tab.key && (
-                    <span
-                      className="absolute left-0 right-0 bg-brand-primary"
+                    <motion.span
+                      layoutId="chat-room-tab-underline"
+                      className="absolute left-0 right-0 rounded-full bg-brand-primary"
                       style={{ bottom: '-17px', height: '2px' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
                 </button>
@@ -371,16 +374,17 @@ export function ChatRoomPanel({
               return (
                 <div key={msg.id} id={`message-${msg.id}`} className="w-full min-w-0">
                   {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
-                  <div className={`transition-all duration-1000 ${msg.id === targetMessageId ? 'bg-brand-soft/50 rounded-xl py-1 px-2 -mx-2' : 'py-1'}`}>
+                  <div
+                    className={`transition-all duration-1000 ${msg.id === targetMessageId ? 'bg-brand-soft/50 rounded-xl py-1 px-2 -mx-2' : 'py-1'}`}>
                     <MessageBubble
-                    message={msg}
-                    onDelete={onDeleteMessage}
-                    selectable={isSelectingMessages}
-                    isSelected={selectedMessageIds.includes(msg.id)}
-                    onToggleSelect={onToggleMessageSelect}
-                    roomMembers={roomMembers}
-                    mentionCandidates={mentionCandidates}
-                    onStartDirectMessage={onStartDirectMessage}
+                      message={msg}
+                      onDelete={onDeleteMessage}
+                      selectable={isSelectingMessages}
+                      isSelected={selectedMessageIds.includes(msg.id)}
+                      onToggleSelect={onToggleMessageSelect}
+                      roomMembers={roomMembers}
+                      mentionCandidates={mentionCandidates}
+                      onStartDirectMessage={onStartDirectMessage}
                       showAvatar={showAvatar}
                     />
                   </div>

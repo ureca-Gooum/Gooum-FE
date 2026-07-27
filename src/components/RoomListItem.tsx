@@ -110,7 +110,11 @@ export function RoomListItem({
             isMenuOpen ? 'pointer-events-none opacity-0' : 'group-hover:opacity-0'
           }`}>
           <span className="whitespace-nowrap text-xs text-fg-tertiary">{room.lastMessageTime}</span>
-          {isUnread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-fg-primary" />}
+          {isUnread && (
+            <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand-primary px-1 text-[10px] font-semibold text-white">
+              {room.unreadCount > 99 ? '99+' : room.unreadCount}
+            </span>
+          )}
         </div>
 
         {/* 호버 시: 같은 자리에 메뉴 버튼만 */}

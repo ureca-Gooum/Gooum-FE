@@ -111,7 +111,8 @@ export function Sidebar() {
     <aside className="flex w-16 shrink-0 flex-col items-center justify-between pb-4 bg-bg-canvas relative h-full">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
 
-      <div className="flex w-full flex-col items-center gap-4">
+      {/* '채팅' 헤더 텍스트와 높이를 맞추기 위한 여백. 숫자만 조절하면 위/아래로 미세조정 가능. */}
+      <div className="flex w-full flex-col items-center gap-4 pt-4">
         {navItems.map(({ icon: Icon, label, to }) => {
           const unreadCount = label === '알림' ? unreadNotiCount : label === 'DM' ? unreadDMCount : 0;
           return (

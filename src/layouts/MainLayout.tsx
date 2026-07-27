@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
+  const location = useLocation();
+  // 로그인 화면에서는 헤더(검색/창 컨트롤)와 사이드바(아이콘 레일)를 아예 안 보여준다.
+  const isLoginPage = location.pathname === '/login';
+
   const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
 
   // 창 모드 위치 및 크기 상태
@@ -163,15 +167,17 @@ export const MainLayout = () => {
         <ResizeHandle edge="bl" className="bottom-0 left-0 w-3 h-3 cursor-sw-resize -mb-1 -ml-1" />
         <ResizeHandle edge="br" className="bottom-0 right-0 w-3 h-3 cursor-se-resize -mb-1 -mr-1" />
 
-        <Header
-          onMinimize={() => setWindowMode('minimized')}
-          onMaximize={() => setWindowMode(isWindowed ? 'maximized' : 'windowed')}
-          onClose={() => setWindowMode('closed')}
-          isMaximized={!isWindowed}
-          onMouseDown={handleHeaderMouseDown}
-        />
-        <div className="flex flex-1 overflow-hidden pt-1 pb-2.5 pr-2.5 gap-4">
-          <Sidebar />
+        {!isLoginPage && (
+          <Header
+            onMinimize={() => setWindowMode('minimized')}
+            onMaximize={() => setWindowMode(isWindowed ? 'maximized' : 'windowed')}
+            onClose={() => setWindowMode('closed')}
+            isMaximized={!isWindowed}
+            onMouseDown={handleHeaderMouseDown}
+          />
+        )}
+        <div className={`flex flex-1 overflow-hidden gap-4 ${isLoginPage ? '' : 'pt-1 pb-2.5 pr-2.5'}`}>
+          {!isLoginPage && <Sidebar />}
           <Outlet />
         </div>
       </div>

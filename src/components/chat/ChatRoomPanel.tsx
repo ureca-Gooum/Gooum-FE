@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode, type RefObject } from 'react';
+import { motion } from 'framer-motion';
 import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
@@ -217,9 +218,11 @@ export function ChatRoomPanel({
                   }`}>
                   {tab.label}
                   {activeTab === tab.key && (
-                    <span
-                      className="absolute left-0 right-0 bg-brand-primary"
+                    <motion.span
+                      layoutId="chat-room-tab-underline"
+                      className="absolute left-0 right-0 rounded-full bg-brand-primary"
                       style={{ bottom: '-17px', height: '2px' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
                 </button>

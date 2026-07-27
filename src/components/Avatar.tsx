@@ -29,8 +29,8 @@ export function Avatar({
   if (memberCount !== undefined) {
     return (
       <div
-        className={`flex shrink-0 items-center justify-center rounded-full ${bgColorClass}`}
-        style={{ width: size, height: size }}
+        className="flex shrink-0 items-center justify-center rounded-full"
+        style={{ width: size, height: size, backgroundColor: 'var(--color-fg-tertiary)' }}
         title={`${memberCount}명`}>
         <span className="font-semibold text-white" style={{ fontSize: size * 0.38 }}>
           {memberCount}

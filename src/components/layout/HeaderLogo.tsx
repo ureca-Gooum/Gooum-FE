@@ -34,16 +34,11 @@ export function HeaderLogo() {
       className="group relative flex h-10 w-10 shrink-0 items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}>
-      {/* 캐릭터: 항상 같은 자리, 텍스트보다 위에 그려짐. 호버 중엔 로딩스피너 프레임이 돈다.
-          스피너 프레임은 원본에 여백이 있어서 favicon보다 캐릭터가 작게 보이는데,
-          overflow-hidden 박스 안에서 확대(scale)해서 크기 차이를 보정한다. */}
-      <div className="relative z-10 h-10 w-10 shrink-0 overflow-hidden">
+      <div className="relative z-10 h-10 w-10 shrink-0">
         <img
           src={isHovered ? SPIN_FRAMES[frameIndex] : '/GOOUM.png'}
           alt="구움"
-          className={`h-full w-full object-contain transition-transform duration-150 ${
-            isHovered ? 'scale-150' : 'scale-100'
-          }`}
+          className="h-full w-full object-contain"
         />
       </div>
 

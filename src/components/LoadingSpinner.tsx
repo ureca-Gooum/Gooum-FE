@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 import frame1 from '@/assets/loading/frame1_top.png';
@@ -47,18 +47,7 @@ export function LoadingSpinner({ message, className }: LoadingSpinnerProps) {
         className="relative w-24 h-24"
         animate={{ y: [0, -5, 0] }}
         transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}>
-        <AnimatePresence>
-          <motion.img
-            key={frameIndex}
-            src={FRAMES[frameIndex]}
-            alt="Loading"
-            className="absolute inset-0 w-24 h-24 object-contain"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.13, ease: 'linear' }}
-          />
-        </AnimatePresence>
+        <img src={FRAMES[frameIndex]} alt="Loading" className="absolute inset-0 w-24 h-24 object-contain" />
       </motion.div>
       <motion.p
         className="text-sm font-semibold text-fg-tertiary"

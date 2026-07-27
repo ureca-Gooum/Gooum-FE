@@ -31,10 +31,7 @@ interface MessageBubbleProps {
   mentionCandidates?: RoomMember[];
   /** 다른 사람의 멘션 카드에서 "메시지 보내기"를 눌렀을 때 호출 */
   onStartDirectMessage?: (userId: string) => void;
-  /**
-   * 상대방 메시지 옆에 아바타/이름을 보여줄지 여부. 같은 사용자가 비슷한 시간대에 연속으로 보낸
-   * 메시지 묶음에서는 첫 메시지에서만 true로 넘겨 아바타가 한 번만 보이게 한다 (내 메시지는 항상 무시).
-   */
+
   showAvatar?: boolean;
 }
 
@@ -73,8 +70,6 @@ export function MessageBubble({
     hideTimeoutRef.current = window.setTimeout(() => setHoveredMention(null), 150);
   };
 
-  // 멘션(@) span에 마우스를 올리면 프로필 호버 카드를 띄운다. (이벤트 위임: 매 렌더마다 span 각각에
-  // 리스너를 새로 붙일 필요 없이, 말풍선 컨테이너에서 한 번에 처리)
   const handleMentionMouseOver = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = (e.target as HTMLElement).closest('[data-type="mention"]') as HTMLElement | null;
     if (!target) return;
@@ -131,11 +126,6 @@ export function MessageBubble({
         )}
         <div className={`flex min-w-0 flex-1 flex-col ${message.isMine ? 'items-end' : 'items-start'}`}>
           <div className={`flex w-full min-w-0 items-end gap-1.5 ${message.isMine ? 'flex-row-reverse' : ''}`}>
-            {/*
-              일반 메시지는 내 메시지일 때 삭제 메뉴(⋮) 버튼이 이 자리를 차지하고 있어서,
-              그만큼 말풍선이 오른쪽 끝에서 살짝 떨어져 있다. 삭제된 메시지는 메뉴가 없지만
-              똑같이 우측 정렬을 맞추기 위해 같은 크기의 빈 자리를 예약해둔다.
-            */}
             {message.isMine && <div className="h-[22px] w-[22px] shrink-0" />}
             <div
               style={{
@@ -166,11 +156,19 @@ export function MessageBubble({
         if (selectable) onToggleSelect?.(message.id);
       }}>
       {!message.isMine && (
-        <div className="shrink-0 self-start" style={{ width: AVATAR_COLUMN_WIDTH }}>
+        <div
+          className="shrink-0 cursor-pointer self-start"
+          style={{ width: AVATAR_COLUMN_WIDTH }}
+          onMouseEnter={(e) => {
+            clearHideTimeout();
+            setHoveredMention({ userId: message.senderId, rect: e.currentTarget.getBoundingClientRect() });
+          }}
+          onMouseLeave={scheduleHideMention}>
           {shouldShowAvatarColumn && (
             <Avatar
               seed={message.senderId}
               imageUrl={senderMember?.profileImageUrl}
+              presence={senderMember?.presence?.status}
               alt={message.senderName}
               size={AVATAR_COLUMN_WIDTH}
               showPresence={false}

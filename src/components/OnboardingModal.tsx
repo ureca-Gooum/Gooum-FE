@@ -72,7 +72,7 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
           <div className="flex flex-col items-center py-6">
             <div className="relative mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-brand-soft shadow-inner">
               <div className="absolute inset-0 rounded-3xl bg-brand-primary/10 animate-ping opacity-20"></div>
-              <img src="/favicon.png" alt="Gooum Logo" className="h-14 w-14 drop-shadow-md" />
+              <img src="/GOOUM.png" alt="Gooum Logo" className="h-14 w-14 drop-shadow-md" />
             </div>
             <h2 className="mb-3 text-3xl font-bold tracking-tight text-fg-primary">구움이 처음이신가요?</h2>
             <p className="mb-10 text-center text-[15px] leading-relaxed text-fg-secondary">

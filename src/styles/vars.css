@@ -16,25 +16,36 @@
 
   --color-border-default: #dce2ea;
   --color-border-strong: #c9d2de;
-  --color-border-brand: #8ebef0;
+  --color-border-brand: #93c5fd;
 
   /* =========================
      Background
+     은은한 라벤더-블루 톤을 기본 테마 전체로 확장 
   ========================= */
 
   --color-bg-default: #ffffff;
-  --color-bg-canvas: #f4f7fb;
-  --color-bg-subtle: #eef3f9;
-  --color-bg-pressed: #e4ebf4;
+  --color-bg-canvas: #f1f3fc;
+  --color-bg-subtle: #eaeefb;
+  --color-bg-pressed: #dfe4f7;
 
   /* =========================
      Brand
+     로그인 페이지에서 쓰던 블루(#3b82f6 계열)를 기본 프라이머리로 승격
   ========================= */
 
-  --color-brand-primary: #285ea8;
-  --color-brand-secondary: #3474c8;
-  --color-brand-light: #4c8fe1;
-  --color-brand-soft: #eaf3fd;
+  --color-brand-primary: #3b82f6;
+  --color-brand-secondary: #2563eb;
+  --color-brand-light: #60a5fa;
+  --color-brand-soft: #eef2ff;
+
+  /* =========================
+     Gradient (전체 화면 배경용)
+     로그인/404처럼 화면 전체를 덮는 페이지에서 재사용하는 그라데이션. 세로로 긴 레이아웃에서
+     대각선 그라데이션이 압축되어 경계처럼 보이는 문제가 있어, 세로용/대각선용을 따로 둔다.
+  ========================= */
+
+  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2eefe 55%, #eaf4ff 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2eefe 55%, #eaf4ff 100%);
 
   /* =========================
      Semantic
@@ -56,15 +67,15 @@
   --color-presence-online: #6bb700;
   --color-presence-away: #ffaa44;
   --color-presence-dnd: #c94b55;
-  --color-presence-offline: #f4f7fb;
+  --color-presence-offline: #f1f3fc;
   --color-presence-offline-border: #a8afb9;
 
-  --color-avatar-1: #285ea8;
-  --color-avatar-2: #4c8fe1;
+  --color-avatar-1: #3b82f6;
+  --color-avatar-2: #60a5fa;
   --color-avatar-3: #7c6fd1;
   --color-avatar-4: #e2637a;
   --color-avatar-5: #e0954c;
-  --color-avatar-6: #3474c8;
+  --color-avatar-6: #2563eb;
 }
 
 /* 다크모드 할 시 */
@@ -80,13 +91,16 @@
 
   --color-bg-default: #1f2229;
   --color-bg-canvas: #181b20;
-  --color-bg-subtle: #243a56;
-  --color-bg-pressed: #33445b;
+  --color-bg-subtle: #232a45;
+  --color-bg-pressed: #303a5c;
 
-  --color-brand-primary: #4c8fe1;
-  --color-brand-secondary: #74a9e8;
-  --color-brand-light: #8ebef0;
-  --color-brand-soft: #29384c;
+  --color-brand-primary: #60a5fa;
+  --color-brand-secondary: #93c5fd;
+  --color-brand-light: #bfdbfe;
+  --color-brand-soft: #1e2a44;
+
+  --gradient-brand-soft: linear-gradient(180deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
 }
 
 /* 파스텔 브라운 테마 */

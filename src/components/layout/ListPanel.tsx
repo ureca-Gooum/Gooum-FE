@@ -83,6 +83,7 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
         ) : (
           <div className="border-b border-border-default p-4">{header}</div>
         )}
+
         <div className="flex-1 overflow-y-auto">{children}</div>
 
         {/* 헤더 높이가 고정된 경우, 그 보더가 gap 너머 메인패널까지 끊기지 않고 이어지도록 다리를 놓는다. */}

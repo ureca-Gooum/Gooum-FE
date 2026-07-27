@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
@@ -165,11 +166,11 @@ export function ChatRoomPanel({
     !target?.isGroup && target?.userId
       ? (mentionCandidates?.find((m) => m.userId === target.userId) ??
         roomMembers.find((m) => m.userId === target.userId) ?? {
-          userId: target.userId,
-          name: target.displayName,
-          profileImageUrl: target.displayImage,
-          presence: target.presence ? { status: target.presence } : undefined,
-        })
+        userId: target.userId,
+        name: target.displayName,
+        profileImageUrl: target.displayImage,
+        presence: target.presence ? { status: target.presence } : undefined,
+      })
       : undefined;
 
   return (
@@ -231,14 +232,15 @@ export function ChatRoomPanel({
                 <button
                   key={tab.key}
                   onClick={() => onTabChange(tab.key)}
-                  className={`relative text-sm ${
-                    activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
-                  }`}>
+                  className={`relative text-sm ${activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
+                    }`}>
                   {tab.label}
                   {activeTab === tab.key && (
-                    <span
-                      className="absolute left-0 right-0 bg-brand-primary"
+                    <motion.span
+                      layoutId="chat-room-tab-underline"
+                      className="absolute left-0 right-0 rounded-full bg-brand-primary"
                       style={{ bottom: '-17px', height: '2px' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
                 </button>
@@ -252,9 +254,8 @@ export function ChatRoomPanel({
                   <button
                     key={tab.key}
                     onClick={() => onTabChange(tab.key)}
-                    className={`relative h-full text-[13px] font-medium transition-colors px-1 shrink-0 ${
-                      activeTab === tab.key ? 'text-brand-primary' : 'text-fg-tertiary hover:text-fg-primary'
-                    }`}>
+                    className={`relative h-full text-[13px] font-medium transition-colors px-1 shrink-0 ${activeTab === tab.key ? 'text-brand-primary' : 'text-fg-tertiary hover:text-fg-primary'
+                      }`}>
                     {tab.label}
                     {activeTab === tab.key && (
                       <span
@@ -401,16 +402,17 @@ export function ChatRoomPanel({
               return (
                 <div key={msg.id} id={`message-${msg.id}`} className="w-full min-w-0">
                   {showDateDivider && <ChatDateDivider label={getDateLabel(msg.time)} />}
-                  <div className={`transition-all duration-1000 ${msg.id === targetMessageId ? 'bg-brand-soft/50 rounded-xl py-1 px-2 -mx-2' : 'py-1'}`}>
+                  <div
+                    className={`transition-all duration-1000 ${msg.id === targetMessageId ? 'bg-brand-soft/50 rounded-xl py-1 px-2 -mx-2' : 'py-1'}`}>
                     <MessageBubble
-                    message={msg}
-                    onDelete={onDeleteMessage}
-                    selectable={isSelectingMessages}
-                    isSelected={selectedMessageIds.includes(msg.id)}
-                    onToggleSelect={onToggleMessageSelect}
-                    roomMembers={roomMembers}
-                    mentionCandidates={mentionCandidates}
-                    onStartDirectMessage={onStartDirectMessage}
+                      message={msg}
+                      onDelete={onDeleteMessage}
+                      selectable={isSelectingMessages}
+                      isSelected={selectedMessageIds.includes(msg.id)}
+                      onToggleSelect={onToggleMessageSelect}
+                      roomMembers={roomMembers}
+                      mentionCandidates={mentionCandidates}
+                      onStartDirectMessage={onStartDirectMessage}
                       showAvatar={showAvatar}
                     />
                   </div>

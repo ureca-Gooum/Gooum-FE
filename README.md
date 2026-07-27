@@ -1,52 +1,135 @@
-# Gooum Frontend (구움 프론트엔드)
+<p align="center">
+  <img src="./public/GOOUM.png" width="180"/>
+</p>
 
-실시간 공동 문서 편집 및 채팅 기능을 지원하는 Gooum 프로젝트의 프론트엔드 저장소입니다.
+<h1 align="center">GOOUM (구움)</h1>
 
-## 📋 사전 준비 사항 (Prerequisites)
+<p align="center">
+AI 기반 협업 메신저
+</p>
 
-이 프로젝트를 실행하려면 컴퓨터에 **Node.js**가 설치되어 있어야 합니다.
-- [Node.js 공식 다운로드](https://nodejs.org/) (LTS 버전 권장, v18 이상)
+## 📖 프로젝트 소개
 
-## 🚀 설치 및 시작 방법 (Setup & Run)
+**GOOUM**은 팀명인 **구운감자**의 '구움'과 사람들이 함께 모이는 공간을 의미하는 **Room**을 결합한 이름입니다.
 
-GitHub에서 프로젝트를 클론(또는 Pull)한 후 아래 단계를 따라 실행해 주세요.
+실시간 채팅, AI 회의록 생성, 동시 문서 편집을 하나의 서비스에서 제공하는 AI 기반 협업 메신저입니다.
 
-### 1. 프로젝트 폴더로 이동 및 패키지 설치
-터미널을 열고 프로젝트 폴더로 이동한 후, 필요한 패키지들을 설치합니다.
+> **대화 → 협업 → 기록**
 
-```bash
-# 의존성 패키지 설치
-npm install
-```
-
-### 2. 환경 변수 설정
-프로젝트 루트 경로에 `.env` 파일을 생성하고 필요한 설정을 입력합니다. (기본적으로 `.env.example` 파일을 복사하여 사용할 수 있습니다.)
-
-```bash
-# 환경 변수 파일 복사 (MacOS/Linux)
-cp .env.example .env
-
-# 환경 변수 파일 복사 (Windows PowerShell)
-Copy-Item .env.example .env
-```
-
-### 3. 실시간 공동 편집 웹소켓 서버 실행 (Terminal 1)
-동시 편집 기능을 위해 Yjs 웹소켓 서버를 먼저 실행합니다. (기본 포트: `1234`)
-
-```bash
-npm run y-server
-```
-
-### 4. 프론트엔드 개발 서버 실행 (Terminal 2)
-새로운 터미널을 열고 프론트엔드 개발 서버를 실행합니다. (기본 주소: `http://localhost:5173`)
-
-```bash
-npm run dev
-```
+단순히 대화를 주고받는 것을 넘어, 회의 내용을 기록하고 함께 문서를 편집하는 협업 경험을 제공합니다.
 
 ---
 
-## 🛠️ 주요 기술 스택
-- **Framework:** React 18, Vite 8, TypeScript
-- **Styling:** Tailwind CSS v4
-- **Collaboration:** Tiptap Editor, Yjs, y-websocket (실시간 동시 편집)
+## 👥 팀원 소개
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="https://github.com/junhwan0697.png" width="120px" alt="장준환 프로필"/>
+      <br />
+      <b>장준환</b>
+      <br />
+      Frontend
+      <br /><br />
+      <a href="https://github.com/junhwan0697">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="장준환 GitHub"/>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://github.com/Ppakso.png" width="120px" alt="박소연 프로필"/>
+      <br />
+      <b>박소연</b>
+      <br />
+      Frontend
+      <br /><br />
+      <a href="박소연_GITHUB_URL">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="박소연 GitHub"/>
+      </a>
+    </td>
+    <td align="center" width="33%">
+      <img src="https://github.com/jhwest-dev.png" width="120px" alt="서지현 프로필"/>
+      <br />
+      <b>서지현</b>
+      <br />
+      Backend
+      <br /><br />
+      <a href="서지현_GITHUB_URL">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="서지현 GitHub"/>
+      </a>
+    </td>
+  </tr>
+</table>
+
+### 역할 분담
+
+| 이름            | 담당 영역  | 주요 역할                                                              |
+| --------------- | ---------- | ---------------------------------------------------------------------- |
+| 장준환 (팀장님) | 프론트엔드 | 동시 편집 에디터, 문서 페이지, 알림 센터, 카카오 로그인                |
+| 박소연          | 프론트엔드 | 피그마, 환경 세팅, 실시간 채팅, 대화방 목록, 파일 첨부, AI 회의록 생성 |
+| 서지현          | 백엔드     | REST API, Socket.io 서버, MongoDB, 인증 및 권한, 파일 저장, Azure 배포 |
+
+---
+
+## 🖥️ 서비스 화면
+
+(추후 스크린샷 or GIF 삽입)
+
+| 로그인                   | 채팅                     |
+| ------------------------ | ------------------------ |
+| <img width="400" src=""> | <img width="400" src=""> |
+
+| AI 회의록                | 동시 편집                |
+| ------------------------ | ------------------------ |
+| <img width="400" src=""> | <img width="400" src=""> |
+
+---
+
+## ✨ 주요 기능
+
+### 💬 실시간 채팅
+
+- 1:1 및 그룹 채팅
+- 파일 첨부
+- 알림 및 검색 기능
+
+### 🤖 AI 회의록
+
+- 선택한 채팅 메시지 기반 AI 요약
+- 회의록 생성
+- 문서로 변환
+
+### 📝 동시 문서 편집
+
+- 실시간 공동 편집
+- 자동 저장
+- 변경 사항 동기화
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+<img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/> <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/> <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/> <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.io"/>
+
+### Backend
+
+<img src="https://img.shields.io/badge/Node.js-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/> <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express"/> <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/> <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.io"/>
+
+### AI
+
+<img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Google Gemini"/>
+
+### Deployment
+
+<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel"/> <img src="https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Microsoft Azure"/>
+
+### Design
+
+<img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" alt="Figma"/>
+
+---
+
+## 🏗️ 시스템 아키텍처
+
+<img src="./public/img/System Architecture.png">

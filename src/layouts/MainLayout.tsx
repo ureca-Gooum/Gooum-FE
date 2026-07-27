@@ -144,7 +144,7 @@ export const MainLayout = () => {
         <button
           onClick={() => setWindowMode('maximized')}
           className="px-6 py-3 bg-bg-default shadow-2xl rounded-2xl border border-border-default font-bold text-brand-primary flex items-center gap-3 hover:scale-105 transition-transform">
-          <img src="/favicon.png" alt="logo" className="w-6 h-6 animate-pulse" />
+          <img src="/GOOUM.png" alt="logo" className="w-6 h-6 animate-pulse" />
           구움 앱 열기
         </button>
       </div>

@@ -1,6 +1,6 @@
 import { useKakaoAuth } from '@/hooks/useKakaoAuth';
 import illustrationImage from '@/assets/login.png';
-import mascotIcon from '/favicon.png';
+import mascotIcon from '/GOOUM.png';
 
 export const LoginPage = () => {
   const { loginWithKakao } = useKakaoAuth();

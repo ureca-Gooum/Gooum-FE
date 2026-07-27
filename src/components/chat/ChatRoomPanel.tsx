@@ -7,6 +7,7 @@ import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { MessageBubble } from '@/components/MessageBubble';
 import { MentionHoverCard } from '@/components/MentionHoverCard';
 import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 import type { Message, PresenceStatus, TiptapDoc } from '@/types/chat';
 import type { RoomMember } from '@/types/room';
 
@@ -280,9 +281,7 @@ export function ChatRoomPanel({
             </div>
           </div>
         ) : (
-          <div className="flex h-[63px] items-center border-b border-border-default px-4">
-            <h2 className="text-fg-tertiary">{emptyHeaderLabel}</h2>
-          </div>
+          <div className="flex h-[63px] items-center px-4" />
         )
       }
       footer={
@@ -332,7 +331,9 @@ export function ChatRoomPanel({
           </div>
         ) : undefined
       }>
-      {isChatTab ? (
+      {!target ? (
+        <EmptyState title={emptyHeaderLabel} />
+      ) : isChatTab ? (
         isMessagesLoading ? (
           <MessageAreaSkeleton />
         ) : (

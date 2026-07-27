@@ -7,16 +7,18 @@ import { OnboardingModal } from '@/components/OnboardingModal';
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
-  const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
   const location = useLocation();
   const navigate = useNavigate();
+  // 로그인 화면에서는 헤더(검색/창 컨트롤)와 사이드바(아이콘 레일)를 아예 안 보여준다.
+  const isLoginPage = location.pathname === '/login';
+
+  const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const hideOnboarding = localStorage.getItem('gooum_hide_onboarding');
     const state = location.state as { justLoggedIn?: boolean } | null;
-    
+
     if (!hideOnboarding && state?.justLoggedIn) {
       setShowOnboarding(true);
       // state 초기화 (새로고침 시 다시 뜨지 않도록)
@@ -142,7 +144,7 @@ export const MainLayout = () => {
         <button
           onClick={() => setWindowMode('maximized')}
           className="px-6 py-3 bg-bg-default shadow-2xl rounded-2xl border border-border-default font-bold text-brand-primary flex items-center gap-3 hover:scale-105 transition-transform">
-          <img src="/favicon.svg" alt="logo" className="w-6 h-6 animate-pulse" />
+          <img src="/favicon.png" alt="logo" className="w-6 h-6 animate-pulse" />
           구움 앱 열기
         </button>
       </div>
@@ -179,15 +181,17 @@ export const MainLayout = () => {
         <ResizeHandle edge="bl" className="bottom-0 left-0 w-3 h-3 cursor-sw-resize -mb-1 -ml-1" />
         <ResizeHandle edge="br" className="bottom-0 right-0 w-3 h-3 cursor-se-resize -mb-1 -mr-1" />
 
-        <Header
-          onMinimize={() => setWindowMode('minimized')}
-          onMaximize={() => setWindowMode(isWindowed ? 'maximized' : 'windowed')}
-          onClose={() => setWindowMode('closed')}
-          isMaximized={!isWindowed}
-          onMouseDown={handleHeaderMouseDown}
-        />
-        <div className="flex flex-1 overflow-hidden pt-1 pb-2.5 pr-2.5 gap-4">
-          <Sidebar />
+        {!isLoginPage && (
+          <Header
+            onMinimize={() => setWindowMode('minimized')}
+            onMaximize={() => setWindowMode(isWindowed ? 'maximized' : 'windowed')}
+            onClose={() => setWindowMode('closed')}
+            isMaximized={!isWindowed}
+            onMouseDown={handleHeaderMouseDown}
+          />
+        )}
+        <div className={`flex flex-1 overflow-hidden gap-4 ${isLoginPage ? '' : 'pt-1 pb-2.5 pr-2.5'}`}>
+          {!isLoginPage && <Sidebar />}
           <Outlet />
         </div>
       </div>

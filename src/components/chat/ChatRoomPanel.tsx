@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, type ReactNode, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { Heart, Pencil, Bell, BellOff, ChevronLeft } from 'lucide-react';
+import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -93,7 +93,7 @@ interface ChatRoomPanelProps {
   onDeleteMessage: (messageId: string) => void;
   onStartDirectMessage?: (userId: string) => void;
   targetMessageId?: string | null;
-  onBack?: () => void;
+  onSidebarToggle?: () => void;
 }
 
 /**
@@ -133,19 +133,20 @@ export function ChatRoomPanel({
   onDeleteMessage,
   onStartDirectMessage,
   targetMessageId,
-  onBack,
+  onSidebarToggle,
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
   // 헤더의 상대 프로필(아바타+이름)에 호버했을 때 보여줄 프로필 카드 상태
   const [isHeaderProfileHovered, setIsHeaderProfileHovered] = useState(false);
-  const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
-  const headerProfileHideTimeoutRef = useRef<number>();
 
   useEffect(() => {
-    setPortalContainer(document.getElementById('header-tabs-portal'));
+    const container = document.getElementById('header-tabs-portal');
+    if (container) setPortalContainer(container);
   }, []);
+  const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
+  const headerProfileHideTimeoutRef = useRef<number>();
 
   const clearHeaderProfileHideTimeout = () => {
     if (headerProfileHideTimeoutRef.current) {
@@ -175,12 +176,12 @@ export function ChatRoomPanel({
     <MainPanel
       header={
         target ? (
-          <div className="flex h-[63px] items-center gap-2 @md:gap-3 border-b border-border-default px-3 @md:px-4 overflow-x-auto [&::-webkit-scrollbar]:hidden">
-            {onBack && (
+          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
+            {onSidebarToggle && (
               <button
-                onClick={onBack}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95 mr-1">
-                <ChevronLeft className="h-6 w-6" />
+                onClick={onSidebarToggle}
+                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
+                <Menu className="h-5 w-5" />
               </button>
             )}
             <div
@@ -267,6 +268,26 @@ export function ChatRoomPanel({
             )}
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
+              {target.isGroup && roomMembers.length > 0 && (
+                <div className="flex shrink-0 items-center -space-x-2">
+                  {roomMembers.slice(0, 5).map((member) => (
+                    <div key={member.userId} className="rounded-full border-[3px] border-bg-default shadow-sm">
+                      <Avatar
+                        seed={member.userId}
+                        imageUrl={member.profileImageUrl}
+                        alt={member.name}
+                        size={24}
+                        showPresence={false}
+                      />
+                    </div>
+                  ))}
+                  {roomMembers.length > 5 && (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-[3px] border-bg-default bg-bg-subtle text-[10px] font-medium text-fg-tertiary shadow-sm">
+                      +{roomMembers.length - 5}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {onToggleMute && (
                 <button
@@ -302,11 +323,11 @@ export function ChatRoomPanel({
           </div>
         ) : (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
-            {onBack && (
+            {onSidebarToggle && (
               <button
-                onClick={onBack}
+                onClick={onSidebarToggle}
                 className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <ChevronLeft className="h-6 w-6" />
+                <Menu className="h-5 w-5" />
               </button>
             )}
             {emptyHeaderLabel}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen, Plus } from 'lucide-react';
+import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
@@ -212,7 +212,7 @@ export const ChatPage = () => {
   if (isLoading) {
     return (
       <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
-        <ListPanel headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
+        <ListPanel className="w-80" headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
           <div className="flex flex-col gap-1 py-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <RoomListItemSkeleton key={i} />
@@ -251,9 +251,9 @@ export const ChatPage = () => {
     <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
       <ListPanel
         className={selectedRoomId ? 'hidden @md:flex' : 'flex'}
+        headerHeight={63}
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        headerHeight={63}
         header={
           <div className="flex w-full items-center justify-between">
             <h2 className="font-semibold text-fg-primary">채팅</h2>
@@ -321,6 +321,7 @@ export const ChatPage = () => {
 
       <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
+        onBack={() => setSelectedRoomId(null)}
         target={
           selectedRoom
             ? {
@@ -373,7 +374,7 @@ export const ChatPage = () => {
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={targetMessageId}
-        onBack={() => setSelectedRoomId(null)}
+        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
       </div>
     </div>

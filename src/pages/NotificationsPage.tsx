@@ -27,7 +27,7 @@ export const NotificationsPage = () => {
   // onNewNotification 소켓 이벤트로 이 배열 맨 위에 추가된다.
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
+  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '멘션' | '문서' | '채팅' | '파일'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -77,7 +77,10 @@ export const NotificationsPage = () => {
         if (isMounted) {
           setNotifications(res.data);
           if (res.data.length > 0) {
-            setSelectedNotiId(res.data[0].id);
+            // PC 화면(768px 이상)에서만 자동 선택하여 디자인 유지, 모바일에서는 리스트 표시
+            if (window.innerWidth >= 768) {
+              setSelectedNotiId(res.data[0].id);
+            }
           }
         }
       })
@@ -121,9 +124,15 @@ export const NotificationsPage = () => {
     if (activeTab === '전체') return true;
     if (activeTab === 'DM') return noti.type === 'message';
     if (activeTab === '멘션') return noti.type === 'mention';
+    if (activeTab === '채팅') return noti.type === 'message' || noti.type === 'mention';
+    if (activeTab === '파일') return noti.type === 'file';
     if (activeTab === '문서') return noti.type === 'document';
     return true;
   });
+
+  const unreadChatCount = notifications.filter(n => (n.type === 'message' || n.type === 'mention') && !n.isRead).length;
+  const unreadFileCount = notifications.filter(n => n.type === 'file' && !n.isRead).length;
+  const unreadDocCount = notifications.filter(n => n.type === 'document' && !n.isRead).length;
 
   const handleSelectNoti = async (noti: NotificationItem) => {
     setSelectedNotiId(noti.id);
@@ -180,7 +189,8 @@ export const NotificationsPage = () => {
                 모두 읽음
               </button>
             </div>
-            <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
+            {/* PC 전용 기존 탭 (모바일에서는 숨김) */}
+            <div className="hidden @md:flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
                 className={`pb-3 text-[13px] font-bold transition-colors ${
@@ -220,6 +230,57 @@ export const NotificationsPage = () => {
                 }`}>
                 <FileText size={15} />
                 문서
+              </button>
+            </div>
+
+            {/* 모바일 전용 새 탭 (PC에서는 숨김) */}
+            <div className="flex @md:hidden gap-5 -mb-4 border-b border-border-default pb-0">
+              <button
+                onClick={() => setActiveTab('채팅')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ${
+                  activeTab === '채팅'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <MessageCircle size={15} />
+                채팅
+                {unreadChatCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                  </span>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('파일')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${
+                  activeTab === '파일'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <FileText size={15} />
+                파일
+                {unreadFileCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadFileCount > 99 ? '99+' : unreadFileCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('문서')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${
+                  activeTab === '문서'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <FileText size={15} />
+                문서
+                {unreadDocCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadDocCount > 99 ? '99+' : unreadDocCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>

@@ -24,12 +24,15 @@ import type { NewMessagePayload, MessageDeletedPayload } from '@/types/socket';
 interface UseRoomConversationOptions {
   /** 방 안에서 새 메시지를 "내가" 보냈을 때, 사이드바 미리보기 등을 갱신하고 싶을 때 사용 (raw 소켓 payload를 그대로 전달) */
   onMessageSent?: (payload: NewMessagePayload) => void;
-  targetMessageId?: string | null;
   /**
    * 지금 열려있는 방에서 메시지가 삭제됐을 때 호출된다. 삭제된 메시지가 그 방의 "마지막 메시지"였는지
    * (=사이드바 미리보기를 갱신해야 하는지)를 wasLastMessage로 함께 알려준다.
+   * 주의: 이 훅은 roomId(현재 열려있는 방)에 대해서만 소켓 이벤트를 구독하므로, 다른 방에서 벌어진
+   * 삭제는 여기로 오지 않는다. 다른 방 미리보기까지 실시간으로 갱신하려면 서버가 삭제 이벤트도
+   * new_notification처럼 전체 브로드캐스트해줘야 한다.
    */
   onMessageDeleted?: (payload: { roomId: string; messageId: string; wasLastMessage: boolean }) => void;
+  targetMessageId?: string | null;
 }
 
 /**

@@ -74,11 +74,13 @@ function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeView
       className="ai-minutes-block group relative my-3 rounded-xl border border-slate-200 bg-slate-100 px-4 py-3"
       data-status={status}>
       <div className="mb-2 flex items-center justify-between gap-2" contentEditable={false}>
-        <div className="flex items-center gap-1.5 text-[12px] font-medium text-blue-600">
-          <Sparkles size={13} />
-          <span>AI 생성됨</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-medium text-blue-600">
+          <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <Sparkles size={13} />
+            <span>AI 생성됨</span>
+          </div>
           {!isStreaming && node.attrs.generatedAt && (
-            <span className="font-normal text-slate-400">· {formatGeneratedAt(node.attrs.generatedAt)}</span>
+            <span className="font-normal text-slate-400 shrink-0 whitespace-nowrap">· {formatGeneratedAt(node.attrs.generatedAt)}</span>
           )}
         </div>
 

@@ -228,7 +228,7 @@ export const ChatMessageInput = ({
     content: '',
     editorProps: {
       attributes: {
-        class: 'tiptap-content max-h-40 min-h-[24px] overflow-y-auto overflow-x-hidden break-words whitespace-pre-wrap text-sm text-fg-primary outline-none',
+        class: 'tiptap-content max-h-40 min-h-[24px] overflow-y-auto text-sm text-fg-primary outline-none',
       },
       // Enter는 전송, Shift+Enter는 기본 동작(줄바꿈)이 그대로 실행되도록 여기서만 가로챈다.
       // 단, 코드 블록이나 리스트 안에서는 Enter가 원래 하던 일(줄바꿈/새 목록 항목)을 해야 하므로 그대로 둔다.

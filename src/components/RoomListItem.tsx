@@ -82,8 +82,8 @@ export function RoomListItem({
   return (
     <div
       onClick={onSelect}
-      className={`group relative mx-2 flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 active:scale-[0.98] ${
-        isActive ? 'bg-bg-default shadow-sm border border-border-default/60' : 'border border-transparent hover:bg-bg-pressed'
+      className={`group relative mx-2 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+        isActive ? 'border border-border-default bg-bg-default' : 'border border-transparent hover:bg-bg-pressed'
       }`}>
       <Avatar
         seed={room.id}

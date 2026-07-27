@@ -162,7 +162,7 @@ export function Sidebar() {
         </button>
 
         {isThemeMenuOpen && (
-          <div className="absolute left-14 bottom-0 w-32 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
+          <div className="absolute right-0 @md:right-auto @md:left-14 bottom-12 @md:bottom-0 w-32 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
             <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
             <div className="flex flex-col gap-1">
               {[
@@ -224,6 +224,7 @@ export function Sidebar() {
 
         {isMenuOpen && (
           <ProfileDropdown
+            className="absolute right-0 @md:right-auto @md:left-14 bottom-14 @md:bottom-0"
             isSelf={true}
             userName={userName}
             currentStatus={status}

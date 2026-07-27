@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { updateRoomNotificationSettings } from '@/api/rooms';
 
 const STORAGE_KEY = 'mutedRoomIds';
 
@@ -21,13 +22,33 @@ export function useMutedRooms() {
     }
   });
 
-  const toggleMute = (roomId: string) => {
+  const toggleMute = async (roomId: string) => {
+    const currentlyMuted = mutedRoomIds.includes(roomId);
+    const willBeMuted = !currentlyMuted;
+
+    // Optimistic Update
     setMutedRoomIds((prev) => {
-      const isMuted = prev.includes(roomId);
-      const next = isMuted ? prev.filter((id) => id !== roomId) : [...prev, roomId];
+      const next = willBeMuted ? [...prev, roomId] : prev.filter((id) => id !== roomId);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
+
+    try {
+      // 알림을 끄는 것(willBeMuted)이면 수신 안 함(false), 켜는 것이면 수신 함(true)
+      await updateRoomNotificationSettings(roomId, {
+        message: !willBeMuted,
+        mention: !willBeMuted,
+      });
+    } catch (error) {
+      // 실패 시 원래 상태로 롤백
+      setMutedRoomIds((prev) => {
+        const next = currentlyMuted ? [...prev, roomId] : prev.filter((id) => id !== roomId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+      console.error('알림 설정 변경 실패:', error);
+      alert('알림 설정 변경에 실패했어요.');
+    }
   };
 
   const isMuted = (roomId: string) => mutedRoomIds.includes(roomId);

@@ -1,11 +1,13 @@
 export interface Collaborator {
   userId: string;
   name: string;
+  avatar?: string;
 }
 
 export interface UserInfo {
   userId: string;
   name: string;
+  avatar?: string;
 }
 
 export interface Document {
@@ -15,7 +17,11 @@ export interface Document {
   roomId?: string;
   roomName?: string | null;
   content?: any | null; // Editor's JSON content
-  collaborators?: Collaborator[];
+  collaborators?: Array<{ 
+      userId: string;
+      name: string;
+      avatar?: string | null;
+    }>;
   createdBy: string | UserInfo;
   createdAt: string;
   updatedAt: string;

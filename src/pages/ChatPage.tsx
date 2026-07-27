@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
@@ -29,11 +29,14 @@ type PanelTab = 'chat' | 'file' | 'docs';
 export const ChatPage = () => {
   const currentUserId = getCurrentUserId(); // 컴포넌트 안에서 매번 최신값 계산
   const navigate = useNavigate();
+  const location = useLocation();
+  const navState = location.state as { action?: string; userId?: string; roomId?: string; targetMessageId?: string } | null;
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<PanelTab>('chat');
@@ -42,7 +45,10 @@ export const ChatPage = () => {
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
 
+  // 현재 열린 방이 navState에 명시된 방과 같을 때만 targetMessageId를 활성화
+  const targetMessageId = selectedRoomId === navState?.roomId ? navState?.targetMessageId : undefined;
   const conversation = useRoomConversation(selectedRoomId, currentUserId, {
+    targetMessageId,
     onMessageSent: (payload) => {
       setRooms((prev) => {
         const index = prev.findIndex((r) => r.id === payload.roomId);
@@ -77,6 +83,29 @@ export const ChatPage = () => {
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
   }, []);
+
+  // 네비게이션 상태(location.state)를 감지하여 특정 채팅방이나 유저 DM을 열도록 처리
+  useEffect(() => {
+    if (!navState || rooms.length === 0) return;
+
+    if (navState.action === 'open_dm' && navState.userId) {
+      const existingRoom = rooms.find((r) => r.type === 'direct' && r.otherUserId === navState.userId);
+      if (existingRoom) {
+        handleSelectRoom(existingRoom.id);
+        navigate('/app', { replace: true });
+      } else {
+        createRoom({ type: 'direct', memberIds: [navState.userId] })
+          .then(newRoom => {
+            setRooms(prev => [mapRoomFromApi(newRoom), ...prev]);
+            handleSelectRoom(newRoom.roomId);
+            navigate('/app', { replace: true });
+          })
+          .catch(err => alert(err.message ?? 'DM방을 여는 데 실패했어요.'));
+      }
+    } else if (navState.roomId) {
+      handleSelectRoom(navState.roomId);
+    }
+  }, [location.state, rooms.length]);
 
   // 소켓 연결 - 앱 진입 시 한 번만
   useEffect(() => {
@@ -153,6 +182,7 @@ export const ChatPage = () => {
     setSelectedRoomId(roomId);
     setActiveTab('chat');
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
+    setIsSidebarOpen(false);
   };
 
   const handleStartDirectMessage = async (userId: string) => {
@@ -218,9 +248,11 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
+    <div className="flex min-w-0 flex-1 gap-3 overflow-hidden relative">
       <ListPanel
         headerHeight={63}
+        isSidebarOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
         header={
           <div className="flex w-full items-center justify-between">
             <h2 className="font-semibold text-fg-primary">채팅</h2>
@@ -338,6 +370,8 @@ export const ChatPage = () => {
         onCreateDocument={conversation.createDocumentMessage}
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
+        targetMessageId={targetMessageId}
+        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
     </div>
   );

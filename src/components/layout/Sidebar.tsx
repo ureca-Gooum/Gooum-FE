@@ -9,6 +9,7 @@ import { getCurrentUserId } from '@/constants/auth';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useUnreadBadge } from '@/hooks/useUnreadBadge';
 import { logout } from '@/api/users';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 const navItems = [
   { icon: Bell, label: '알림', to: '/app/notifications' },
@@ -19,6 +20,7 @@ const navItems = [
 export function Sidebar() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginAlertOpen, setIsLoginAlertOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,9 +123,9 @@ export function Sidebar() {
               to={to}
               end={to === '/app'}
               onClick={(e) => {
-                if (label === '알림' && !localStorage.getItem('accessToken')) {
+                if (!localStorage.getItem('accessToken')) {
                   e.preventDefault();
-                  alert('로그인 후 이용해주세요.');
+                  setIsLoginAlertOpen(true);
                 }
               }}
               className={({ isActive }) =>
@@ -234,6 +236,19 @@ export function Sidebar() {
           />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={isLoginAlertOpen}
+        title="로그인이 필요합니다"
+        message="해당 기능을 사용하시려면 먼저 로그인을 진행해주세요."
+        confirmText="로그인 화면으로"
+        cancelText="닫기"
+        onConfirm={() => {
+          setIsLoginAlertOpen(false);
+          navigate('/login');
+        }}
+        onCancel={() => setIsLoginAlertOpen(false)}
+      />
     </aside>
   );
 }

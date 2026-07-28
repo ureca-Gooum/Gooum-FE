@@ -46,10 +46,15 @@ export function useMyProfile(enabled: boolean = true) {
 
         if (response.data.name) setUserName(response.data.name);
 
-        const serverPresence = response.data.presence?.status || response.data.status;
-        if (serverPresence) {
-          setStatus((SERVER_TO_STATUS[serverPresence] || serverPresence) as UserStatus);
-        }
+        // usePresence와 동일한 복원 규칙(manualStatus 기준)을 써야 두 훅이 다른 색을 잠깐 보여주는 경합이 없다
+        const manualPresence = response.data.presence?.manualStatus;
+        const effectivePresence =
+          manualPresence === 'busy' || manualPresence === 'away' || manualPresence === 'offline'
+            ? manualPresence
+            : document.visibilityState === 'visible'
+              ? 'online'
+              : 'away';
+        setStatus((SERVER_TO_STATUS[effectivePresence] || effectivePresence) as UserStatus);
 
         if (response.data.statusMessage !== undefined) {
           setStatusMessage(response.data.statusMessage);

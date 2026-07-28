@@ -17,6 +17,7 @@ import type {
   UpdatePresenceResponse,
   PresenceChangedPayload,
   NewNotificationPayload,
+  UnreadCountPayload,
 } from '@/types/socket';
 import type { PresenceStatus } from '@/types/chat';
 
@@ -24,8 +25,8 @@ let socket: Socket | null = null;
 
 // 1. 소켓 연결 (토큰 인증 포함) - 중복 연결 방지
 export function connectSocket(): Socket {
-  if (socket?.connected) {
-    console.log('이미 연결된 소켓 재사용:', socket.id);
+  // connected만 체크하면 handshake 도중 다른 컴포넌트가 동시에 호출했을 때 소켓이 중복 생성된다
+  if (socket) {
     return socket;
   }
 
@@ -117,4 +118,13 @@ export function onNewNotification(handler: (payload: NewNotificationPayload) => 
 
 export function offNewNotification(handler: (payload: NewNotificationPayload) => void) {
   socket?.off('newNotification', handler);
+}
+
+// 11. 안 읽은 알림/채팅방 수 수신 - 연결 시점 + 이후 상태 변화(읽음 처리, 새 메시지 등)마다 서버가 다시 보내줌
+export function onUnreadCount(handler: (payload: UnreadCountPayload) => void) {
+  socket?.on('unreadCount', handler);
+}
+
+export function offUnreadCount(handler: (payload: UnreadCountPayload) => void) {
+  socket?.off('unreadCount', handler);
 }

@@ -9,18 +9,19 @@ export function usePresence(setRooms: React.Dispatch<React.SetStateAction<Room[]
     let cancelled = false;
 
     (async () => {
-      let savedStatus: PresenceStatus | undefined;
+      // presence.status는 연결 여부로 자동 갱신되니, 복원 기준은 프로필에서 명시적으로 고른 manualStatus를 쓴다
+      let manualStatus: PresenceStatus | undefined;
       try {
         const res = await api.get('/api/users/me');
-        savedStatus = res.data?.presence?.status || res.data?.status;
+        manualStatus = res.data?.presence?.manualStatus;
       } catch (error) {
         console.error('저장된 presence 조회 실패:', error);
       }
       if (cancelled) return;
 
       const nextStatus: PresenceStatus =
-        savedStatus === 'busy' || savedStatus === 'away'
-          ? savedStatus
+        manualStatus === 'busy' || manualStatus === 'away' || manualStatus === 'offline'
+          ? manualStatus
           : document.visibilityState === 'visible'
             ? 'online'
             : 'away';

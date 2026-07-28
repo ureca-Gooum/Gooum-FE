@@ -95,3 +95,8 @@ export interface MessageDeletedPayload {
   messageId: string;
   roomId: string;
 }
+
+export interface UnreadCountPayload {
+  notifications: number; // 안 읽은 알림 수 (알림 아이콘 뱃지)
+  rooms: number; // 안 읽은 메시지가 있는 채팅방 수 (채팅 아이콘 뱃지)
+}

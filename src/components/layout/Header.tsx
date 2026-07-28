@@ -98,13 +98,15 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
       <div className="hidden @md:block">
         <HeaderLogo />
       </div>
-      <button 
-        className="@md:hidden flex items-center justify-center p-1.5 -ml-1 mr-1 rounded-md text-fg-tertiary hover:bg-bg-subtle" 
-        onClick={() => navigate(-1)}>
-        <ChevronLeft size={24} />
-      </button>
+      <div className="flex @md:hidden w-10 shrink-0 items-center">
+        <button 
+          className="flex items-center justify-center p-1.5 -ml-1 rounded-md text-fg-tertiary hover:bg-bg-subtle" 
+          onClick={() => navigate(-1)}>
+          <ChevronLeft size={24} />
+        </button>
+      </div>
 
-      <div className="flex flex-1 items-center justify-center gap-2">
+      <div className="flex flex-1 items-center justify-center gap-2 px-2 @md:px-0">
         <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
           <ChevronLeft size={18} />
         </button>
@@ -112,7 +114,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
           <ChevronRight size={18} />
         </button>
 
-        <div className="relative w-full max-w-[280px] @md:max-w-md" ref={dropdownRef}>
+        <div className="relative w-full max-w-[400px] @md:max-w-md" ref={dropdownRef}>
           <div
             className={`flex w-full items-center gap-2 rounded-lg border bg-bg-default px-3 py-1.5 transition-colors ${
               isFocused ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-border-default'
@@ -218,7 +220,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
         </div>
       </div>
 
-      <div id="header-tabs-portal" className="flex @md:hidden flex-1 items-center min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden pl-2" />
+      <div id="header-tabs-portal" className="flex @md:hidden w-10 shrink-0 items-center justify-end min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden pr-1" />
 
       <div className="hidden @md:flex items-center gap-1 ml-auto">
         <button

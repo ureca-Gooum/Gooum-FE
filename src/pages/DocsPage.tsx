@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2 } from 'lucide-react';
+import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2, MoreVertical } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { DocsEditorSkeleton } from '@/components/DocsEditorSkeleton';
@@ -639,9 +639,14 @@ export const DocsPage = () => {
                     <button
                       onClick={() => startEditing(`header-${activeFile.documentId}`)}
                       className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-fg-secondary transition-colors hover:bg-bg-subtle">
-                      {activeFile.title || '새 문서'}
+                      <span className="hidden @md:inline">{activeFile.title || '새 문서'}</span>
+                      <span className="@md:hidden text-left">
+                        {(activeFile.title || '새 문서').length > 6
+                          ? (activeFile.title || '새 문서').slice(0, 6) + '...'
+                          : (activeFile.title || '새 문서')}
+                      </span>
                       <svg
-                        className="h-3 w-3 text-gray-400"
+                        className="h-3 w-3 text-gray-400 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -711,15 +716,24 @@ export const DocsPage = () => {
                   </div>
 
                   <div className="relative flex items-center export-menu-container">
-                    {/* 단일 내보내기 버튼 */}
+                    {/* PC 내보내기 버튼 */}
                     <button
                       onClick={() => setShowExportMenu(!showExportMenu)}
                       disabled={isSaving}
-                      className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                      className="hidden @md:flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
                       title="내보내기 옵션">
                       {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       <span>내보내기</span>
                       <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* 모바일 옵션(3점 메뉴) 버튼 */}
+                    <button
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      disabled={isSaving}
+                      className="flex @md:hidden items-center justify-center h-8 w-8 rounded-md text-fg-secondary hover:bg-bg-subtle transition-colors active:scale-95 disabled:opacity-60"
+                      title="옵션">
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                     </button>
 
                     {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}

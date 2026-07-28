@@ -4,21 +4,19 @@ import { driver, type DriveStep } from 'driver.js';
 
 const ONBOARDING_DONE_KEY = 'gooum_onboarding_done';
 
-/**
- * data-tour 속성이 붙은 실제 DOM 요소들을 순서대로 하이라이트하며
- * 툴팁(popover)을 보여주는 온보딩 투어.
- *
- * - Sidebar / Header는 MainLayout 하위 모든 라우트에 항상 떠 있으므로
- *   대부분의 step은 페이지 이동 없이 그대로 하이라이트할 수 있다.
- * - 다만 채팅 입력창처럼 '/app' 라우트에만 존재하는 요소가 있어서,
- *   투어 시작 시 먼저 '/app'으로 이동시킨 뒤 단계를 진행한다.
- * - AI 요약 버튼(ChatMessageInput)과 문서 협업자 아바타(DocsPage)는
- *   '채팅방이 열려 있을 때' / '문서가 열려 있을 때'만 DOM에 존재한다.
- *   신규 유저는 아직 채팅방/문서가 없을 수 있으므로, 요소가 없으면
- *   하이라이트 없이 중앙에 뜨는 안내 팝오버로 자연스럽게 대체한다.
- *   (요소가 없는데 selector만 넘기면 이전에 겪었던 것처럼 하이라이트/팝오버
- *   위치가 깨지므로, 반드시 존재 여부를 먼저 확인하고 step을 구성한다.)
- */
+const AI_SUMMARY_MOCKUP = `
+  <svg width="230" height="72" viewBox="0 0 230 72" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 12px">
+    <rect x="1" y="1" width="228" height="70" rx="12" fill="var(--color-bg-default)" stroke="var(--color-border-default)" stroke-width="1.5" />
+    <text x="14" y="26" font-size="12" fill="var(--color-fg-tertiary)" font-family="inherit">메시지를 입력하세요</text>
+    <line x1="10" y1="44" x2="220" y2="44" stroke="var(--color-border-default)" stroke-width="1" />
+    <rect x="145" y="52" width="10" height="12" rx="1.5" fill="none" stroke="var(--color-fg-tertiary)" stroke-width="1.4" />
+    <line x1="166" y1="51" x2="166" y2="65" stroke="var(--color-border-default)" stroke-width="1" />
+    <circle cx="186" cy="58" r="13" fill="var(--color-brand-soft)" stroke="var(--color-brand-primary)" stroke-width="2" />
+    <path d="M186 52 L187.3 56.2 L191.5 57.5 L187.3 58.8 L186 63 L184.7 58.8 L180.5 57.5 L184.7 56.2 Z" fill="var(--color-brand-primary)" />
+    <line x1="202" y1="51" x2="202" y2="65" stroke="var(--color-border-default)" stroke-width="1" />
+    <path d="M212 52 L222 58 L212 64 L214 58 Z" fill="var(--color-fg-tertiary)" />
+  </svg>`;
+
 export function useOnboardingTour() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,35 +28,18 @@ export function useOnboardingTour() {
       ? {
           element: '[data-tour="ai-summary"]',
           popover: {
-            title: '골라서 한 입에, AI 요약',
-            description: '요약하고 싶은 메시지 구간을 선택하면 AI가 알맹이만 쏙 골라 회의록처럼 정리해줘요.',
+            title: 'AI 회의록 버튼',
+            description: '요약하고 싶은 메시지 구간을 선택하고 이 버튼을 누르면 AI가 회의록처럼 정리해줘요.',
             side: 'top',
             align: 'end',
           },
         }
       : {
           popover: {
-            title: '골라서 한 입에, AI 요약',
+            title: 'AI 회의록 버튼',
             description:
-              '채팅방을 열면 입력창 옆에 반짝이는 아이콘이 생겨요. 요약하고 싶은 메시지 구간만 콕 선택하면 AI가 알맹이만 골라 정리해줘요.',
-          },
-        };
-
-    const docCollabStep: DriveStep = exists('[data-tour="doc-collaborators"]')
-      ? {
-          element: '[data-tour="doc-collaborators"]',
-          popover: {
-            title: '다 같이 뭉근하게, 동시 편집',
-            description: '지금 이 문서를 같이 보고 있는 동료들이에요. 여러 명이 동시에 입력해도 실시간으로 반영돼요.',
-            side: 'bottom',
-            align: 'end',
-          },
-        }
-      : {
-          popover: {
-            title: '다 같이 뭉근하게, 동시 편집',
-            description:
-              '문서 탭에 들어가면 지금 같이 보고 있는 동료들이 아바타로 떠요. 여러 명이 동시에 타이핑해도 실시간으로 뭉근하게 반영돼요.',
+              AI_SUMMARY_MOCKUP +
+              '채팅방을 열면 입력창 오른쪽에 AI 회의록 버튼이 있어요. 요약하고 싶은 메시지 구간을 선택하고 눌러보세요.',
           },
         };
 
@@ -66,19 +47,28 @@ export function useOnboardingTour() {
       {
         element: '[data-tour="new-chat"]',
         popover: {
-          title: '친구를 콕 골라볼까요?',
-          description: '뜨끈한 감자 고르듯, 대화하고 싶은 친구를 콕 선택하면 다이렉트든 그룹이든 바로 시작돼요.',
+          title: '친구와 대화 시작하기',
+          description: '대화하고 싶은 친구를 선택하면 다이렉트든 그룹이든 바로 시작할 수 있어요.',
           side: 'bottom',
           align: 'start',
         },
       },
       aiSummaryStep,
-      docCollabStep,
+      {
+        element: '[data-tour="nav-docs"]',
+        popover: {
+          title: '문서로 함께 작업하기',
+          description:
+            '여기서 새 문서를 만들 수도 있고, 동료와 실시간으로 편집 중인 문서를 모아볼 수도 있어요. 채팅 중이라면 입력창의 문서 아이콘으로 바로 만들 수도 있어요.',
+          side: 'right',
+          align: 'center',
+        },
+      },
       {
         element: '[data-tour="search"]',
         popover: {
-          title: '뭐든 후딱 찾기',
-          description: '사람, 채팅방, 메시지, 문서까지 검색 한 번이면 콕 집어 찾아드려요.',
+          title: '찾고 싶은 걸 바로',
+          description: '사람, 채팅방, 메시지, 문서까지 한 번에 검색할 수 있어요.',
           side: 'bottom',
           align: 'center',
         },
@@ -86,28 +76,10 @@ export function useOnboardingTour() {
       {
         element: '[data-tour="nav-notifications"]',
         popover: {
-          title: '놓치면 아쉬운 소식',
-          description: '멘션이나 초대 같은 새 소식이 오면 여기 폭신하게 쌓여요.',
+          title: '새 소식은 여기서',
+          description: '멘션이나 초대 같은 알림을 확인할 수 있어요.',
           side: 'right',
           align: 'center',
-        },
-      },
-      {
-        element: '[data-tour="nav-docs"]',
-        popover: {
-          title: '문서는 이쪽으로',
-          description: '방금 본 동시 편집 문서들은 여기 문서 탭에 모여 있어요.',
-          side: 'right',
-          align: 'center',
-        },
-      },
-      {
-        element: '[data-tour="help"]',
-        popover: {
-          title: '다시 보고 싶다면 여기',
-          description: '이 버튼을 누르면 온보딩 가이드를 언제든 따끈하게 다시 볼 수 있어요.',
-          side: 'bottom',
-          align: 'end',
         },
       },
     ];
@@ -121,8 +93,9 @@ export function useOnboardingTour() {
     const run = () => {
       const tour = driver({
         showProgress: true,
-        allowClose: true,
+        allowClose: false,
         overlayOpacity: 0.5,
+        disableActiveInteraction: true,
         nextBtnText: '다음',
         prevBtnText: '이전',
         doneBtnText: '시작하기',

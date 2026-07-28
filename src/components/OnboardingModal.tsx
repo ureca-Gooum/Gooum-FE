@@ -1,43 +1,35 @@
 import { useState } from 'react';
-import { X, MessageSquare, Sparkles, Users, UserPlus, ChevronRight, Check } from 'lucide-react';
+import { X, MessageSquare, Sparkles, Users, ChevronRight, Check } from 'lucide-react';
 
 interface OnboardingModalProps {
   onClose: () => void;
-  onStartTour?: () => void;
 }
 
 const slides = [
   {
-    icon: <UserPlus size={44} className="text-white" />,
-    title: '친구를 콕 골라볼까요?',
-    desc: '뜨끈한 감자 고르듯, 대화하고 싶은 친구를 콕 선택하면 다이렉트든 그룹이든 바로 대화가 시작돼요.',
-    bg: 'bg-gradient-to-br from-amber-400 to-orange-600',
-    shadow: 'shadow-orange-500/40',
-  },
-  {
     icon: <MessageSquare size={44} className="text-white" />,
-    title: '따끈따끈 실시간 대화',
-    desc: '언제 어디서든 김이 모락모락 나는 감자처럼 따끈하게, 끊김 없이 이야기를 나눠보세요.',
+    title: '실시간으로 연결되는 우리',
+    desc: '동료들과 언제 어디서나 다이렉트 및 그룹 채팅으로 끊김 없이 의견을 나누세요.',
     bg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
     shadow: 'shadow-indigo-500/40',
   },
   {
     icon: <Sparkles size={44} className="text-white" />,
-    title: '한 입에 쏙, AI 요약',
-    desc: '길어진 대화도 걱정 마세요. AI가 알맹이만 쏙 골라 부드럽게 요약해 드려요.',
+    title: '똑똑한 AI 대화방 요약',
+    desc: '길어진 대화도 문제없어요. AI가 채팅 내용을 핵심만 빠르고 정확하게 요약해 드립니다.',
     bg: 'bg-gradient-to-br from-purple-500 to-fuchsia-600',
     shadow: 'shadow-purple-500/40',
   },
   {
     icon: <Users size={44} className="text-white" />,
-    title: '다 같이 뭉근하게, 회의록',
-    desc: '채팅과 동시에 여러 명이 함께 회의록과 문서를 실시간으로 뭉근하게 완성해요.',
+    title: '실시간 회의록 & 동시 편집',
+    desc: '채팅과 동시에 여러 명과 함께 회의록과 문서를 실시간으로 작성하고 편집할 수 있어요.',
     bg: 'bg-gradient-to-br from-teal-400 to-emerald-600',
     shadow: 'shadow-emerald-500/40',
   },
 ];
 
-export function OnboardingModal({ onClose, onStartTour }: OnboardingModalProps) {
+export function OnboardingModal({ onClose }: OnboardingModalProps) {
   const [step, setStep] = useState<'question' | 'intro'>('question');
   const [slide, setSlide] = useState(0);
 
@@ -57,10 +49,7 @@ export function OnboardingModal({ onClose, onStartTour }: OnboardingModalProps) 
     if (slide < slides.length - 1) {
       setSlide((s) => s + 1);
     } else {
-      // 슬라이드 소개는 그대로 두고, 마지막 '시작하기'에서 실제 화면을 짚어주는
-      // driver.js 투어로 자연스럽게 이어준다.
-      onClose();
-      onStartTour?.();
+      handleClose();
     }
   };
 

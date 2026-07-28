@@ -12,6 +12,15 @@
   max-width: 320px;
 }
 
+/* 실제 요소 없이 중앙에 뜨는 안내 팝오버(목업 SVG 포함)는 살짝 더 여유 있게 */
+.driver-popover:has(svg) {
+  max-width: 280px;
+  text-align: center;
+}
+.driver-popover:has(svg) .driver-popover-description {
+  text-align: center;
+}
+
 .driver-popover-title {
   color: var(--color-fg-primary);
   font-size: 16px;

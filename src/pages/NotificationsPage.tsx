@@ -16,6 +16,8 @@ import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
+import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
+import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
@@ -83,18 +85,18 @@ export const NotificationsPage = () => {
       isMounted = false;
     };
   }, []);
-
+  
   useEffect(() => {
-    if (!roomId) {
-      setRoom(null);
-      return;
-    }
+    // roomId가 없으면 API 요청 없이 종료
+    if (!roomId) return;
+
     let isMounted = true;
     fetchRoomDetail(roomId)
       .then((res) => {
         if (isMounted) setRoom(mapRoomFromApi(res));
       })
       .catch((err) => console.error('채팅방 정보를 불러오지 못했어요:', err));
+
     return () => {
       isMounted = false;
     };
@@ -156,7 +158,7 @@ export const NotificationsPage = () => {
   const tabs: { key: NotificationMainTab; label: string }[] = [
     { key: 'chat', label: '채팅' },
     { key: 'file', label: '파일' },
-    { key: 'aiMinutes', label: 'AI 회의록' },
+    { key: 'aiMinutes', label: '문서' },
   ];
 
   return (
@@ -269,14 +271,10 @@ export const NotificationsPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              업로드된 파일이 없습니다.
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              생성된 AI 회의록이 없습니다.
-            </div>
-          )
+            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
+          ) : roomId ? (
+            <RoomDocumentsTab roomId={roomId} />
+          ) : null
         }
         isMuted={room ? mutedRoomIds.includes(room.id) : false}
         onToggleMute={room ? () => toggleMute(room.id) : undefined}

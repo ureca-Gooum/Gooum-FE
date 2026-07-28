@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { showAlert } from '@/utils/alert';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, X, Loader2, FileText, ArrowRight } from 'lucide-react';
 import { createAiSummaryClientOnly } from '@/api/documents';
@@ -60,7 +61,7 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
       });
       const transcript = buildTranscript(messages);
       if (doc.skippedAttachmentNotes?.length) {
-        alert(
+        showAlert(
           `일부 첨부파일은 분석에 포함하지 못했어요:\n${doc.skippedAttachmentNotes.join('\n')}\n\n나머지 내용으로 회의록을 만들었어요.`,
         );
       }

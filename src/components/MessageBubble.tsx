@@ -4,14 +4,15 @@ import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
 import Mention from '@tiptap/extension-mention';
 import { MoreVertical, Trash2, Check, Download, Paperclip } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Message } from '@/types/chat';
 import type { RoomMember } from '@/types/room';
-import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
+import { stripTrailingEmptyParagraphs, markSelfMentions } from '@/utils/tiptap';
 import { DocumentCardNode } from '@/components/DocumentCardNode';
 import { MentionHoverCard } from '@/components/MentionHoverCard';
 import { Avatar } from '@/components/Avatar';
 import { DeleteMessageModal } from '@/components/DeleteMessageModal';
+import { getCurrentUserId } from '@/constants/auth';
 
 const AVATAR_COLUMN_WIDTH = 28;
 
@@ -24,10 +25,6 @@ interface MessageBubbleProps {
   onToggleSelect?: (messageId: string) => void;
   /** 메시지 안의 "@멘션"에 호버했을 때 보여줄 프로필 카드 + 상대방 아바타 표시용 방 멤버 목록 */
   roomMembers?: RoomMember[];
-  /**
-   * 멘션 호버카드용 조회 대상. 멘션은 방 멤버가 아닌 가입자도 될 수 있으므로, 넘겨주면
-   * 이 목록에서 우선 찾고 없으면 roomMembers에서 찾는다(둘 다 없으면 "알 수 없음"으로 표시됨).
-   */
   mentionCandidates?: RoomMember[];
   /** 다른 사람의 멘션 카드에서 "메시지 보내기"를 눌렀을 때 호출 */
   onStartDirectMessage?: (userId: string) => void;
@@ -104,6 +101,11 @@ export function MessageBubble({
 
   const isDocumentCardOnly =
     message.content?.content?.length === 1 && message.content.content[0]?.type === 'documentCard';
+
+  useEffect(() => {
+    if (!editor) return;
+    markSelfMentions(editor.view.dom as HTMLElement, getCurrentUserId());
+  }, [editor, message.content]);
 
   const isImage = message.type === 'image' && !!message.fileUrl;
   const isFile = message.type === 'file' && !!message.fileUrl;

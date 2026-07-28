@@ -76,6 +76,18 @@
   --color-avatar-4: #e2637a;
   --color-avatar-5: #e0954c;
   --color-avatar-6: #2563eb;
+
+  /* =========================
+     Scrollbar (연한 라벤더 그라데이션)
+  ========================= */
+
+  --color-scrollbar-thumb: #b9b3ea;
+  --color-scrollbar-thumb-from: #c7c1f2;
+  --color-scrollbar-thumb-to: #a49bdf;
+  --color-scrollbar-thumb-hover: #8f84d4;
+  --color-scrollbar-thumb-hover-from: #b3a9ec;
+  --color-scrollbar-thumb-hover-to: #8f84d4;
+  --color-scrollbar-track: transparent;
 }
 
 /* 다크모드 할 시 */
@@ -101,6 +113,13 @@
 
   --gradient-brand-soft: linear-gradient(180deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
   --gradient-brand-soft-diagonal: linear-gradient(135deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
+
+  --color-scrollbar-thumb: #5b5680;
+  --color-scrollbar-thumb-from: #6b6596;
+  --color-scrollbar-thumb-to: #4a4570;
+  --color-scrollbar-thumb-hover: #7a739f;
+  --color-scrollbar-thumb-hover-from: #8079ab;
+  --color-scrollbar-thumb-hover-to: #5b5680;
 }
 
 /* 파스텔 브라운 테마 */

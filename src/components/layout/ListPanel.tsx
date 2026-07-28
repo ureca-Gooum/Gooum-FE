@@ -3,11 +3,6 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type R
 interface ListPanelProps {
   header: ReactNode;
   children: ReactNode;
-  /**
-   * 헤더 높이(px)를 고정하고 싶을 때 지정한다. (예: 메인패널 헤더와 높이를 맞춰서
-   * 헤더 아래 보더가 정확히 같은 줄에서 이어지도록)
-   * 지정하면 ListPanel과 메인패널 사이 gap 구간까지 보더 선을 이어 그려준다.
-   */
   headerHeight?: number;
   isSidebarOpen?: boolean;
   onClose?: () => void;
@@ -61,20 +56,13 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
   return (
     <>
       {/* 모바일 환경: 사이드바 뒷 배경 오버레이 */}
-      {isSidebarOpen && onClose && (
-        <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />
-      )}
-      
-      {/* 
-        모바일(@md 미만): absolute로 띄우고 translate로 슬라이드 처리 
-        데스크탑(@md 이상): relative로 띄우고 항상 보임
-      */}
-      <section 
-        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+      {isSidebarOpen && onClose && <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />}
+
+      <section
+        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
           isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
         }`}
-        style={{ width: `${width}px` }}
-      >
+        style={{ width: `${width}px` }}>
         {headerHeight ? (
           <div
             className="flex shrink-0 items-center border-b border-border-default px-4"
@@ -86,14 +74,9 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
         )}
         <div className="flex-1 overflow-y-auto">{children}</div>
 
-        {/* 헤더 높이가 고정된 경우, 그 보더가 gap 너머 메인패널까지 끊기지 않고 이어지도록 다리를 놓는다. */}
-        {headerHeight && (
-          <div className="absolute -right-3 w-3 bg-border-default hidden @md:block" style={{ top: headerHeight - 1, height: 1 }} />
-        )}
-
         <div
           onMouseDown={handleResizeStart}
-          className={`absolute -right-[9px] bottom-0 top-0 w-1.5 cursor-col-resize transition-colors hover:bg-brand-primary/30 hidden @md:block ${
+          className={`absolute -right-[3px] bottom-0 top-0 w-1.5 cursor-col-resize transition-colors hover:bg-brand-primary/30 hidden @md:block ${
             isDragging ? 'bg-brand-primary/30' : ''
           }`}
         />

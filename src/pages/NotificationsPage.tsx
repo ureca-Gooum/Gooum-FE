@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MessageCircle, FileText, AtSign } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
@@ -21,6 +23,7 @@ type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
 export const NotificationsPage = () => {
   const currentUserId = getCurrentUserId();
+  const navigate = useNavigate();
 
   // 초기 목록은 fetchNotifications()로 서버에서 받아온다 (아래 useEffect). 실시간으로 오는 새 알림은
   // onNewNotification 소켓 이벤트로 이 배열 맨 위에 추가된다.
@@ -144,6 +147,13 @@ export const NotificationsPage = () => {
     }
   };
 
+  // 멘션 카드의 "메시지 보내기": 이 페이지 자체는 방 목록을 들고 있지 않으므로,
+  // ChatPage로 이동시키면서 open_dm 액션을 넘겨 그쪽의 기존 로직(기존 DM방 찾기/없으면 생성)을 그대로 태운다.
+  const handleStartDirectMessage = (userId: string) => {
+    if (!userId || userId === currentUserId) return;
+    navigate('/app', { state: { action: 'open_dm', userId } });
+  };
+
   const isLoggedIn = !!localStorage.getItem('accessToken');
   if (!isLoggedIn) {
     return (
@@ -160,7 +170,7 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 gap-3 overflow-hidden relative">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative">
       <ListPanel
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -177,43 +187,67 @@ export const NotificationsPage = () => {
             <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
-                className={`pb-3 text-[13px] font-bold transition-colors ${
-                  activeTab === '전체'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
+                className={`relative pb-3 text-[13px] font-bold transition-colors ${
+                  activeTab === '전체' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 전체
+                {activeTab === '전체' && (
+                  <motion.span
+                    layoutId="activity-tab-underline"
+                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                    style={{ bottom: '-1px', height: '3px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('DM')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === 'DM'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
+                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                  activeTab === 'DM' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <MessageCircle size={15} />
                 DM
+                {activeTab === 'DM' && (
+                  <motion.span
+                    layoutId="activity-tab-underline"
+                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                    style={{ bottom: '-1px', height: '3px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
               </button>
 
               <button
                 onClick={() => setActiveTab('멘션')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === '멘션'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
+                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                  activeTab === '멘션' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <AtSign size={15} />
                 멘션
+                {activeTab === '멘션' && (
+                  <motion.span
+                    layoutId="activity-tab-underline"
+                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                    style={{ bottom: '-1px', height: '3px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('문서')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
-                  activeTab === '문서'
-                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
-                    : 'text-fg-tertiary hover:text-fg-primary'
+                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                  activeTab === '문서' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <FileText size={15} />
                 문서
+                {activeTab === '문서' && (
+                  <motion.span
+                    layoutId="activity-tab-underline"
+                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                    style={{ bottom: '-1px', height: '3px' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  />
+                )}
               </button>
             </div>
           </div>
@@ -300,6 +334,7 @@ export const NotificationsPage = () => {
         onOpenAiMinutes={conversation.startSelecting}
         onCreateDocument={conversation.createDocumentMessage}
         onDeleteMessage={conversation.deleteMessage}
+        onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={selectedNoti?.messageId}
         onSidebarToggle={() => setIsSidebarOpen(true)}
       />

@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Bell, MessageCircle, FileText, Palette } from 'lucide-react';
-import defaultAvatar from '@/assets/Avatar.svg';
+import { Avatar } from '@/components/Avatar';
 import { ProfileDropdown } from './ProfileDropdown';
 import { USER_STATUS_CONFIG } from '@/types/user';
-import { getAvatarColorClass } from '@/utils/avatar';
 import { getCurrentUserId } from '@/constants/auth';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useUnreadBadge } from '@/hooks/useUnreadBadge';
@@ -32,8 +31,6 @@ export function Sidebar() {
     status,
     statusMessage,
     userImage,
-    profileImgError,
-    setProfileImgError,
     onStatusChange,
     onStatusMessageChange,
     uploadImage,
@@ -133,21 +130,28 @@ export function Sidebar() {
                 }
               }}
               className={({ isActive }) =>
-                `flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
-                  isActive
-                    ? 'text-brand-primary bg-bg-subtle'
-                    : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
+                `group relative flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
+                  isActive ? 'text-brand-primary' : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
                 }`
               }>
-              <div className="relative">
-                <Icon size={20} />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-bg-canvas leading-none tracking-tighter">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`absolute left-0 top-1/2 w-[4px] -translate-y-1/2 rounded-r-full bg-brand-primary transition-all duration-300 ease-out ${
+                      isActive ? 'h-9 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'
+                    }`}
+                  />
+                  <div className="relative">
+                    <Icon size={20} fill={isActive ? 'currentColor' : 'none'} />
+                    {unreadCount > 0 && (
+                      <div className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-bg-canvas leading-none tracking-tighter">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className="text-[11px]">{label}</span>
+                  <span className="text-[11px]">{label}</span>
+                </>
+              )}
             </NavLink>
           );
         })}
@@ -203,27 +207,21 @@ export function Sidebar() {
         <button
           onClick={handleProfileClick}
           className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none ring-1 ring-black/5">
-          {userImage && !profileImgError ? (
-            <img
-              src={userImage}
-              alt="사용자"
-              className="w-full h-full rounded-full object-cover"
-              onError={() => setProfileImgError(true)}
-            />
-          ) : (
-            <div
-              className={`flex h-full w-full items-center justify-center rounded-full ${getAvatarColorClass(
-                getCurrentUserId() ?? userName,
-              )}`}>
-              <img
-                src={defaultAvatar}
-                alt="사용자"
-                className="object-contain"
-                style={{ width: 40 * 0.62, height: 40 * 0.62 }}
-              />
-            </div>
-          )}
-          <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${statusColor} ring-2 ring-bg-canvas`} />
+          <Avatar
+            seed={getCurrentUserId() ?? userName}
+            imageUrl={userImage}
+            alt="사용자"
+            size={40}
+            showPresence={false}
+          />
+          <div
+            className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-2 ring-bg-canvas ${
+              status === '오프라인' ? 'bg-presence-offline' : statusColor
+            }`}
+            style={
+              status === '오프라인' ? { boxShadow: 'inset 0 0 0 1px var(--color-presence-offline-border)' } : undefined
+            }
+          />
         </button>
 
         {isMenuOpen && (
@@ -233,6 +231,7 @@ export function Sidebar() {
             currentStatus={status}
             userImage={userImage}
             statusMessage={statusMessage}
+            seed={getCurrentUserId() ?? userName}
             onStatusChange={onStatusChange}
             onStatusMessageChange={onStatusMessageChange}
             onImageUpload={() => fileInputRef.current?.click()}

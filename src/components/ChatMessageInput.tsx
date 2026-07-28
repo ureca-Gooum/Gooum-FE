@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -20,7 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { uploadFile } from '@/api/upload';
-import { stripTrailingEmptyParagraphs } from '@/utils/tiptap';
+import { stripTrailingEmptyParagraphs, markSelfMentions } from '@/utils/tiptap';
 import { createMentionExtension, mentionSuggestionPluginKey } from '@/components/mentionExtension';
 import { getCurrentUserId } from '@/constants/auth';
 import type { TiptapDoc } from '@/types/chat';
@@ -249,7 +250,8 @@ export const ChatMessageInput = ({
         return false;
       },
     },
-    onUpdate: () => {
+    onUpdate: ({ editor: currentEditor }) => {
+      markSelfMentions(currentEditor.view.dom as HTMLElement, getCurrentUserId());
       onTyping?.();
     },
   });
@@ -369,7 +371,7 @@ export const ChatMessageInput = ({
       setPendingAttachment({ type, fileUrl, fileName: file.name, previewUrl });
     } catch (error) {
       console.error('파일 업로드 실패:', error);
-      alert('파일 업로드에 실패했어요. 다시 시도해주세요.');
+      showAlert('파일 업로드에 실패했어요. 다시 시도해주세요.');
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     } finally {
       setIsUploading(false);

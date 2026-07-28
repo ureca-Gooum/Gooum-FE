@@ -96,11 +96,6 @@ interface ChatRoomPanelProps {
   onSidebarToggle?: () => void;
 }
 
-/**
- * 채팅 메인패널: 상단 헤더(아바타/이름/탭/알림·즐겨찾기) + 메시지 목록 + 하단 입력창.
- * ChatPage(채팅 탭)와 NotificationsPage(알림 상세)가 동일하게 사용하도록 프레젠테이셔널로 분리했다.
- * 실제 데이터/소켓/전송 로직은 `useRoomConversation` 훅에서 가져와 그대로 props로 내려주면 된다.
- */
 export function ChatRoomPanel({
   target,
   emptyHeaderLabel = '채팅방을 선택해주세요',
@@ -295,7 +290,7 @@ export function ChatRoomPanel({
             </div>
           </div>
         ) : (
-          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
+          <div className="flex h-[63px] items-center gap-3 px-4">
             {onSidebarToggle && (
               <button
                 onClick={onSidebarToggle}
@@ -303,7 +298,6 @@ export function ChatRoomPanel({
                 <Menu className="h-5 w-5" />
               </button>
             )}
-            {emptyHeaderLabel}
           </div>
         )
       }

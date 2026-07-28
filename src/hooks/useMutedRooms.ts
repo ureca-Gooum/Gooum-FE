@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import { updateRoomNotificationSettings } from '@/api/rooms';
 
 const STORAGE_KEY = 'mutedRoomIds';
@@ -47,7 +48,7 @@ export function useMutedRooms() {
         return next;
       });
       console.error('알림 설정 변경 실패:', error);
-      alert('알림 설정 변경에 실패했어요.');
+      showAlert('알림 설정 변경에 실패했어요.');
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { showAlert } from '@/utils/alert';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2 } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
@@ -364,7 +365,7 @@ export const DocsPage = () => {
         .save();
     } catch (error) {
       console.error('PDF 변환 실패:', error);
-      alert('PDF 변환 중 오류가 발생했습니다.');
+      showAlert('PDF 변환 중 오류가 발생했습니다.');
     }
   };
 
@@ -400,7 +401,7 @@ export const DocsPage = () => {
     } catch (error) {
       console.error('문서 생성 실패:', error);
       setFiles((prev) => prev.filter((f) => f.documentId !== tempId));
-      alert('문서 생성에 실패했습니다.');
+      showAlert('문서 생성에 실패했습니다.');
     }
   };
 
@@ -459,9 +460,9 @@ export const DocsPage = () => {
       if (activeFileId === id) setActiveFileId(id);
 
       if (error.response?.status === 403) {
-        alert('문서 생성자만 삭제할 수 있습니다.');
+        showAlert('문서 생성자만 삭제할 수 있습니다.');
       } else {
-        alert('문서 삭제 중 오류가 발생했습니다.');
+        showAlert('문서 삭제 중 오류가 발생했습니다.');
       }
     }
   };

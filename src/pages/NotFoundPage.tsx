@@ -47,7 +47,7 @@ export const NotFoundPage = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-[image:var(--gradient-brand-soft-diagonal)] px-6 text-center">
+    <div className="relative flex h-screen w-screen flex-col items-center justify-center overflow-hidden bg-[image:var(--gradient-brand-soft-diagonal)] px-6 text-center">
       {/* 일러스트 뒤에 깔리는 큰 404 장식 텍스트. 살짝 기울이고 위치를 어긋나게 둬서 불규칙한 느낌을 준다. */}
       <div className="relative mb-2 flex items-center justify-center">
         <span
@@ -55,7 +55,7 @@ export const NotFoundPage = () => {
           style={{
             fontSize: 'clamp(140px, 28vw, 260px)',
             transform: 'rotate(-6deg) translate(2%, 6%)',
-            zIndex: 0,
+            zIndex: -1,
           }}>
           404
         </span>

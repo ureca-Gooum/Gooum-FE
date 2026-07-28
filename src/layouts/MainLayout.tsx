@@ -213,7 +213,7 @@ export const MainLayout = () => {
               <Sidebar />
             </div>
           )}
-          <div className="flex flex-1 overflow-hidden order-1 @md:order-2 w-full">
+          <div className="flex flex-1 order-1 @md:order-2 w-full">
             <Outlet />
           </div>
         </div>

@@ -184,7 +184,7 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
+    <div className="flex min-w-0 flex-1 relative w-full h-full">
       <ListPanel
         className={selectedNotiId ? 'hidden @md:flex' : 'flex'}
         isSidebarOpen={isSidebarOpen}

@@ -222,7 +222,7 @@ export const ChatPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-w-0 flex-1 overflow-hidden w-full h-full">
+      <div className="flex min-w-0 flex-1 w-full h-full">
         <ListPanel className="flex" headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
           <div className="flex flex-col gap-1 py-2">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -232,8 +232,8 @@ export const ChatPage = () => {
         </ListPanel>
 
         <section
-          className="flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default"
-          style={{ boxShadow: '0 8px 24px -6px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)' }}>
+          className="relative z-10 flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default"
+          style={{ boxShadow: '0 6px 18px -6px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.06)' }}>
           <div className="flex h-[63px] shrink-0 items-center gap-3 border-b border-border-default px-4">
             <Skeleton className="h-7 w-7 rounded-full" />
             <Skeleton className="h-4 w-24 rounded-full" />
@@ -261,7 +261,7 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
+    <div className="flex min-w-0 flex-1 relative w-full h-full">
       <ListPanel
         className={selectedRoomId ? 'hidden @md:flex' : 'flex'}
         headerHeight={63}

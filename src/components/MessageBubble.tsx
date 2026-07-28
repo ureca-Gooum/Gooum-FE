@@ -234,7 +234,7 @@ export function MessageBubble({
                     wordBreak: 'keep-all',
                     overflowWrap: 'anywhere',
                     whiteSpace: 'pre-wrap',
-                    backgroundColor: message.isMine ? 'var(--color-brand-soft)' : 'var(--color-bg-pressed)',
+                    backgroundColor: message.isMine ? 'var(--color-bg-pressed)' : 'var(--color-brand-soft)',
                     color: 'var(--color-fg-primary)',
                   }
             }

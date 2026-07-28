@@ -57,6 +57,7 @@ export function MentionHoverCard({
           currentStatus={myProfile.status}
           userImage={myProfile.userImage}
           statusMessage={myProfile.statusMessage}
+          seed={userId}
           onStatusChange={myProfile.onStatusChange}
           onStatusMessageChange={myProfile.onStatusMessageChange}
         />

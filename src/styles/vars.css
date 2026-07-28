@@ -14,45 +14,44 @@
      Border
   ========================= */
 
-  --color-border-default: #dce2ea;
-  --color-border-strong: #c9d2de;
-  --color-border-brand: #93c5fd;
+  --color-border-default: #ddd7f0;
+  --color-border-strong: #c7bfe6;
+  --color-border-brand: #a6c1ee;
 
   /* =========================
      Background
-     은은한 라벤더-블루 톤을 기본 테마 전체로 확장 
+     "Lavender" 컨셉: 위쪽 블루-라벤더에서 아래쪽 은은한 핑크로 번지는 톤
   ========================= */
 
   --color-bg-default: #ffffff;
-  --color-bg-canvas: #f1f3fc;
-  --color-bg-subtle: #eaeefb;
-  --color-bg-pressed: #dfe4f7;
+  --color-bg-canvas: #f2f1fb;
+  --color-bg-subtle: #ebe8f8;
+  --color-bg-pressed: #ddd8f2;
 
   /* =========================
      Brand
-     로그인 페이지에서 쓰던 블루(#3b82f6 계열)를 기본 프라이머리로 승격
+     인디고-라벤더 포인트 컬러. 스와치 그라데이션(#a6c1ee → #fbc2eb)의 진한 쪽에서 뽑았다.
   ========================= */
 
-  --color-brand-primary: #3b82f6;
-  --color-brand-secondary: #2563eb;
-  --color-brand-light: #60a5fa;
-  --color-brand-soft: #eef2ff;
+  --color-brand-primary: #7986e0;
+  --color-brand-secondary: #5f6cc9;
+  --color-brand-light: #a6c1ee;
+  --color-brand-soft: #eef0fd;
 
   /* =========================
-     Gradient (전체 화면 배경용)
-     로그인/404처럼 화면 전체를 덮는 페이지에서 재사용하는 그라데이션. 세로로 긴 레이아웃에서
-     대각선 그라데이션이 압축되어 경계처럼 보이는 문제가 있어, 세로용/대각선용을 따로 둔다.
+     Gradient (전체 화면/앱 배경용)
   ========================= */
 
-  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2eefe 55%, #eaf4ff 100%);
-  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2eefe 55%, #eaf4ff 100%);
+  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
+  --gradient-canvas: linear-gradient(160deg, #eef1fd 0%, #f2edf9 55%, #f8eaf4 100%);
 
   /* =========================
-     Semantic
+     Semantic (테마 무관, 항상 같은 의미 유지)
   ========================= */
 
-  --color-error: #c94b55;
-  --color-error-bg: #fcf4f6;
+  --color-error: #c9455f;
+  --color-error-bg: #fdf1f4;
 
   --color-warning: #8c6415;
   --color-warning-bg: #fff8e8;
@@ -61,7 +60,7 @@
   --color-success-bg: #ddf3e7;
 
   /* =========================
-     Presence (접속 상태 전용)
+     Presence (접속 상태 전용, 테마 무관)
   ========================= */
 
   --color-presence-online: #6bb700;
@@ -73,62 +72,174 @@
   --color-avatar-1: #3b82f6;
   --color-avatar-2: #60a5fa;
   --color-avatar-3: #7c6fd1;
-  --color-avatar-4: #e2637a;
-  --color-avatar-5: #e0954c;
+  --color-avatar-4: #c97b93;
+  --color-avatar-5: #d99a5c;
   --color-avatar-6: #2563eb;
+
+  /* 그룹 채팅방 헤더의 "총인원 숫자" 아바타 배지 배경/글자색. 기본값은 fg-tertiary + 흰 글자이며,
+     테마별로 대비가 부족하면 아래에서 개별적으로 덮어쓴다(예: 다크 모드). */
+  --color-avatar-group-bg: var(--color-fg-tertiary);
+  --color-avatar-group-fg: #ffffff;
+
+  /* =========================
+     Scrollbar ("Lavender" 그라데이션: #a6c1ee → #fbc2eb)
+  ========================= */
+
+  --color-scrollbar-thumb: #c0addf;
+  --color-scrollbar-thumb-from: #a6c1ee;
+  --color-scrollbar-thumb-to: #eaaed9;
+  --color-scrollbar-thumb-hover: #d98fc2;
+  --color-scrollbar-thumb-hover-from: #8fa8e0;
+  --color-scrollbar-thumb-hover-to: #f2a6da;
+  --color-scrollbar-track: transparent;
+
+  /* =========================
+     Mention 하이라이트 (라이트 기본값)
+  ========================= */
+
+  --color-mention-self-bg: rgba(255, 183, 0, 0.38);
+  --color-mention-self-text: #8a5a00;
+  --color-mention-other-bg: rgba(56, 189, 248, 0.22);
+  --color-mention-other-text: #1d6fa5;
 }
 
-/* 다크모드 할 시 */
-
+/* Midnight (다크) — 짙은 남색 대신 눈이 편한 뉴트럴 차콜 톤, 배경은 그라데이션 없이 단색 */
 [data-theme='dark'] {
-  --color-fg-primary: #f4f7fb;
-  --color-fg-secondary: #dce2ea;
-  --color-fg-tertiary: #a8afb9;
-  --color-fg-disabled: #69717e;
+  --color-fg-primary: #e8eaed;
+  --color-fg-secondary: #bcc0c9;
+  --color-fg-tertiary: #8b909b;
+  --color-fg-disabled: #5b6069;
 
-  --color-border-default: #3b414c;
-  --color-border-strong: #69717e;
+  --color-border-default: #34363d;
+  --color-border-strong: #46484f;
+  --color-border-brand: #4c5a86;
 
-  --color-bg-default: #1f2229;
-  --color-bg-canvas: #181b20;
-  --color-bg-subtle: #232a45;
-  --color-bg-pressed: #303a5c;
+  --color-bg-default: #26272c;
+  --color-bg-canvas: #1c1d21;
+  --color-bg-subtle: #2f3036;
+  --color-bg-pressed: #383a42;
 
-  --color-brand-primary: #60a5fa;
-  --color-brand-secondary: #93c5fd;
-  --color-brand-light: #bfdbfe;
-  --color-brand-soft: #1e2a44;
+  --color-brand-primary: #8b9ae8;
+  --color-brand-secondary: #a3b0ee;
+  --color-brand-light: #c2cdf5;
+  --color-brand-soft: #2c2f42;
 
-  --gradient-brand-soft: linear-gradient(180deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
-  --gradient-brand-soft-diagonal: linear-gradient(135deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
+  --gradient-brand-soft: linear-gradient(180deg, #1c1d21 0%, #1c1d21 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #1c1d21 0%, #1c1d21 100%);
+  --gradient-canvas: linear-gradient(180deg, #1c1d21 0%, #1c1d21 100%);
+
+  --color-scrollbar-thumb: #45474f;
+  --color-scrollbar-thumb-from: #4c4f59;
+  --color-scrollbar-thumb-to: #3b3d44;
+  --color-scrollbar-thumb-hover: #585b66;
+  --color-scrollbar-thumb-hover-from: #5f6270;
+  --color-scrollbar-thumb-hover-to: #45474f;
+
+  --color-mention-self-bg: rgba(255, 200, 60, 0.2);
+  --color-mention-self-text: #ffd76b;
+  --color-mention-other-bg: rgba(139, 154, 232, 0.2);
+  --color-mention-other-text: #a3b0ee;
+
+  /* fg-tertiary(#8b909b)를 그대로 쓰면 흰 숫자와 대비가 약해 잘 안 보이지만, 너무 밝은 회색은
+     다크 테마 톤과 안 어울려서 기존 아바타 팔레트의 딥 블루를 가져와 어둡고 자연스럽게 처리 */
+  --color-avatar-group-bg: var(--color-avatar-6);
 }
 
-/* 파스텔 브라운 테마 */
+/* Caramel (브라운) — 오븐에 노릇하게 구운 캐러멜·토스트 톤: #f6d365 → #c68a4a */
 [data-theme='pastel-brown'] {
-  --color-bg-canvas: #fdf8f5;
+  --color-fg-primary: #4a3728;
+  --color-fg-secondary: #7a5f47;
+  --color-fg-tertiary: #a1876c;
+  --color-fg-disabled: #cdb99e;
+
+  --color-border-default: #ecd6a8;
+  --color-border-strong: #ddc084;
+  --color-border-brand: #f6d365;
+
   --color-bg-default: #ffffff;
-  --color-bg-subtle: #f6efe9;
-  --color-border-default: #e6d5c3;
-  --color-fg-primary: #5c4033;
-  --color-fg-secondary: #7b5e4a;
+  --color-bg-canvas: #fbf4e6;
+  --color-bg-subtle: #f6e7c9;
+  --color-bg-pressed: #eed9ac;
+
+  --color-brand-primary: #c68a4a;
+  --color-brand-secondary: #a86f34;
+  --color-brand-light: #f6d365;
+  --color-brand-soft: #fdf0d9;
+
+  --gradient-brand-soft: linear-gradient(180deg, #fdf0d9 0%, #fbe6c2 55%, #f7dba3 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #fdf0d9 0%, #fbe6c2 55%, #f7dba3 100%);
+  --gradient-canvas: linear-gradient(160deg, #fbf4e6 0%, #f8e9cd 55%, #f3dcae 100%);
+
+  --color-scrollbar-thumb: #dcaf64;
+  --color-scrollbar-thumb-from: #f6d365;
+  --color-scrollbar-thumb-to: #c68a4a;
+  --color-scrollbar-thumb-hover: #a86f34;
+  --color-scrollbar-thumb-hover-from: #d9a44a;
+  --color-scrollbar-thumb-hover-to: #a86f34;
 }
 
-/* 파스텔 핑크 테마 */
+/* Cotton Candy (핑크) — 라일락에서 버블검 핑크로 이어지는 솜사탕 톤: #f6d5f7 → #ffb8de */
 [data-theme='pastel-pink'] {
-  --color-bg-canvas: #fff0f5;
+  --color-fg-primary: #5a3b56;
+  --color-fg-secondary: #8a5c7e;
+  --color-fg-tertiary: #ac82a0;
+  --color-fg-disabled: #d1aec8;
+
+  --color-border-default: #f6d0e8;
+  --color-border-strong: #eab8d9;
+  --color-border-brand: #ffb8de;
+
   --color-bg-default: #ffffff;
-  --color-bg-subtle: #ffe4e1;
-  --color-border-default: #ffb6c1;
-  --color-fg-primary: #8b0000;
-  --color-fg-secondary: #a52a2a;
+  --color-bg-canvas: #fdf1fa;
+  --color-bg-subtle: #fbe4f3;
+  --color-bg-pressed: #f6d0e8;
+
+  --color-brand-primary: #e6659e;
+  --color-brand-secondary: #cc4d85;
+  --color-brand-light: #ffb8de;
+  --color-brand-soft: #fdedf7;
+
+  --gradient-brand-soft: linear-gradient(180deg, #fdedf7 0%, #fbe4f3 50%, #fef0e8 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #fbeaf5 0%, #fbe4f3 50%, #fdedde 100%);
+  --gradient-canvas: linear-gradient(160deg, #fdf1fa 0%, #fbe6f0 50%, #fdf0e6 100%);
+
+  --color-scrollbar-thumb: #f0a8d4;
+  --color-scrollbar-thumb-from: #f6d5f7;
+  --color-scrollbar-thumb-to: #ffb8de;
+  --color-scrollbar-thumb-hover: #e6659e;
+  --color-scrollbar-thumb-hover-from: #e6a0d0;
+  --color-scrollbar-thumb-hover-to: #e6659e;
 }
 
-/* 파스텔 그린 테마 */
+/* Mint Chip (그린) — 초록에 하늘빛이 섞인 민트초코 톤: #7bd7c4 → #a8e08f */
 [data-theme='pastel-green'] {
-  --color-bg-canvas: #f0fff0;
+  --color-fg-primary: #1f3d38;
+  --color-fg-secondary: #4d6b64;
+  --color-fg-tertiary: #7d9a92;
+  --color-fg-disabled: #b0c7c0;
+
+  --color-border-default: #c8e6cf;
+  --color-border-strong: #a3cec0;
+  --color-border-brand: #7bd7c4;
+
   --color-bg-default: #ffffff;
-  --color-bg-subtle: #e6ffe6;
-  --color-border-default: #90ee90;
-  --color-fg-primary: #006400;
-  --color-fg-secondary: #228b22;
+  --color-bg-canvas: #f1faee;
+  --color-bg-subtle: #e0f3e5;
+  --color-bg-pressed: #cbe8d2;
+
+  --color-brand-primary: #3fb39a;
+  --color-brand-secondary: #2e9280;
+  --color-brand-light: #7bd7c4;
+  --color-brand-soft: #e3f7ee;
+
+  --gradient-brand-soft: linear-gradient(180deg, #e3f7ee 0%, #e6f5ea 55%, #eef7e4 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #e0f6ee 0%, #e5f4e9 55%, #eef7e2 100%);
+  --gradient-canvas: linear-gradient(160deg, #f0faf3 0%, #e9f6ee 55%, #eef6e2 100%);
+
+  --color-scrollbar-thumb: #7cc9ae;
+  --color-scrollbar-thumb-from: #7bd7c4;
+  --color-scrollbar-thumb-to: #a8e08f;
+  --color-scrollbar-thumb-hover: #3fb39a;
+  --color-scrollbar-thumb-hover-from: #4fc2ab;
+  --color-scrollbar-thumb-hover-to: #8fd473;
 }

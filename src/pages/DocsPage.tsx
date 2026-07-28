@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { showAlert } from '@/utils/alert';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2, MoreVertical } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
@@ -275,7 +276,6 @@ export const DocsPage = () => {
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   // 온라인 접속자 이름 목록 (Set)
@@ -366,7 +366,7 @@ export const DocsPage = () => {
         .save();
     } catch (error) {
       console.error('PDF 변환 실패:', error);
-      alert('PDF 변환 중 오류가 발생했습니다.');
+      showAlert('PDF 변환 중 오류가 발생했습니다.');
     }
   };
 
@@ -402,7 +402,7 @@ export const DocsPage = () => {
     } catch (error) {
       console.error('문서 생성 실패:', error);
       setFiles((prev) => prev.filter((f) => f.documentId !== tempId));
-      alert('문서 생성에 실패했습니다.');
+      showAlert('문서 생성에 실패했습니다.');
     }
   };
 
@@ -452,7 +452,7 @@ export const DocsPage = () => {
     if (activeFileId === id) {
       setActiveFileId(next.length > 0 ? next[0].documentId : null);
     }
-    
+
     setIsDeleteConfirmOpen(false);
 
     try {
@@ -463,9 +463,9 @@ export const DocsPage = () => {
       if (activeFileId === id) setActiveFileId(id);
 
       if (error.response?.status === 403) {
-        setErrorModalMessage('문서 생성자만 삭제할 수 있습니다.');
+        showAlert('문서 생성자만 삭제할 수 있습니다.');
       } else {
-        setErrorModalMessage('문서 삭제 중 오류가 발생했습니다.');
+        showAlert('문서 삭제 중 오류가 발생했습니다.');
       }
     }
   };
@@ -559,7 +559,7 @@ export const DocsPage = () => {
                       setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
                     }
                   }}>
-                  {/* 왼쪽 테마 바 (활성 시) */}
+                  {/* 왼쪽 테마 바 (활성 시, 텍스트 높이 정도의 둥근 선) */}
                   <div
                     className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
                       }`}
@@ -830,7 +830,7 @@ export const DocsPage = () => {
 
           {/* 토스트 알림 */}
           {toastMessage && (
-            <div className="pointer-events-none absolute top-5 left-1/2 z-50 -translate-x-1/2">
+            <div className="pointer-events-none fixed top-5 left-1/2 z-50 -translate-x-1/2">
               <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 shadow-lg">
                 {isSaving ? (
                   <svg className="h-4 w-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
@@ -874,17 +874,6 @@ export const DocsPage = () => {
         isDestructive={true}
         onConfirm={confirmDeleteFile}
         onCancel={() => setIsDeleteConfirmOpen(false)}
-      />
-
-      <ConfirmModal
-        isOpen={!!errorModalMessage}
-        title="삭제 실패"
-        message={errorModalMessage || ''}
-        confirmText="확인"
-        hideCancel={true}
-        isDestructive={true}
-        onConfirm={() => setErrorModalMessage(null)}
-        onCancel={() => setErrorModalMessage(null)}
       />
     </div>
   );

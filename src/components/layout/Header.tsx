@@ -1,5 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Search, FileText, MessageCircle, HelpCircle, Minus, Square, X, Copy, User, Hash } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  FileText,
+  MessageCircle,
+  HelpCircle,
+  Minus,
+  Square,
+  X,
+  Copy,
+  User,
+  Hash,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { HeaderLogo } from './HeaderLogo';
 import { fetchSearch } from '@/api/search';
@@ -84,7 +97,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
             </span>
           ) : (
             part
-          )
+          ),
         )}
       </>
     );
@@ -92,7 +105,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
 
   return (
     <header
-      className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
+      className={`flex h-14 shrink-0 items-center px-3 ${!isMaximized ? 'cursor-move' : ''}`}
       onMouseDown={onMouseDown}>
       {/* 왼쪽: 로고 (PC) / 뒤로가기 (모바일) */}
       <div className="hidden @md:block">
@@ -136,9 +149,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
           {isFocused && searchQuery.length > 0 && (
             <div className="absolute top-full left-0 mt-2 w-full max-h-[400px] overflow-y-auto rounded-lg border border-border-default bg-bg-default shadow-lg z-50">
               <div className="sticky top-0 px-3 py-2 border-b border-border-default bg-bg-canvas flex items-center justify-between z-10">
-                <span className="text-xs font-semibold text-fg-tertiary">
-                  '{searchQuery}' 검색 결과
-                </span>
+                <span className="text-xs font-semibold text-fg-tertiary">'{searchQuery}' 검색 결과</span>
                 {isSearching && <span className="text-xs text-brand-primary">검색 중...</span>}
               </div>
 
@@ -146,30 +157,44 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
                 {!searchResults && !isSearching && (
                   <div className="px-3 py-6 text-center text-sm text-fg-tertiary">검색 결과가 없습니다.</div>
                 )}
-                
+
                 {searchResults && (
                   <>
                     {/* 유저 */}
                     {searchResults.users.length > 0 && (
                       <div className="py-1">
-                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">사용자</div>
-                        {searchResults.users.map(user => (
-                          <button key={user.userId} onClick={() => handleResultClick('user', user)} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
+                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">
+                          사용자
+                        </div>
+                        {searchResults.users.map((user) => (
+                          <button
+                            key={user.userId}
+                            onClick={() => handleResultClick('user', user)}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
                             <User size={16} className="text-fg-tertiary shrink-0" />
-                            <span className="text-sm font-semibold text-fg-primary truncate">{highlightText(user.name, searchQuery)}</span>
+                            <span className="text-sm font-semibold text-fg-primary truncate">
+                              {highlightText(user.name, searchQuery)}
+                            </span>
                           </button>
                         ))}
                       </div>
                     )}
-                    
+
                     {/* 채팅방 */}
                     {searchResults.rooms.length > 0 && (
                       <div className="py-1">
-                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">채팅방</div>
-                        {searchResults.rooms.map(room => (
-                          <button key={room.roomId} onClick={() => handleResultClick('room', room)} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
+                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">
+                          채팅방
+                        </div>
+                        {searchResults.rooms.map((room) => (
+                          <button
+                            key={room.roomId}
+                            onClick={() => handleResultClick('room', room)}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
                             <Hash size={16} className="text-fg-tertiary shrink-0" />
-                            <span className="text-sm font-semibold text-fg-primary truncate">{highlightText(room.name || '알 수 없는 채팅방', searchQuery)}</span>
+                            <span className="text-sm font-semibold text-fg-primary truncate">
+                              {highlightText(room.name || '알 수 없는 채팅방', searchQuery)}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -178,13 +203,22 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
                     {/* 메시지 */}
                     {searchResults.messages.length > 0 && (
                       <div className="py-1">
-                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">메시지</div>
-                        {searchResults.messages.map(msg => (
-                          <button key={msg.messageId} onClick={() => handleResultClick('message', msg)} className="w-full flex items-start gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
+                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">
+                          메시지
+                        </div>
+                        {searchResults.messages.map((msg) => (
+                          <button
+                            key={msg.messageId}
+                            onClick={() => handleResultClick('message', msg)}
+                            className="w-full flex items-start gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
                             <MessageCircle size={16} className="text-fg-tertiary shrink-0 mt-0.5" />
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-[11px] text-fg-tertiary truncate mb-0.5">{msg.roomName} • {msg.sender.name}</span>
-                              <span className="text-sm text-fg-primary line-clamp-2 leading-tight">{highlightText(msg.content, searchQuery)}</span>
+                              <span className="text-[11px] text-fg-tertiary truncate mb-0.5">
+                                {msg.roomName} • {msg.sender.name}
+                              </span>
+                              <span className="text-sm text-fg-primary line-clamp-2 leading-tight">
+                                {highlightText(msg.content, searchQuery)}
+                              </span>
                             </div>
                           </button>
                         ))}
@@ -194,12 +228,19 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
                     {/* 문서 */}
                     {searchResults.documents.length > 0 && (
                       <div className="py-1">
-                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">문서</div>
-                        {searchResults.documents.map(doc => (
-                          <button key={doc.documentId} onClick={() => handleResultClick('document', doc)} className="w-full flex items-start gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
+                        <div className="px-3 py-1 text-[11px] font-bold text-fg-tertiary uppercase tracking-wider">
+                          문서
+                        </div>
+                        {searchResults.documents.map((doc) => (
+                          <button
+                            key={doc.documentId}
+                            onClick={() => handleResultClick('document', doc)}
+                            className="w-full flex items-start gap-3 px-3 py-2 hover:bg-bg-subtle transition-colors text-left">
                             <FileText size={16} className="text-fg-tertiary shrink-0 mt-0.5" />
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-sm font-semibold text-fg-primary truncate">{highlightText(doc.title, searchQuery)}</span>
+                              <span className="text-sm font-semibold text-fg-primary truncate">
+                                {highlightText(doc.title, searchQuery)}
+                              </span>
                               <span className="text-[11px] text-fg-tertiary truncate">{doc.roomName}</span>
                             </div>
                           </button>
@@ -207,11 +248,12 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
                       </div>
                     )}
 
-                    {searchResults.users.length === 0 && searchResults.rooms.length === 0 && searchResults.messages.length === 0 && searchResults.documents.length === 0 && (
-                      <div className="px-3 py-10 text-center text-sm text-fg-tertiary">
-                        검색 결과가 없습니다.
-                      </div>
-                    )}
+                    {searchResults.users.length === 0 &&
+                      searchResults.rooms.length === 0 &&
+                      searchResults.messages.length === 0 &&
+                      searchResults.documents.length === 0 && (
+                        <div className="px-3 py-10 text-center text-sm text-fg-tertiary">검색 결과가 없습니다.</div>
+                      )}
                   </>
                 )}
               </div>

@@ -68,7 +68,7 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
         데스크탑(@md 이상): relative로 띄우고 항상 보임
       */}
       <section
-        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
+        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:bg-transparent @md:shadow-none ${
           isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
         }`}
         style={{ width: `${width}px` }}>

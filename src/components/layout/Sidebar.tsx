@@ -111,7 +111,7 @@ export function Sidebar() {
   const statusColor = USER_STATUS_CONFIG[status]?.color || 'bg-fg-disabled';
 
   return (
-    <aside className="flex w-16 shrink-0 flex-col items-center justify-between pb-4 bg-bg-canvas relative h-full">
+    <aside className="flex w-16 shrink-0 flex-col items-center justify-between pb-4 relative h-full">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
 
       {/* '채팅' 헤더 텍스트와 높이를 맞추기 위한 여백. 숫자만 조절하면 위/아래로 미세조정 가능. */}

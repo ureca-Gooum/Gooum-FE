@@ -40,8 +40,6 @@
 
   /* =========================
      Gradient (전체 화면/앱 배경용)
-     로그인/404처럼 화면 전체를 덮는 페이지, 그리고 앱 쉘 캔버스 배경에 쓰는 그라데이션.
-     테마마다 다시 정의되므로, 여기 값은 기본(Lavender) 테마 값이다.
   ========================= */
 
   --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
@@ -89,17 +87,18 @@
   --color-scrollbar-thumb-hover-from: #8fa8e0;
   --color-scrollbar-thumb-hover-to: #f2a6da;
   --color-scrollbar-track: transparent;
+
+  /* =========================
+     Mention 하이라이트 (라이트 기본값)
+  ========================= */
+
+  --color-mention-self-bg: rgba(255, 183, 0, 0.38);
+  --color-mention-self-text: #8a5a00;
+  --color-mention-other-bg: rgba(56, 189, 248, 0.22);
+  --color-mention-other-text: #1d6fa5;
 }
 
-/* =========================================================
-   테마
-   라이트를 기준으로, 배경/보더뿐 아니라 글자색·브랜드색·스크롤바까지
-   전부 같이 바뀌도록 세트로 정의한다. (그래야 아이콘/보더/포인트 컬러가
-   테마와 따로 놀지 않는다) 사이드바 테마 메뉴의 이름/스와치와 실제 앱
-   컬러가 같은 컨셉을 가리키도록 맞춰뒀다.
-========================================================= */
-
-/* Midnight (다크) — 눈 피로를 늘리지 않는 선에서, 네이비에서 블랙으로 가라앉는 톤 */
+/* Midnight (다크)  */
 [data-theme='dark'] {
   --color-fg-primary: #f4f7fb;
   --color-fg-secondary: #dce2ea;
@@ -130,6 +129,11 @@
   --color-scrollbar-thumb-hover: #5b81bd;
   --color-scrollbar-thumb-hover-from: #6690c8;
   --color-scrollbar-thumb-hover-to: #3f5d94;
+
+  --color-mention-self-bg: rgba(255, 200, 60, 0.24);
+  --color-mention-self-text: #ffd76b;
+  --color-mention-other-bg: rgba(96, 165, 250, 0.22);
+  --color-mention-other-text: #8fc4ff;
 }
 
 /* Caramel (브라운) — 오븐에 노릇하게 구운 캐러멜·토스트 톤: #f6d365 → #c68a4a */

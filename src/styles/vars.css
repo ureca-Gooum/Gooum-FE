@@ -14,37 +14,37 @@
      Border
   ========================= */
 
-  --color-border-default: #ddd7f0;
-  --color-border-strong: #c7bfe6;
-  --color-border-brand: #a6c1ee;
+  --color-border-default: #dbe6f3;
+  --color-border-strong: #b9cfea;
+  --color-border-brand: #9dc0ec;
 
   /* =========================
      Background
-     "Lavender" 컨셉: 위쪽 블루-라벤더에서 아래쪽 은은한 핑크로 번지는 톤
+     "Sky" 컨셉: 깔끔한 화이트 베이스에 아주 은은한 블루 톤
   ========================= */
 
   --color-bg-default: #ffffff;
-  --color-bg-canvas: #f2f1fb;
-  --color-bg-subtle: #ebe8f8;
-  --color-bg-pressed: #ddd8f2;
+  --color-bg-canvas: #f4f7fc;
+  --color-bg-subtle: #eaf1fa;
+  --color-bg-pressed: #dbe7f6;
 
   /* =========================
      Brand
-     인디고-라벤더 포인트 컬러. 스와치 그라데이션(#a6c1ee → #fbc2eb)의 진한 쪽에서 뽑았다.
+     회사 브랜드 컬러(#4c8fe1) 기반의 클린한 블루 포인트 컬러.
   ========================= */
 
-  --color-brand-primary: #7986e0;
-  --color-brand-secondary: #5f6cc9;
-  --color-brand-light: #a6c1ee;
-  --color-brand-soft: #eef0fd;
+  --color-brand-primary: #4c8fe1;
+  --color-brand-secondary: #3572c2;
+  --color-brand-light: #a9c9f0;
+  --color-brand-soft: #eef3f9;
 
   /* =========================
      Gradient (전체 화면/앱 배경용)
   ========================= */
 
-  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
-  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
-  --gradient-canvas: linear-gradient(160deg, #eef1fd 0%, #f2edf9 55%, #f8eaf4 100%);
+  --gradient-brand-soft: linear-gradient(180deg, #eef4fc 0%, #eef3f9 55%, #f2f6fb 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef4fc 0%, #eef3f9 55%, #f2f6fb 100%);
+  --gradient-canvas: linear-gradient(160deg, #f4f7fc 0%, #f4f7fc 100%);
 
   /* =========================
      Semantic (테마 무관, 항상 같은 의미 유지)
@@ -82,15 +82,15 @@
   --color-avatar-group-fg: #ffffff;
 
   /* =========================
-     Scrollbar ("Lavender" 그라데이션: #a6c1ee → #fbc2eb)
+     Scrollbar (블루 그라데이션: #bcd3f2 → #7fa8dd)
   ========================= */
 
-  --color-scrollbar-thumb: #c0addf;
-  --color-scrollbar-thumb-from: #a6c1ee;
-  --color-scrollbar-thumb-to: #eaaed9;
-  --color-scrollbar-thumb-hover: #d98fc2;
-  --color-scrollbar-thumb-hover-from: #8fa8e0;
-  --color-scrollbar-thumb-hover-to: #f2a6da;
+  --color-scrollbar-thumb: #a9c4e8;
+  --color-scrollbar-thumb-from: #bcd3f2;
+  --color-scrollbar-thumb-to: #7fa8dd;
+  --color-scrollbar-thumb-hover: #6f9bd9;
+  --color-scrollbar-thumb-hover-from: #8fb4e6;
+  --color-scrollbar-thumb-hover-to: #5686cc;
   --color-scrollbar-track: transparent;
 
   /* =========================
@@ -242,4 +242,13 @@
   --color-scrollbar-thumb-hover: #3fb39a;
   --color-scrollbar-thumb-hover-from: #4fc2ab;
   --color-scrollbar-thumb-hover-to: #8fd473;
+}
+
+/* =========================
+   로그인 페이지 전용 고정 테마
+========================= */
+.theme-login {
+  --color-brand-primary: #285ea8;
+  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
 }

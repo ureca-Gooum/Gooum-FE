@@ -182,7 +182,7 @@ export function Sidebar() {
             <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
             <div className="flex flex-col gap-1">
               {[
-                { id: 'light', label: 'light', gradient: '#ffffff' },
+                { id: 'light', label: 'light', gradient: 'linear-gradient(160deg, #eef3f9 0%, #4c8fe1 100%)' },
                 { id: 'dark', label: 'dark', gradient: '#1f2229' },
                 { id: 'pastel-brown', label: 'Caramel', gradient: 'linear-gradient(160deg, #f6d365 0%, #c68a4a 100%)' },
                 {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2 } from 'lucide-react';
+import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2, MoreVertical } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { DocsEditorSkeleton } from '@/components/DocsEditorSkeleton';
@@ -326,6 +326,7 @@ export const DocsPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showExportMenu]);
 
+
   const handleExportTXT = () => {
     setShowExportMenu(false);
     if (!editorRef.current || !activeFile) return;
@@ -479,9 +480,8 @@ export const DocsPage = () => {
 
         {/* ━━━ 좌측 사이드바 ━━━ */}
         <aside
-          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
-            isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-          }`}>
+          className={`absolute z-40 h-full w-[260px] flex-col border-r border-border-default bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
+            }`}>
           {/* Gooum 타이틀 */}
           <div className="px-5 pt-5 pb-3">
             <span className="text-base font-bold text-fg-primary">문서</span>
@@ -549,9 +549,8 @@ export const DocsPage = () => {
               return (
                 <div
                   key={file.documentId}
-                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                    isActive ? 'bg-[var(--color-bg-default)]' : 'hover:bg-[var(--color-bg-subtle)]'
-                  }`}
+                  className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${isActive ? 'bg-[var(--color-bg-default)] shadow-sm' : 'hover:bg-[var(--color-bg-subtle)]'
+                    }`}
                   onClick={() => {
                     if (!isEditing) {
                       handleTabSwitch(file.documentId);
@@ -560,9 +559,8 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 테마 바 (활성 시, 텍스트 높이 정도의 둥근 선) */}
                   <div
-                    className={`absolute left-0 top-1/2 h-3.5 w-[3px] -translate-y-1/2 rounded-full transition-colors ${
-                      isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
-                    }`}
+                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
+                      }`}
                   />
 
                   {/* 제목 영역 */}
@@ -581,9 +579,8 @@ export const DocsPage = () => {
                     />
                   ) : (
                     <span
-                      className={`flex-1 truncate ${
-                        isActive ? 'font-medium text-[var(--color-fg-primary)]' : 'text-[var(--color-fg-secondary)]'
-                      }`}
+                      className={`flex-1 truncate ${isActive ? 'font-medium text-[var(--color-fg-primary)]' : 'text-[var(--color-fg-secondary)]'
+                        }`}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         startEditing(file.documentId);
@@ -601,9 +598,8 @@ export const DocsPage = () => {
                         e.stopPropagation();
                         handleDeleteFileClick(file.documentId);
                       }}
-                      className={`h-5 w-5 shrink-0 items-center justify-center rounded text-[var(--color-fg-tertiary)] hover:bg-[var(--color-bg-pressed)] hover:text-[var(--color-error)] transition-colors ${
-                        isActive ? 'flex' : 'hidden group-hover:flex'
-                      }`}
+                      className={`h-5 w-5 shrink-0 items-center justify-center rounded text-[var(--color-fg-tertiary)] hover:bg-[var(--color-bg-pressed)] hover:text-[var(--color-error)] transition-colors ${isActive ? 'flex' : 'hidden group-hover:flex'
+                        }`}
                       title="삭제">
                       {/* Lucide Trash2 아이콘 */}
                       <Trash2 className="h-3.5 w-3.5" />
@@ -644,9 +640,14 @@ export const DocsPage = () => {
                     <button
                       onClick={() => startEditing(`header-${activeFile.documentId}`)}
                       className="flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-fg-secondary transition-colors hover:bg-bg-subtle">
-                      {activeFile.title || '새 문서'}
+                      <span className="hidden @md:inline">{activeFile.title || '새 문서'}</span>
+                      <span className="@md:hidden text-left">
+                        {(activeFile.title || '새 문서').length > 6
+                          ? (activeFile.title || '새 문서').slice(0, 6) + '...'
+                          : (activeFile.title || '새 문서')}
+                      </span>
                       <svg
-                        className="h-3 w-3 text-gray-400"
+                        className="h-3 w-3 text-gray-400 shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -673,9 +674,8 @@ export const DocsPage = () => {
                       <div
                         key={u.userId || u.id || u.name || i}
                         /* group 클래스로 호버 시 커스텀 툴팁 노출 제어 */
-                        className={`group relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] transition-all hover:z-30 hover:scale-110 flex-shrink-0 ${
-                          u.isOnline ? 'z-10' : 'opacity-60 saturate-75' // 미참여 사용자는 투명도 조절
-                        }`}
+                        className={`group relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-[var(--color-bg-default)] transition-all hover:z-30 hover:scale-110 flex-shrink-0 ${u.isOnline ? 'z-10' : 'opacity-60 saturate-75' // 미참여 사용자는 투명도 조절
+                          }`}
                         style={{ backgroundColor: u.color || 'var(--color-avatar-1)' }}>
                         {/* 1. 이니셜 (기본/fallback) */}
                         <span>{u.name?.charAt(0)}</span>
@@ -702,9 +702,8 @@ export const DocsPage = () => {
                         <div className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--color-fg-primary)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-bg-default)] shadow-lg opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:-translate-y-1 z-40 flex items-center gap-1.5">
                           {/* 상태 indicator 점(Dot) */}
                           <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              u.isOnline ? 'bg-[var(--color-presence-online)]' : 'bg-[var(--color-fg-disabled)]'
-                            }`}
+                            className={`h-1.5 w-1.5 rounded-full ${u.isOnline ? 'bg-[var(--color-presence-online)]' : 'bg-[var(--color-fg-disabled)]'
+                              }`}
                           />
                           {/* 이름 & 상태 텍스트 */}
                           <span>{u.name}</span>
@@ -718,15 +717,24 @@ export const DocsPage = () => {
                   </div>
 
                   <div className="relative flex items-center export-menu-container">
-                    {/* 단일 내보내기 버튼 */}
+                    {/* PC 내보내기 버튼 */}
                     <button
                       onClick={() => setShowExportMenu(!showExportMenu)}
                       disabled={isSaving}
-                      className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
+                      className="hidden @md:flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#4f8ef7] to-[#6c7bfa] px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_8px_rgba(79,142,247,0.3)] transition-all hover:brightness-110 active:scale-95 disabled:opacity-60"
                       title="내보내기 옵션">
                       {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                       <span>내보내기</span>
                       <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* 모바일 옵션(3점 메뉴) 버튼 */}
+                    <button
+                      onClick={() => setShowExportMenu(!showExportMenu)}
+                      disabled={isSaving}
+                      className="flex @md:hidden items-center justify-center h-8 w-8 rounded-md text-fg-secondary hover:bg-bg-subtle transition-colors active:scale-95 disabled:opacity-60"
+                      title="옵션">
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                     </button>
 
                     {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}
@@ -754,6 +762,7 @@ export const DocsPage = () => {
                     )}
                   </div>
                 </div>
+
               </header>
 
               {/* 에디터 본문 */}

@@ -111,11 +111,11 @@ export function Sidebar() {
   const statusColor = USER_STATUS_CONFIG[status]?.color || 'bg-fg-disabled';
 
   return (
-    <aside className="flex w-16 shrink-0 flex-col items-center justify-between pb-4 relative h-full">
+    <aside className="flex w-full @md:w-16 shrink-0 flex-row @md:flex-col items-center justify-around @md:justify-between @md:pb-4 bg-bg-canvas relative h-full">
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFileChange} className="hidden" />
 
       {/* '채팅' 헤더 텍스트와 높이를 맞추기 위한 여백. 숫자만 조절하면 위/아래로 미세조정 가능. */}
-      <div className="flex w-full flex-col items-center gap-4 pt-4">
+      <div className="flex flex-1 @md:flex-none w-full flex-row @md:flex-col items-center justify-around @md:justify-start gap-0 @md:gap-4 pt-0 @md:pt-4 h-full @md:h-auto px-2 @md:px-0">
         {navItems.map(({ icon: Icon, label, to }) => {
           const unreadCount = label === '알림' ? unreadNotiCount : label === 'DM' ? unreadDMCount : 0;
           return (
@@ -130,8 +130,10 @@ export function Sidebar() {
                 }
               }}
               className={({ isActive }) =>
-                `group relative flex w-full flex-col items-center gap-1 rounded-lg py-2 transition-colors ${
-                  isActive ? 'text-brand-primary' : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
+                `group relative flex w-auto @md:w-full flex-col items-center gap-1 rounded-lg px-4 @md:px-0 py-1.5 @md:py-2 transition-colors ${
+                  isActive
+                    ? 'text-brand-primary @md:bg-bg-subtle'
+                    : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
                 }`
               }>
               {({ isActive }) => (
@@ -157,7 +159,7 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="relative mt-auto mb-4 flex flex-col items-center" ref={themeMenuRef}>
+      <div className="relative @md:mt-auto @md:mb-4 flex flex-col items-center hidden @md:flex" ref={themeMenuRef}>
         <button
           onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
           className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors focus:outline-none ${
@@ -213,7 +215,7 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="relative" ref={menuRef}>
+      <div className="relative hidden @md:block" ref={menuRef}>
         <button
           onClick={handleProfileClick}
           className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none ring-1 ring-black/5">

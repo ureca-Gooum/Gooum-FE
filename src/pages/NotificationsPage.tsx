@@ -18,6 +18,8 @@ import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
+import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
+import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
@@ -29,7 +31,7 @@ export const NotificationsPage = () => {
   // onNewNotification 소켓 이벤트로 이 배열 맨 위에 추가된다.
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedNotiId, setSelectedNotiId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '문서' | '멘션'>('전체');
+  const [activeTab, setActiveTab] = useState<'전체' | 'DM' | '멘션' | '문서' | '채팅' | '파일'>('전체');
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -78,7 +80,10 @@ export const NotificationsPage = () => {
         if (isMounted) {
           setNotifications(res.data);
           if (res.data.length > 0) {
-            setSelectedNotiId(res.data[0].id);
+            // PC 화면(768px 이상)에서만 자동 선택하여 디자인 유지, 모바일에서는 리스트 표시
+            if (window.innerWidth >= 768) {
+              setSelectedNotiId(res.data[0].id);
+            }
           }
         }
       })
@@ -87,18 +92,18 @@ export const NotificationsPage = () => {
       isMounted = false;
     };
   }, []);
-
+  
   useEffect(() => {
-    if (!roomId) {
-      setRoom(null);
-      return;
-    }
+    // roomId가 없으면 API 요청 없이 종료
+    if (!roomId) return;
+
     let isMounted = true;
     fetchRoomDetail(roomId)
       .then((res) => {
         if (isMounted) setRoom(mapRoomFromApi(res));
       })
       .catch((err) => console.error('채팅방 정보를 불러오지 못했어요:', err));
+
     return () => {
       isMounted = false;
     };
@@ -122,9 +127,15 @@ export const NotificationsPage = () => {
     if (activeTab === '전체') return true;
     if (activeTab === 'DM') return noti.type === 'message';
     if (activeTab === '멘션') return noti.type === 'mention';
+    if (activeTab === '채팅') return noti.type === 'message' || noti.type === 'mention';
+    if (activeTab === '파일') return noti.type === 'file';
     if (activeTab === '문서') return noti.type === 'document';
     return true;
   });
+
+  const unreadChatCount = notifications.filter(n => (n.type === 'message' || n.type === 'mention') && !n.isRead).length;
+  const unreadFileCount = notifications.filter(n => n.type === 'file' && !n.isRead).length;
+  const unreadDocCount = notifications.filter(n => n.type === 'document' && !n.isRead).length;
 
   const handleSelectNoti = async (noti: NotificationItem) => {
     setSelectedNotiId(noti.id);
@@ -167,12 +178,13 @@ export const NotificationsPage = () => {
   const tabs: { key: NotificationMainTab; label: string }[] = [
     { key: 'chat', label: '채팅' },
     { key: 'file', label: '파일' },
-    { key: 'aiMinutes', label: 'AI 회의록' },
+    { key: 'aiMinutes', label: '문서' },
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
       <ListPanel
+        className={selectedNotiId ? 'hidden @md:flex' : 'flex'}
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         header={
@@ -187,7 +199,8 @@ export const NotificationsPage = () => {
                 모두 읽음
               </button>
             </div>
-            <div className="flex gap-5 ">
+            {/* PC 전용 기존 탭 (모바일에서는 숨김) */}
+            <div className="hidden @md:flex gap-5 -mb-4 border-b border-border-default pb-0">
               <button
                 onClick={() => setActiveTab('전체')}
                 className={`relative pb-2.5 text-[13px] font-bold transition-colors ${
@@ -253,6 +266,57 @@ export const NotificationsPage = () => {
                 )}
               </button>
             </div>
+
+            {/* 모바일 전용 새 탭 (PC에서는 숨김) */}
+            <div className="flex @md:hidden gap-5 -mb-4 border-b border-border-default pb-0">
+              <button
+                onClick={() => setActiveTab('채팅')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ${
+                  activeTab === '채팅'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <MessageCircle size={15} />
+                채팅
+                {unreadChatCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                  </span>
+                )}
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('파일')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${
+                  activeTab === '파일'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <FileText size={15} />
+                파일
+                {unreadFileCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadFileCount > 99 ? '99+' : unreadFileCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('문서')}
+                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${
+                  activeTab === '문서'
+                    ? 'border-b-[3px] border-fg-primary text-fg-primary'
+                    : 'text-fg-tertiary hover:text-fg-primary'
+                }`}>
+                <FileText size={15} />
+                문서
+                {unreadDocCount > 0 && (
+                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                    {unreadDocCount > 99 ? '99+' : unreadDocCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         }>
         <div className="flex flex-col h-full overflow-y-auto px-2 py-2">
@@ -283,6 +347,7 @@ export const NotificationsPage = () => {
         </div>
       </ListPanel>
 
+      <div className={`flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
         target={
           room
@@ -311,14 +376,10 @@ export const NotificationsPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              업로드된 파일이 없습니다.
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              생성된 AI 회의록이 없습니다.
-            </div>
-          )
+            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
+          ) : roomId ? (
+            <RoomDocumentsTab roomId={roomId} />
+          ) : null
         }
         isMuted={room ? mutedRoomIds.includes(room.id) : false}
         onToggleMute={room ? () => toggleMute(room.id) : undefined}
@@ -344,8 +405,8 @@ export const NotificationsPage = () => {
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={selectedNoti?.messageId}
-        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
+      </div>
     </div>
   );
 };

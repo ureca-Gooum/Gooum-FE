@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { OnboardingModal } from '@/components/OnboardingModal';
@@ -8,23 +8,13 @@ type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   // 로그인 화면에서는 헤더(검색/창 컨트롤)와 사이드바(아이콘 레일)를 아예 안 보여준다.
   const isLoginPage = location.pathname === '/login';
 
   const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    const hideOnboarding = localStorage.getItem('gooum_hide_onboarding');
-    const state = location.state as { justLoggedIn?: boolean } | null;
 
-    if (!hideOnboarding && state?.justLoggedIn) {
-      setShowOnboarding(true);
-      // state 초기화 (새로고침 시 다시 뜨지 않도록)
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate]);
 
   // 창 모드 위치 및 크기 상태
   const [rect, setRect] = useState(() => {
@@ -42,6 +32,7 @@ export const MainLayout = () => {
   const [isResizing, setIsResizing] = useState<string | null>(null);
 
   const actionRef = useRef<{ startX: number; startY: number; startRect: typeof rect } | null>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -50,34 +41,45 @@ export const MainLayout = () => {
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
 
-      if (isDragging) {
-        setRect({
-          ...startRect,
-          x: startRect.x + dx,
-          y: startRect.y + dy,
-        });
-      } else if (isResizing) {
-        let newX = startRect.x;
-        let newY = startRect.y;
-        let newW = startRect.w;
-        let newH = startRect.h;
+      let newX = startRect.x;
+      let newY = startRect.y;
+      let newW = startRect.w;
+      let newH = startRect.h;
 
-        if (isResizing.includes('r')) newW = Math.max(400, startRect.w + dx);
+      if (isDragging) {
+        newX = startRect.x + dx;
+        newY = startRect.y + dy;
+      } else if (isResizing) {
+        if (isResizing.includes('r')) newW = Math.max(375, startRect.w + dx);
         if (isResizing.includes('l')) {
-          newW = Math.max(400, startRect.w - dx);
+          newW = Math.max(375, startRect.w - dx);
           newX = startRect.x + (startRect.w - newW);
         }
-        if (isResizing.includes('b')) newH = Math.max(400, startRect.h + dy);
+        if (isResizing.includes('b')) newH = Math.max(667, startRect.h + dy);
         if (isResizing.includes('t')) {
-          newH = Math.max(400, startRect.h - dy);
+          newH = Math.max(667, startRect.h - dy);
           newY = startRect.y + (startRect.h - newH);
         }
+      }
 
-        setRect({ x: newX, y: newY, w: newW, h: newH });
+      // DOM 직접 조작 (requestAnimationFrame 없이 즉각 적용하여 딜레이 0으로 만듦)
+      if (windowRef.current) {
+        windowRef.current.style.left = `${newX}px`;
+        windowRef.current.style.top = `${newY}px`;
+        windowRef.current.style.width = `${newW}px`;
+        windowRef.current.style.height = `${newH}px`;
       }
     };
 
     const handleMouseUp = () => {
+      if (actionRef.current && windowRef.current) {
+        setRect({
+          x: parseFloat(windowRef.current.style.left) || 0,
+          y: parseFloat(windowRef.current.style.top) || 0,
+          w: parseFloat(windowRef.current.style.width) || 0,
+          h: parseFloat(windowRef.current.style.height) || 0,
+        });
+      }
       setIsDragging(false);
       setIsResizing(null);
       actionRef.current = null;
@@ -171,7 +173,7 @@ export const MainLayout = () => {
   return (
     <div
       className={`transition-colors duration-300 ${isWindowed ? 'min-h-screen bg-gray-200/60 p-4 flex items-center justify-center' : ''}`}>
-      <div className={layoutClasses} style={{ ...windowedStyle, ...canvasStyle }}>
+      <div ref={windowRef} className={layoutClasses} style={{ ...windowedStyle, ...canvasStyle }}>
         {/* 리사이즈 핸들 */}
         <ResizeHandle edge="t" className="top-0 left-0 right-0 h-1.5 cursor-n-resize -mt-0.5" />
         <ResizeHandle edge="b" className="bottom-0 left-0 right-0 h-1.5 cursor-s-resize -mb-0.5" />
@@ -190,11 +192,18 @@ export const MainLayout = () => {
             onClose={() => setWindowMode('closed')}
             isMaximized={!isWindowed}
             onMouseDown={handleHeaderMouseDown}
+            onHelpClick={() => setShowOnboarding(true)}
           />
         )}
-        <div className={`flex flex-1 overflow-hidden gap-4 ${isLoginPage ? '' : 'pt-1 pb-2.5 pr-2.5'}`}>
-          {!isLoginPage && <Sidebar />}
-          <Outlet />
+        <div className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-1 @md:pb-2.5 @md:pr-2.5'}`}>
+          {!isLoginPage && (
+            <div className="order-2 @md:order-1 shrink-0 z-50 border-t border-border-default @md:border-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] @md:shadow-none h-14 @md:h-full">
+              <Sidebar />
+            </div>
+          )}
+          <div className="flex flex-1 overflow-hidden order-1 @md:order-2 w-full">
+            <Outlet />
+          </div>
         </div>
       </div>
       {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}

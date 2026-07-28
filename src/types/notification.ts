@@ -1,6 +1,6 @@
 export interface NotificationItem {
   id: string;
-  type: 'message' | 'mention' | 'document' | 'system';
+  type: 'message' | 'mention' | 'document' | 'system' | 'file';
   title: string;
   content: string;
   time: string;

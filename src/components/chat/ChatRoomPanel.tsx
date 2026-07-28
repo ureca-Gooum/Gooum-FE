@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode, type RefObject } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
+import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -94,7 +94,6 @@ interface ChatRoomPanelProps {
   onDeleteMessage: (messageId: string) => void;
   onStartDirectMessage?: (userId: string) => void;
   targetMessageId?: string | null;
-  onSidebarToggle?: () => void;
 }
 
 export function ChatRoomPanel({
@@ -129,12 +128,12 @@ export function ChatRoomPanel({
   onDeleteMessage,
   onStartDirectMessage,
   targetMessageId,
-  onSidebarToggle,
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
   // 헤더의 상대 프로필(아바타+이름)에 호버했을 때 보여줄 프로필 카드 상태
   const [isHeaderProfileHovered, setIsHeaderProfileHovered] = useState(false);
+
   const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
   const headerProfileHideTimeoutRef = useRef<number>();
 
@@ -172,11 +171,11 @@ export function ChatRoomPanel({
     !target?.isGroup && target?.userId
       ? (mentionCandidates?.find((m) => m.userId === target.userId) ??
         roomMembers.find((m) => m.userId === target.userId) ?? {
-          userId: target.userId,
-          name: target.displayName,
-          profileImageUrl: target.displayImage,
-          presence: target.presence ? { status: target.presence } : undefined,
-        })
+        userId: target.userId,
+        name: target.displayName,
+        profileImageUrl: target.displayImage,
+        presence: target.presence ? { status: target.presence } : undefined,
+      })
       : undefined;
 
   return (
@@ -184,13 +183,7 @@ export function ChatRoomPanel({
       header={
         target ? (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-            {onSidebarToggle && (
-              <button
-                onClick={onSidebarToggle}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+
             <div
               className={`flex min-w-0 flex-1 items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
               onMouseEnter={(e) => {
@@ -234,14 +227,14 @@ export function ChatRoomPanel({
               </button>
             )}
 
-            <div className="flex shrink-0 items-center gap-4">
+            {/* PC 버전: 기존 탭 유지 (모바일에서는 숨김) */}
+            <div className="hidden @md:flex items-center gap-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => onTabChange(tab.key)}
-                  className={`relative text-sm ${
-                    activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
-                  }`}>
+                  className={`relative text-sm ${activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
+                    }`}>
                   {tab.label}
                   {activeTab === tab.key && (
                     <motion.span
@@ -254,6 +247,7 @@ export function ChatRoomPanel({
                 </button>
               ))}
             </div>
+
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
               {target.isGroup && roomMembers.length > 0 && (
@@ -326,14 +320,8 @@ export function ChatRoomPanel({
             </div>
           </div>
         ) : (
-          <div className="flex h-[63px] items-center gap-3 px-4">
-            {onSidebarToggle && (
-              <button
-                onClick={onSidebarToggle}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
+            {emptyHeaderLabel}
           </div>
         )
       }

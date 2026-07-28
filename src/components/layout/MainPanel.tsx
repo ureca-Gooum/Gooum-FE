@@ -10,7 +10,7 @@ export function MainPanel({ header, children, footer }: MainPanelProps) {
   return (
     <section
       className="
-        flex min-w-[480px] flex-1 flex-col
+        flex min-w-0 @md:min-w-[480px] flex-1 flex-col
         overflow-hidden rounded-lg
         bg-bg-default
       "

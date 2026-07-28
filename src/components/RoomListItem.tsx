@@ -63,11 +63,6 @@ export function RoomListItem({
     };
   }, [isMenuOpen]);
 
-  const handleLeaveClick = () => {
-    onMenuToggle();
-    setIsConfirmOpen(true);
-  };
-
   const handleConfirmLeave = () => {
     onLeave(room.id);
   };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { showAlert } from '@/utils/alert';
 import { useNavigate } from 'react-router-dom';

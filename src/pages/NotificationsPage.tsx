@@ -92,7 +92,7 @@ export const NotificationsPage = () => {
       isMounted = false;
     };
   }, []);
-  
+
   useEffect(() => {
     // roomId가 없으면 API 요청 없이 종료
     if (!roomId) return;
@@ -133,9 +133,11 @@ export const NotificationsPage = () => {
     return true;
   });
 
-  const unreadChatCount = notifications.filter(n => (n.type === 'message' || n.type === 'mention') && !n.isRead).length;
-  const unreadFileCount = notifications.filter(n => n.type === 'file' && !n.isRead).length;
-  const unreadDocCount = notifications.filter(n => n.type === 'document' && !n.isRead).length;
+  const unreadChatCount = notifications.filter(
+    (n) => (n.type === 'message' || n.type === 'mention') && !n.isRead,
+  ).length;
+  const unreadFileCount = notifications.filter((n) => n.type === 'file' && !n.isRead).length;
+  const unreadDocCount = notifications.filter((n) => n.type === 'document' && !n.isRead).length;
 
   const handleSelectNoti = async (noti: NotificationItem) => {
     setSelectedNotiId(noti.id);
@@ -182,7 +184,7 @@ export const NotificationsPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
+    <div className="flex min-w-0 flex-1 relative w-full h-full">
       <ListPanel
         className={selectedNotiId ? 'hidden @md:flex' : 'flex'}
         isSidebarOpen={isSidebarOpen}
@@ -200,7 +202,7 @@ export const NotificationsPage = () => {
               </button>
             </div>
             {/* PC 전용 기존 탭 (모바일에서는 숨김) */}
-            <div className="hidden @md:flex gap-5 -mb-4 border-b border-border-default pb-0">
+            <div className="hidden @md:flex gap-5">
               <button
                 onClick={() => setActiveTab('전체')}
                 className={`relative pb-2.5 text-[13px] font-bold transition-colors ${
@@ -284,7 +286,7 @@ export const NotificationsPage = () => {
                   </span>
                 )}
               </button>
-              
+
               <button
                 onClick={() => setActiveTab('파일')}
                 className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${
@@ -347,65 +349,65 @@ export const NotificationsPage = () => {
         </div>
       </ListPanel>
 
-      <div className={`flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
-      <ChatRoomPanel
-        target={
-          room
-            ? {
-                id: room.id,
-                displayName: room.displayName,
-                displayImage: room.displayImage,
-                presence: room.presence,
-                isGroup: room.type === 'group',
-                isFavorite: room.isFavorite,
-                userId: room.otherUserId,
-                memberCount: room.memberCount,
-              }
-            : selectedNoti
+      <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
+        <ChatRoomPanel
+          target={
+            room
               ? {
-                  id: selectedNoti.id,
-                  displayName: selectedNoti.title,
-                  displayImage: selectedNoti.avatarUrl ?? null,
+                  id: room.id,
+                  displayName: room.displayName,
+                  displayImage: room.displayImage,
+                  presence: room.presence,
+                  isGroup: room.type === 'group',
+                  isFavorite: room.isFavorite,
+                  userId: room.otherUserId,
+                  memberCount: room.memberCount,
                 }
-              : null
-        }
-        emptyHeaderLabel="알림을 선택해주세요"
-        tabs={tabs}
-        activeTab={activeMainTab}
-        onTabChange={(key) => setActiveMainTab(key as NotificationMainTab)}
-        chatTabKey="chat"
-        renderOtherTab={(tabKey) =>
-          tabKey === 'file' ? (
-            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
-          ) : roomId ? (
-            <RoomDocumentsTab roomId={roomId} />
-          ) : null
-        }
-        isMuted={room ? mutedRoomIds.includes(room.id) : false}
-        onToggleMute={room ? () => toggleMute(room.id) : undefined}
-        onToggleFavorite={room ? handleToggleFavorite : undefined}
-        messages={conversation.messages}
-        isMessagesLoading={conversation.isMessagesLoading}
-        roomMembers={conversation.roomMembers}
-        mentionCandidates={conversation.allMembers}
-        messagesEndRef={conversation.messagesEndRef}
-        isSelectingMessages={conversation.isSelectingMessages}
-        selectedMessageIds={conversation.selectedMessageIds}
-        onToggleMessageSelect={conversation.toggleMessageSelect}
-        onStartSelecting={conversation.startSelecting}
-        onCancelSelecting={conversation.cancelSelecting}
-        onResetSelection={conversation.resetSelection}
-        onConfirmSelection={() => conversation.confirmSelection(() => {})}
-        typingLabel={conversation.typingLabel ?? undefined}
-        onSend={conversation.sendMessage}
-        onSendFile={conversation.sendFile}
-        onTyping={conversation.notifyTyping}
-        onOpenAiMinutes={conversation.startSelecting}
-        onCreateDocument={conversation.createDocumentMessage}
-        onDeleteMessage={conversation.deleteMessage}
-        onStartDirectMessage={handleStartDirectMessage}
-        targetMessageId={selectedNoti?.messageId}
-      />
+              : selectedNoti
+                ? {
+                    id: selectedNoti.id,
+                    displayName: selectedNoti.title,
+                    displayImage: selectedNoti.avatarUrl ?? null,
+                  }
+                : null
+          }
+          emptyHeaderLabel="알림을 선택해주세요"
+          tabs={tabs}
+          activeTab={activeMainTab}
+          onTabChange={(key) => setActiveMainTab(key as NotificationMainTab)}
+          chatTabKey="chat"
+          renderOtherTab={(tabKey) =>
+            tabKey === 'file' ? (
+              <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
+            ) : roomId ? (
+              <RoomDocumentsTab roomId={roomId} />
+            ) : null
+          }
+          isMuted={room ? mutedRoomIds.includes(room.id) : false}
+          onToggleMute={room ? () => toggleMute(room.id) : undefined}
+          onToggleFavorite={room ? handleToggleFavorite : undefined}
+          messages={conversation.messages}
+          isMessagesLoading={conversation.isMessagesLoading}
+          roomMembers={conversation.roomMembers}
+          mentionCandidates={conversation.allMembers}
+          messagesEndRef={conversation.messagesEndRef}
+          isSelectingMessages={conversation.isSelectingMessages}
+          selectedMessageIds={conversation.selectedMessageIds}
+          onToggleMessageSelect={conversation.toggleMessageSelect}
+          onStartSelecting={conversation.startSelecting}
+          onCancelSelecting={conversation.cancelSelecting}
+          onResetSelection={conversation.resetSelection}
+          onConfirmSelection={() => conversation.confirmSelection(() => {})}
+          typingLabel={conversation.typingLabel ?? undefined}
+          onSend={conversation.sendMessage}
+          onSendFile={conversation.sendFile}
+          onTyping={conversation.notifyTyping}
+          onOpenAiMinutes={conversation.startSelecting}
+          onCreateDocument={conversation.createDocumentMessage}
+          onDeleteMessage={conversation.deleteMessage}
+          onStartDirectMessage={handleStartDirectMessage}
+          targetMessageId={selectedNoti?.messageId}
+        />
       </div>
     </div>
   );

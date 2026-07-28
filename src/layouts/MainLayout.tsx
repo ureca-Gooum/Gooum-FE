@@ -16,8 +16,6 @@ export const MainLayout = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { startTour, hasSeenOnboarding } = useOnboardingTour();
 
-  // 로그인된 상태에서 온보딩 투어를 아직 본 적 없으면 최초 1회 자동으로 실행한다.
-  // (헤더의 물음표 아이콘을 눌러 여는 AppIntroModal은 별개의 '앱 소개' 팝업이라 여기서 건드리지 않는다.)
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem('accessToken');
     if (isLoggedIn && !isLoginPage && !hasSeenOnboarding()) {
@@ -178,7 +176,10 @@ export const MainLayout = () => {
     ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
     : '@container flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
 
-  const canvasStyle = { backgroundImage: 'var(--gradient-canvas)' };
+  // Header/Sidebar/ListPanel은 전부 단색 bg-bg-canvas를 쓰기 때문에, 창 배경을 그라데이션으로
+  // 두면 그 지점의 색이 미묘하게 달라져 패널 경계가 선처럼 보이는 문제가 있었다.
+  // 동일한 단색을 그대로 써서 이 경계가 보이지 않도록 한다.
+  const canvasStyle = { backgroundColor: 'var(--color-bg-canvas)' };
 
   return (
     <div
@@ -206,13 +207,13 @@ export const MainLayout = () => {
           />
         )}
         <div
-          className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-1 @md:pb-2.5 @md:pr-2.5'}`}>
+          className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-2 @md:pb-6 @md:pr-5'}`}>
           {!isLoginPage && (
             <div className="order-2 @md:order-1 shrink-0 z-50 border-t border-border-default @md:border-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] @md:shadow-none h-14 @md:h-full">
               <Sidebar />
             </div>
           )}
-          <div className="flex flex-1 overflow-hidden order-1 @md:order-2 w-full">
+          <div className="flex flex-1 order-1 @md:order-2 w-full">
             <Outlet />
           </div>
         </div>

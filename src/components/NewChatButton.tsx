@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SquarePen } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { createRoom } from '@/api/rooms';
 
 export function NewChatButton({ onCreated }: { onCreated: (roomId: string) => void }) {
@@ -30,7 +30,7 @@ export function NewChatButton({ onCreated }: { onCreated: (roomId: string) => vo
         onClick={handleClick}
         disabled={isLoading}
         className="flex items-center gap-1 rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle disabled:opacity-50">
-        <SquarePen size={18} />
+        <Plus size={18} />
       </button>
       {error && <p className="text-xs text-error">{error}</p>}
     </div>

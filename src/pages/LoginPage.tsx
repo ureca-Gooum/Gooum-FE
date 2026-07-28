@@ -6,15 +6,15 @@ export const LoginPage = () => {
   const { loginWithKakao } = useKakaoAuth();
 
   return (
-    <div className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto bg-[image:var(--gradient-brand-soft)] @3xl:flex-row @3xl:overflow-hidden @3xl:bg-[image:var(--gradient-brand-soft-diagonal)]">
+    <div className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto bg-[image:linear-gradient(180deg,#eef2ff_0%,#ece9fa_50%,#e9e8f5_100%)] @3xl:flex-row @3xl:overflow-hidden @3xl:bg-[image:linear-gradient(135deg,#eef2ff_0%,#ece9fa_50%,#e9e8f5_100%)]">
       {/* 왼쪽: 로고 + 문구 + 로그인 버튼 */}
       <div className="relative z-10 flex w-full flex-col items-center justify-center overflow-y-auto px-6 py-10 text-center @sm:px-10 @lg:px-16 @3xl:w-[46%] @3xl:items-start @3xl:px-20 @3xl:text-left">
-        <img src={mascotIcon} alt="구움" className="mb-6 h-12 w-12 self-start @lg:mb-8 @lg:h-14 @lg:w-14" />
+        <img src={mascotIcon} alt="구움" className="mb-6 h-12 w-12 @lg:mb-8 @lg:h-14 @lg:w-14 @3xl:self-start" />
 
         <h1 className="mb-3 text-[26px] font-bold leading-tight tracking-tight text-[#1f2937] @lg:mb-4 @lg:text-[32px] @3xl:text-[38px]">
           매일 갓 구운
           <br />
-          <span className="text-brand-primary">이야기</span>가 있는 곳
+          <span className="text-[#4c8fe1]">이야기</span>가 있는 곳
         </h1>
         <p className="mb-8 max-w-[360px] text-[13.5px] font-medium leading-relaxed text-gray-500 @lg:mb-10 @lg:text-[14.5px]">
           좋은 아이디어는 함께 구울수록 더 맛있어집니다.

@@ -552,7 +552,7 @@ export const DocsPage = () => {
                 <div
                   key={file.documentId}
                   className={`group relative mb-0.5 flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors select-none ${
-                    isActive ? 'bg-[var(--color-bg-default)] shadow-sm' : 'hover:bg-[var(--color-bg-subtle)]'
+                    isActive ? 'bg-[var(--color-bg-default)]' : 'hover:bg-[var(--color-bg-subtle)]'
                   }`}
                   onClick={() => {
                     if (!isEditing) {
@@ -562,7 +562,7 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 테마 바 (활성 시, 텍스트 높이 정도의 둥근 선) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-sm transition-colors ${
+                    className={`absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full transition-colors ${
                       isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
                     }`}
                   />

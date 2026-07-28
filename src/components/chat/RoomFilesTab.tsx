@@ -65,7 +65,7 @@ export function RoomFilesTab({ messages, isLoading = false }: RoomFilesTabProps)
       </div>
 
       {isEmpty && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-fg-tertiary">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-fg-tertiary">
           <FolderOpen size={28} strokeWidth={1.5} />
           <p className="text-sm">{filter === 'image' ? '주고받은 이미지가 없어요.' : '주고받은 파일이 없어요.'}</p>
         </div>

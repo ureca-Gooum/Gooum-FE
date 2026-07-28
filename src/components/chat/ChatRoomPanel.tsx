@@ -171,11 +171,11 @@ export function ChatRoomPanel({
     !target?.isGroup && target?.userId
       ? (mentionCandidates?.find((m) => m.userId === target.userId) ??
         roomMembers.find((m) => m.userId === target.userId) ?? {
-        userId: target.userId,
-        name: target.displayName,
-        profileImageUrl: target.displayImage,
-        presence: target.presence ? { status: target.presence } : undefined,
-      })
+          userId: target.userId,
+          name: target.displayName,
+          profileImageUrl: target.displayImage,
+          presence: target.presence ? { status: target.presence } : undefined,
+        })
       : undefined;
 
   return (
@@ -183,9 +183,8 @@ export function ChatRoomPanel({
       header={
         target ? (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-
             <div
-              className={`flex min-w-0 flex-1 items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
+              className={`flex min-w-0 max-w-[45%] shrink items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
               onMouseEnter={(e) => {
                 if (!headerProfileMember) return;
                 clearHeaderProfileHideTimeout();
@@ -233,8 +232,9 @@ export function ChatRoomPanel({
                 <button
                   key={tab.key}
                   onClick={() => onTabChange(tab.key)}
-                  className={`relative text-sm ${activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
-                    }`}>
+                  className={`relative text-sm ${
+                    activeTab === tab.key ? 'font-medium text-brand-primary' : 'text-fg-tertiary'
+                  }`}>
                   {tab.label}
                   {activeTab === tab.key && (
                     <motion.span
@@ -247,7 +247,6 @@ export function ChatRoomPanel({
                 </button>
               ))}
             </div>
-
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
               {target.isGroup && roomMembers.length > 0 && (
@@ -320,9 +319,7 @@ export function ChatRoomPanel({
             </div>
           </div>
         ) : (
-          <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
-            {emptyHeaderLabel}
-          </div>
+          <div className="h-[63px]" />
         )
       }
       footer={

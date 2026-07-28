@@ -14,7 +14,7 @@ export function MainPanel({ header, children, footer }: MainPanelProps) {
         overflow-hidden rounded-lg
         bg-bg-default
       "
-      style={{ boxShadow: '0 8px 24px -6px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)' }}>
+      style={{ boxShadow: '0 6px 18px -6px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.06)' }}>
       <div className="shrink-0">{header}</div>
 
       <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-6 py-4">{children}</div>

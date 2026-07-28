@@ -133,7 +133,7 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `group relative flex w-auto @md:w-full flex-col items-center gap-1 rounded-lg px-4 @md:px-0 py-1.5 @md:py-2 transition-colors ${
                   isActive
-                    ? 'text-brand-primary @md:bg-bg-subtle'
+                    ? 'text-brand-primary hover:bg-bg-subtle'
                     : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
                 }`
               }>
@@ -146,7 +146,7 @@ export function Sidebar() {
                       ${
                         isActive
                           ? 'h-[3px] w-9 opacity-100 @md:w-[3px] @md:h-9'
-                          : 'h-[3px] w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 @md:w-[3px] @md:h-0 @md:group-hover:h-5'
+                          : 'h-[3px] w-[18px] opacity-0 group-hover:opacity-100 @md:w-[3px] @md:h-[18px]'
                       }`}
                   />
                   <div className="relative">
@@ -182,7 +182,7 @@ export function Sidebar() {
             <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
             <div className="flex flex-col gap-1">
               {[
-                { id: 'light', label: 'light', gradient: 'linear-gradient(160deg, #eef3f9 0%, #4c8fe1 100%)' },
+                { id: 'light', label: 'light', gradient: '#ffffff' },
                 { id: 'dark', label: 'dark', gradient: '#1f2229' },
                 { id: 'pastel-brown', label: 'Caramel', gradient: 'linear-gradient(160deg, #f6d365 0%, #c68a4a 100%)' },
                 {

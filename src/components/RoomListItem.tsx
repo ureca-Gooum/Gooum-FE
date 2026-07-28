@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Heart, LogOut } from 'lucide-react';
+import { MoreVertical, Heart } from 'lucide-react';
 import { Avatar } from '@/components/Avatar';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import type { Room } from '@/types/chat';
@@ -62,11 +62,6 @@ export function RoomListItem({
       document.removeEventListener('click', handleClickOutside);
     };
   }, [isMenuOpen]);
-
-  const handleLeaveClick = () => {
-    onMenuToggle();
-    setIsConfirmOpen(true);
-  };
 
   const handleConfirmLeave = () => {
     onLeave(room.id);
@@ -191,33 +186,6 @@ export function RoomListItem({
               }}
             />
             {room.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleLeaveClick();
-            }}
-            onMouseEnter={() => setHoveredItem('leave')}
-            onMouseLeave={() => setHoveredItem(null)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              width: '100%',
-              borderRadius: '6px',
-              padding: '10px 12px',
-              textAlign: 'left',
-              fontSize: '14px',
-              fontWeight: hoveredItem === 'leave' ? 700 : 400,
-              color: 'var(--color-fg-primary)',
-            }}>
-            <LogOut
-              size={14}
-              style={{
-                color: hoveredItem === 'leave' ? 'var(--color-brand-primary)' : 'var(--color-fg-secondary)',
-              }}
-            />
-            나가기
           </button>
         </div>,
         document.body,

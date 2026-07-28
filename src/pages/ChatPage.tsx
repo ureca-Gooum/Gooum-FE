@@ -12,7 +12,7 @@ import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
 import { Skeleton } from '@/components/Skeleton';
 import { fetchRooms, toggleFavorite, leaveRoom, createRoom } from '@/api/rooms';
 import { mapRoomFromApi } from '@/api/mappers/roomMapper';
-import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
+import { connectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { getCurrentUserId } from '@/constants/auth';
 import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
@@ -107,7 +107,7 @@ export const ChatPage = () => {
     }
   }, [location.state, rooms.length]);
 
-  // 소켓 연결 - 앱 진입 시 한 번만
+  // 소켓은 Sidebar 배지도 같이 구독하는 전역 연결이라 페이지 언마운트로 끊으면 안 된다
   useEffect(() => {
     const socket = connectSocket();
 
@@ -118,8 +118,6 @@ export const ChatPage = () => {
     socket.on('disconnect', (reason) => {
       console.log('❌ 소켓 끊김:', reason);
     });
-
-    return () => disconnectSocket();
   }, []);
 
   usePresence(setRooms);
@@ -127,7 +125,7 @@ export const ChatPage = () => {
   // 실시간 알림 수신 (다른 방에서 온 메시지의 미리보기/안읽음 배지 갱신 - 방 목록 소유 상태라 여기 유지)
   useEffect(() => {
     const handleNewNotification = (payload: NewNotificationPayload) => {
-      if (payload.type !== 'message') return;
+      if (payload.type !== 'message' && payload.type !== 'mention') return;
 
       setRooms((prev) => {
         const index = prev.findIndex((r) => r.id === payload.roomId);

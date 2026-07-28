@@ -9,14 +9,15 @@ import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { getCurrentUserId } from '@/constants/auth';
 import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
-import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
+import { connectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { stripSenderPrefix } from '@/utils/notification';
 import { formatTime } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
-import { triggerBadgeRefresh } from '@/hooks/useUnreadBadge';
+import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
+import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
@@ -38,11 +39,9 @@ export const NotificationsPage = () => {
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
 
-  // 이 페이지로 이동해오면 ChatPage가 언마운트되며 소켓 연결이 끊기므로, 여기서도 다시 연결해줘야
-  // 실시간 알림(멘션 포함)을 받을 수 있다. connectSocket은 이미 연결돼있으면 그대로 재사용한다.
+  // 소켓은 Sidebar 배지도 같이 구독하는 전역 연결이라 페이지 언마운트로 끊으면 안 된다
   useEffect(() => {
     connectSocket();
-    return () => disconnectSocket();
   }, []);
 
   // 실시간 알림 수신: 멘션/DM 등 새 알림이 오면 목록 맨 위에 바로 반영한다.
@@ -89,18 +88,18 @@ export const NotificationsPage = () => {
       isMounted = false;
     };
   }, []);
-
+  
   useEffect(() => {
-    if (!roomId) {
-      setRoom(null);
-      return;
-    }
+    // roomId가 없으면 API 요청 없이 종료
+    if (!roomId) return;
+
     let isMounted = true;
     fetchRoomDetail(roomId)
       .then((res) => {
         if (isMounted) setRoom(mapRoomFromApi(res));
       })
       .catch((err) => console.error('채팅방 정보를 불러오지 못했어요:', err));
+
     return () => {
       isMounted = false;
     };
@@ -141,7 +140,6 @@ export const NotificationsPage = () => {
       try {
         await markNotificationAsRead(noti.id);
         setNotifications((prev) => prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n)));
-        triggerBadgeRefresh();
       } catch (err) {
         console.error('알림 읽음 처리 실패:', err);
       }
@@ -152,7 +150,6 @@ export const NotificationsPage = () => {
     try {
       await markAllNotificationsAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      triggerBadgeRefresh();
     } catch (err) {
       console.error('전체 읽음 처리 실패:', err);
     }
@@ -170,7 +167,7 @@ export const NotificationsPage = () => {
   const tabs: { key: NotificationMainTab; label: string }[] = [
     { key: 'chat', label: '채팅' },
     { key: 'file', label: '파일' },
-    { key: 'aiMinutes', label: 'AI 회의록' },
+    { key: 'aiMinutes', label: '문서' },
   ];
 
   return (
@@ -338,14 +335,10 @@ export const NotificationsPage = () => {
         chatTabKey="chat"
         renderOtherTab={(tabKey) =>
           tabKey === 'file' ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              업로드된 파일이 없습니다.
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary h-full min-h-[300px]">
-              생성된 AI 회의록이 없습니다.
-            </div>
-          )
+            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
+          ) : roomId ? (
+            <RoomDocumentsTab roomId={roomId} />
+          ) : null
         }
         isMuted={room ? mutedRoomIds.includes(room.id) : false}
         onToggleMute={room ? () => toggleMute(room.id) : undefined}

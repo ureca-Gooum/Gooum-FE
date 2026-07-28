@@ -165,8 +165,8 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
-    : '@container flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
+    ? '@container relative flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
+    : '@container relative flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
 
   const canvasStyle = { backgroundImage: 'var(--gradient-canvas)' };
 
@@ -205,9 +205,9 @@ export const MainLayout = () => {
             <Outlet />
           </div>
         </div>
+        {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+        <div id="modal-root" className="absolute inset-0 z-[9999] pointer-events-none" />
       </div>
-      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
-      <div id="modal-root" className="absolute inset-0 z-[9999] pointer-events-none" />
     </div>
   );
 };

@@ -9,14 +9,13 @@ import { mapRoomFromApi } from '@/api/mappers/roomMapper';
 import { getCurrentUserId } from '@/constants/auth';
 import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
-import { connectSocket, disconnectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
+import { connectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { stripSenderPrefix } from '@/utils/notification';
 import { formatTime } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
-import { triggerBadgeRefresh } from '@/hooks/useUnreadBadge';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
 
@@ -38,11 +37,9 @@ export const NotificationsPage = () => {
 
   const { mutedRoomIds, toggleMute } = useMutedRooms();
 
-  // 이 페이지로 이동해오면 ChatPage가 언마운트되며 소켓 연결이 끊기므로, 여기서도 다시 연결해줘야
-  // 실시간 알림(멘션 포함)을 받을 수 있다. connectSocket은 이미 연결돼있으면 그대로 재사용한다.
+  // 소켓은 Sidebar 배지도 같이 구독하는 전역 연결이라 페이지 언마운트로 끊으면 안 된다
   useEffect(() => {
     connectSocket();
-    return () => disconnectSocket();
   }, []);
 
   // 실시간 알림 수신: 멘션/DM 등 새 알림이 오면 목록 맨 위에 바로 반영한다.
@@ -132,7 +129,6 @@ export const NotificationsPage = () => {
       try {
         await markNotificationAsRead(noti.id);
         setNotifications((prev) => prev.map((n) => (n.id === noti.id ? { ...n, isRead: true } : n)));
-        triggerBadgeRefresh();
       } catch (err) {
         console.error('알림 읽음 처리 실패:', err);
       }
@@ -143,7 +139,6 @@ export const NotificationsPage = () => {
     try {
       await markAllNotificationsAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      triggerBadgeRefresh();
     } catch (err) {
       console.error('전체 읽음 처리 실패:', err);
     }

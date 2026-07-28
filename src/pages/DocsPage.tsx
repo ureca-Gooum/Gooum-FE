@@ -453,6 +453,8 @@ export const DocsPage = () => {
       setActiveFileId(next.length > 0 ? next[0].documentId : null);
     }
 
+    setIsDeleteConfirmOpen(false);
+
     try {
       await deleteDocument(id);
     } catch (error: any) {

@@ -159,7 +159,10 @@ export const ChatPage = () => {
   }, [selectedRoomId]);
 
   const handleRoomCreated = (newRoom: RoomApiResponse) => {
-    setRooms((prev) => [mapRoomFromApi(newRoom), ...prev]);
+    setRooms((prev) => {
+      if (prev.some((r) => r.id === newRoom.roomId)) return prev;
+      return [mapRoomFromApi(newRoom), ...prev];
+    });
     setIsModalOpen(false);
     handleSelectRoom(newRoom.roomId);
   };
@@ -201,7 +204,10 @@ export const ChatPage = () => {
 
     try {
       const room = await createRoom({ type: 'direct', memberIds: [userId] });
-      setRooms((prev) => [mapRoomFromApi(room), ...prev]);
+      setRooms((prev) => {
+        if (prev.some((r) => r.id === room.roomId)) return prev;
+        return [mapRoomFromApi(room), ...prev];
+      });
       handleSelectRoom(room.roomId);
     } catch (err: any) {
       showAlert(err.message ?? 'DM방을 여는 데 실패했어요.');

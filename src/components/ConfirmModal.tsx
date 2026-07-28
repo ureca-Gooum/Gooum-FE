@@ -11,6 +11,7 @@ interface ConfirmModalProps {
   isDestructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  hideCancel?: boolean;
 }
 
 export function ConfirmModal({
@@ -22,12 +23,13 @@ export function ConfirmModal({
   isDestructive = false,
   onConfirm,
   onCancel,
+  hideCancel = false,
 }: ConfirmModalProps) {
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm"
+          className="absolute inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm pointer-events-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -50,11 +52,13 @@ export function ConfirmModal({
             <p className="mb-6 text-[13px] leading-relaxed whitespace-pre-wrap text-fg-secondary">{message}</p>
 
             <div className="flex w-full gap-2">
-              <button
-                onClick={onCancel}
-                className="flex-1 rounded-lg border border-border-default bg-bg-canvas py-2 text-[13px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95">
-                {cancelText}
-              </button>
+              {!hideCancel && (
+                <button
+                  onClick={onCancel}
+                  className="flex-1 rounded-lg border border-border-default bg-bg-canvas py-2 text-[13px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95">
+                  {cancelText}
+                </button>
+              )}
               <button
                 onClick={() => {
                   onConfirm();
@@ -70,6 +74,6 @@ export function ConfirmModal({
         </motion.div>
       )}
     </AnimatePresence>,
-    document.body,
+    document.getElementById('modal-root') || document.body,
   );
 }

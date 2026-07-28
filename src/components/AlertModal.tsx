@@ -21,7 +21,7 @@ export function AlertModal() {
     <AnimatePresence>
       {options && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm"
+          className="absolute inset-0 z-[10000] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm pointer-events-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -49,6 +49,6 @@ export function AlertModal() {
         </motion.div>
       )}
     </AnimatePresence>,
-    document.body,
+    document.getElementById('modal-root') || document.body,
   );
 }

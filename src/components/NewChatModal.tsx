@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search, Check, MessageCircle, Users } from 'lucide-react';
 import { createRoom } from '@/api/rooms';
 import type { RoomApiResponse, RoomType } from '@/types/room';
@@ -64,10 +65,10 @@ export function NewChatModal({ onClose, onCreated }: NewChatModalProps) {
 
   const isValid = roomType === 'direct' ? selectedIds.length === 1 : selectedIds.length >= 2;
 
-  return (
+  return createPortal(
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+      className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[2px] pointer-events-auto">
       <div
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[85vh] w-[420px] flex-col overflow-hidden rounded-2xl bg-bg-default shadow-lg">
@@ -216,6 +217,7 @@ export function NewChatModal({ onClose, onCreated }: NewChatModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById('modal-root') || document.body
   );
 }

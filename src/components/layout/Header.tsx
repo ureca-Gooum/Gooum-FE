@@ -11,9 +11,10 @@ interface HeaderProps {
   onClose?: () => void;
   isMaximized?: boolean;
   onMouseDown?: (e: React.MouseEvent) => void;
+  onHelpClick?: () => void;
 }
 
-export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, onMouseDown }: HeaderProps = {}) {
+export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, onMouseDown, onHelpClick }: HeaderProps = {}) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -93,8 +94,15 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
     <header
       className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
       onMouseDown={onMouseDown}>
-      {/* 왼쪽: 로고 */}
-      <HeaderLogo />
+      {/* 왼쪽: 로고 (PC) / 뒤로가기 (모바일) */}
+      <div className="hidden @md:block">
+        <HeaderLogo />
+      </div>
+      <button 
+        className="@md:hidden flex items-center justify-center p-1.5 -ml-1 mr-1 rounded-md text-fg-tertiary hover:bg-bg-subtle" 
+        onClick={() => navigate(-1)}>
+        <ChevronLeft size={24} />
+      </button>
 
       <div className="flex flex-1 items-center justify-center gap-2">
         <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
@@ -214,6 +222,7 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
 
       <div className="hidden @md:flex items-center gap-1 ml-auto">
         <button
+          onClick={onHelpClick}
           className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
           title="도움말">
           <HelpCircle size={16} />

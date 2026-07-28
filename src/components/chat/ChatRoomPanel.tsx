@@ -178,13 +178,7 @@ export function ChatRoomPanel({
       header={
         target ? (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
-            {onSidebarToggle && (
-              <button
-                onClick={onSidebarToggle}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+
             <div
               className={`flex items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
               onMouseEnter={(e) => {
@@ -247,26 +241,6 @@ export function ChatRoomPanel({
               ))}
             </div>
 
-            {/* 모바일 버전: 글로벌 헤더 검색창 우측으로 포탈 (PC에서는 숨김) */}
-            {portalContainer && createPortal(
-              <div className="flex @md:hidden h-full items-center gap-3 ml-4">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => onTabChange(tab.key)}
-                    className={`relative h-full text-[13px] font-medium transition-colors px-1 shrink-0 ${activeTab === tab.key ? 'text-brand-primary' : 'text-fg-tertiary hover:text-fg-primary'
-                      }`}>
-                    {tab.label}
-                    {activeTab === tab.key && (
-                      <span
-                        className="absolute left-0 right-0 bottom-0 bg-brand-primary h-[3px] rounded-t-sm"
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>,
-              portalContainer
-            )}
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
               {target.isGroup && roomMembers.length > 0 && (
@@ -324,13 +298,7 @@ export function ChatRoomPanel({
           </div>
         ) : (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
-            {onSidebarToggle && (
-              <button
-                onClick={onSidebarToggle}
-                className="@md:hidden flex shrink-0 items-center justify-center rounded-md p-1.5 text-fg-secondary hover:bg-bg-subtle active:scale-95">
-                <Menu className="h-5 w-5" />
-              </button>
-            )}
+
             {emptyHeaderLabel}
           </div>
         )

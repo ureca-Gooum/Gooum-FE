@@ -243,12 +243,3 @@
   --color-scrollbar-thumb-hover-from: #4fc2ab;
   --color-scrollbar-thumb-hover-to: #8fd473;
 }
-
-/* =========================
-   로그인 페이지 전용 고정 테마
-========================= */
-.theme-login {
-  --color-brand-primary: #285ea8;
-  --gradient-brand-soft: linear-gradient(180deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
-  --gradient-brand-soft-diagonal: linear-gradient(135deg, #eef2ff 0%, #f2ecfb 55%, #fbeaf3 100%);
-}

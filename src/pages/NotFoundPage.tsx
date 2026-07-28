@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import faintFrame1 from '@/assets/404/frame1.png';
 import faintFrame2 from '@/assets/404/frame2.png';
 import faintFrame3 from '@/assets/404/frame3.png';
@@ -35,7 +34,6 @@ export const NotFoundPage = () => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const frameIndex = useFaintFrames(isHovered);
-  const fallDuration = ((FAINT_FRAMES.length - 1) * FAINT_FRAME_INTERVAL_MS) / 1000;
 
   const handleGoHome = () => {
     navigate('/');
@@ -61,22 +59,16 @@ export const NotFoundPage = () => {
           }}>
           404
         </span>
-        <motion.div
-          className="relative z-10 w-full max-w-[180px] sm:max-w-[220px]"
+        <div
+          className="relative z-10 w-full max-w-[110px] sm:max-w-[140px]"
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          animate={isHovered ? { rotate: [0, -88], y: [0, 14] } : { rotate: 0, y: 0 }}
-          transition={
-            isHovered
-              ? { duration: fallDuration, repeat: Infinity, repeatType: 'reverse', ease: 'easeInOut' }
-              : { duration: 0.25, ease: 'easeOut' }
-          }>
+          onMouseLeave={() => setIsHovered(false)}>
           <img
             src={FAINT_FRAMES[frameIndex]}
             alt="404 캐릭터 - 호버하면 기절해요"
             className="w-full object-contain drop-shadow-[0_20px_30px_rgba(76,143,225,0.2)]"
           />
-        </motion.div>
+        </div>
       </div>
 
       <h1 className="mb-3 text-[24px] font-bold tracking-tight text-[#1f2937] sm:text-[28px]">

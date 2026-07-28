@@ -14,7 +14,7 @@ export const LoginPage = () => {
         <h1 className="mb-3 text-[26px] font-bold leading-tight tracking-tight text-[#1f2937] @lg:mb-4 @lg:text-[32px] @3xl:text-[38px]">
           매일 갓 구운
           <br />
-          <span className="text-[#285ea8]">이야기</span>가 있는 곳
+          <span className="text-[#4c8fe1]">이야기</span>가 있는 곳
         </h1>
         <p className="mb-8 max-w-[360px] text-[13.5px] font-medium leading-relaxed text-gray-500 @lg:mb-10 @lg:text-[14.5px]">
           좋은 아이디어는 함께 구울수록 더 맛있어집니다.

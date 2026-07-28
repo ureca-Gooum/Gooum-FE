@@ -69,12 +69,12 @@
   --color-presence-offline: #f1f3fc;
   --color-presence-offline-border: #a8afb9;
 
-  --color-avatar-1: #3b82f6;
-  --color-avatar-2: #60a5fa;
-  --color-avatar-3: #7c6fd1;
-  --color-avatar-4: #c97b93;
-  --color-avatar-5: #d99a5c;
-  --color-avatar-6: #2563eb;
+  --color-avatar-1: #3b6fe2;
+  --color-avatar-2: #2fa8a0;
+  --color-avatar-3: #7c5cfc;
+  --color-avatar-4: #3fb27f;
+  --color-avatar-5: #f0568c;
+  --color-avatar-6: #ff8a3d;
 
   /* 그룹 채팅방 헤더의 "총인원 숫자" 아바타 배지 배경/글자색. 기본값은 fg-tertiary + 흰 글자이며,
      테마별로 대비가 부족하면 아래에서 개별적으로 덮어쓴다(예: 다크 모드). */

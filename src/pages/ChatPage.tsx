@@ -333,7 +333,7 @@ export const ChatPage = () => {
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
-      <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
+      <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
         <ChatRoomPanel
           target={
             selectedRoom

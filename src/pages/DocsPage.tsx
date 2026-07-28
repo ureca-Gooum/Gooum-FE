@@ -562,7 +562,7 @@ export const DocsPage = () => {
                   }}>
                   {/* 왼쪽 테마 바 (활성 시, 텍스트 높이 정도의 둥근 선) */}
                   <div
-                    className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full transition-colors ${
+                    className={`absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full transition-colors ${
                       isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
                     }`}
                   />

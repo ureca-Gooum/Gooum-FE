@@ -190,7 +190,9 @@ export const NotificationsPage = () => {
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         header={
-          <div className="flex flex-col justify-between px-4 pt-2.5" style={{ height: 63 }}>
+          <div
+            className="flex flex-col justify-between px-4 pt-2.5 border-b border-border-default"
+            style={{ height: 63 }}>
             <div className="flex items-center justify-between">
               <h2 className="text-[14px] font-semibold text-fg-primary">내 활동</h2>
               <button
@@ -200,7 +202,7 @@ export const NotificationsPage = () => {
               </button>
             </div>
             {/* PC 전용 기존 탭 (모바일에서는 숨김) */}
-            <div className="hidden @md:flex gap-5 -mb-4 border-b border-border-default pb-0">
+            <div className="hidden @md:flex gap-5">
               <button
                 onClick={() => setActiveTab('전체')}
                 className={`relative pb-2.5 text-[13px] font-bold transition-colors ${
@@ -347,7 +349,7 @@ export const NotificationsPage = () => {
         </div>
       </ListPanel>
 
-      <div className={`flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
+      <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
         <ChatRoomPanel
           target={
             room

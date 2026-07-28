@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Bell, MessageCircle, FileText, Palette } from 'lucide-react';
-import defaultAvatar from '@/assets/Avatar.svg';
+import { Avatar } from '@/components/Avatar';
 import { ProfileDropdown } from './ProfileDropdown';
 import { USER_STATUS_CONFIG } from '@/types/user';
-import { getAvatarColorClass } from '@/utils/avatar';
 import { getCurrentUserId } from '@/constants/auth';
 import { useMyProfile } from '@/hooks/useMyProfile';
 import { useUnreadBadge } from '@/hooks/useUnreadBadge';
@@ -32,8 +31,6 @@ export function Sidebar() {
     status,
     statusMessage,
     userImage,
-    profileImgError,
-    setProfileImgError,
     onStatusChange,
     onStatusMessageChange,
     uploadImage,
@@ -133,21 +130,30 @@ export function Sidebar() {
                 }
               }}
               className={({ isActive }) =>
-                `flex w-auto @md:w-full flex-col items-center gap-1 rounded-lg px-4 @md:px-0 py-1.5 @md:py-2 transition-colors ${
+                `group relative flex w-auto @md:w-full flex-col items-center gap-1 rounded-lg px-4 @md:px-0 py-1.5 @md:py-2 transition-colors ${
                   isActive
                     ? 'text-brand-primary @md:bg-bg-subtle'
                     : 'text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary'
                 }`
               }>
-              <div className="relative">
-                <Icon size={20} />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-bg-canvas leading-none tracking-tighter">
-                    {unreadCount > 99 ? '99+' : unreadCount}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`absolute left-0 top-1/2 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-primary transition-all duration-300 ease-out ${
+                      isActive ? 'h-9 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'
+                    }`}
+                  />
+                  <div className="relative">
+                    <Icon size={20} fill={isActive ? 'currentColor' : 'none'} />
+                    {unreadCount > 0 && (
+                      <div className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white shadow-sm ring-1 ring-bg-canvas leading-none tracking-tighter">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className="text-[11px]">{label}</span>
+                  <span className="text-[11px]">{label}</span>
+                </>
+              )}
             </NavLink>
           );
         })}
@@ -166,15 +172,23 @@ export function Sidebar() {
         </button>
 
         {isThemeMenuOpen && (
-          <div className="absolute left-14 bottom-0 w-32 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
+          <div className="absolute left-14 bottom-0 w-40 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
             <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
             <div className="flex flex-col gap-1">
               {[
-                { id: 'light', label: 'light', color: '#ffffff' },
-                { id: 'dark', label: 'dark', color: '#1f2229' },
-                { id: 'pastel-brown', label: 'brown', color: '#fdf8f5' },
-                { id: 'pastel-pink', label: 'pink', color: '#fff0f5' },
-                { id: 'pastel-green', label: 'green', color: '#f0fff0' },
+                { id: 'light', label: 'light', gradient: '#ffffff' },
+                { id: 'dark', label: 'dark', gradient: '#1f2229' },
+                { id: 'pastel-brown', label: 'Caramel', gradient: 'linear-gradient(160deg, #f6d365 0%, #c68a4a 100%)' },
+                {
+                  id: 'pastel-pink',
+                  label: 'Cotton Candy',
+                  gradient: 'linear-gradient(160deg, #f6d5f7 0%, #ffb8de 100%)',
+                },
+                {
+                  id: 'pastel-green',
+                  label: 'Mint Chip',
+                  gradient: 'linear-gradient(160deg, #7bd7c4 0%, #a8e08f 100%)',
+                },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -188,8 +202,10 @@ export function Sidebar() {
                       : 'text-fg-primary hover:bg-bg-subtle'
                   }`}>
                   <div
-                    className="h-3.5 w-3.5 rounded-full border border-border-default shadow-sm"
-                    style={{ backgroundColor: t.color }}
+                    className="h-3.5 w-3.5 shrink-0 rounded-full border border-border-default shadow-sm"
+                    style={
+                      t.gradient.startsWith('#') ? { backgroundColor: t.gradient } : { backgroundImage: t.gradient }
+                    }
                   />
                   {t.label}
                 </button>
@@ -203,27 +219,21 @@ export function Sidebar() {
         <button
           onClick={handleProfileClick}
           className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 focus:outline-none ring-1 ring-black/5">
-          {userImage && !profileImgError ? (
-            <img
-              src={userImage}
-              alt="사용자"
-              className="w-full h-full rounded-full object-cover"
-              onError={() => setProfileImgError(true)}
-            />
-          ) : (
-            <div
-              className={`flex h-full w-full items-center justify-center rounded-full ${getAvatarColorClass(
-                getCurrentUserId() ?? userName,
-              )}`}>
-              <img
-                src={defaultAvatar}
-                alt="사용자"
-                className="object-contain"
-                style={{ width: 40 * 0.62, height: 40 * 0.62 }}
-              />
-            </div>
-          )}
-          <div className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ${statusColor} ring-2 ring-bg-canvas`} />
+          <Avatar
+            seed={getCurrentUserId() ?? userName}
+            imageUrl={userImage}
+            alt="사용자"
+            size={40}
+            showPresence={false}
+          />
+          <div
+            className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-2 ring-bg-canvas ${
+              status === '오프라인' ? 'bg-presence-offline' : statusColor
+            }`}
+            style={
+              status === '오프라인' ? { boxShadow: 'inset 0 0 0 1px var(--color-presence-offline-border)' } : undefined
+            }
+          />
         </button>
 
         {isMenuOpen && (
@@ -233,6 +243,7 @@ export function Sidebar() {
             currentStatus={status}
             userImage={userImage}
             statusMessage={statusMessage}
+            seed={getCurrentUserId() ?? userName}
             onStatusChange={onStatusChange}
             onStatusMessageChange={onStatusMessageChange}
             onImageUpload={() => fileInputRef.current?.click()}

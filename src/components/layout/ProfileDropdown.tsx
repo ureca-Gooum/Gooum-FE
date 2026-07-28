@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronRight, Camera } from 'lucide-react';
 import { USER_STATUS_CONFIG, type UserStatus } from '@/types/user';
-import defaultAvatar from '@/assets/Avatar.svg';
+import { Avatar } from '@/components/Avatar';
 
 interface ProfileDropdownProps {
   userName: string;
@@ -9,6 +9,8 @@ interface ProfileDropdownProps {
   userImage?: string | null;
   statusMessage?: string;
   isSelf?: boolean; // 내 프로필인지 여부 (기본값 false 또는 true로 조절)
+  /** 아바타 배경색을 정하는 시드값 (보통 userId). 안 넘기면 userName으로 대체한다. */
+  seed?: string;
   onStatusChange?: (newStatus: UserStatus) => void;
   onLogout?: () => void;
   onImageUpload?: () => void;
@@ -24,6 +26,7 @@ export function ProfileDropdown({
   userImage,
   statusMessage = '',
   isSelf = false, // 기본적으로 상대방 프로필 모드로 작동하게 설정
+  seed,
   onStatusChange,
   onLogout,
   onImageUpload,
@@ -92,17 +95,10 @@ export function ProfileDropdown({
             {/* 아바타 영역 (내 프로필이면 클릭 가능, 상대방이면 클릭 안 됨) */}
             <div
               onClick={isSelf ? onImageUpload : undefined}
-              className={`relative w-12 h-12 shrink-0 rounded-full bg-gray-100 flex items-center justify-center ring-1 ring-black/5 overflow-hidden ${
+              className={`relative w-12 h-12 shrink-0 rounded-full ring-1 ring-black/5 overflow-hidden ${
                 isSelf && onImageUpload ? 'cursor-pointer' : ''
               }`}>
-              <img
-                src={userImage || defaultAvatar}
-                alt="사용자"
-                className="w-full h-full rounded-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = defaultAvatar;
-                }}
-              />
+              <Avatar seed={seed || userName} imageUrl={userImage} alt="사용자" size={48} showPresence={false} />
               {/* 내 프로필일 때만 카메라 마스크 보여주기 (업로드 핸들러가 있을 때만) */}
               {isSelf && onImageUpload && (
                 <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center backdrop-blur-[1px]">

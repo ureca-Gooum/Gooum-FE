@@ -63,7 +63,8 @@
 }
 
 .tiptap-content pre {
-  background: #f4f4f5;
+  background: var(--color-bg-subtle);
+  color: var(--color-fg-primary);
   border: 1px solid var(--color-border-default, #dce2ea);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -76,12 +77,10 @@
 .tiptap-content pre code {
   background: none;
   padding: 0;
+  color: inherit;
 }
 
-/* ── 멘션(@) 하이라이트 ──
-   연한 버터색 배경 + 파란 글꼴로 "멘션됨"을 표시한다.
-   white-space: nowrap으로 멘션 자체는 항상 한 덩어리로 취급해서,
-   말풍선 안에서 멘션 텍스트 중간이 잘려 줄바꿈되는 문제를 막는다. */
+/* ── 멘션(@) 하이라이트 ── */
 .tiptap-content .mention {
   display: inline-block;
   white-space: nowrap;
@@ -89,9 +88,18 @@
   overflow-wrap: normal;
   border-radius: 4px;
   padding: 0 3px;
-  background-color: var(--color-warning-bg, #fff8e8);
-  color: var(--color-brand-primary, #285ea8);
   font-weight: 600;
+}
+
+.tiptap-content .mention.mention-self,
+.tiptap-content .mention:not(.mention-other) {
+  background-color: var(--color-mention-self-bg);
+  color: var(--color-mention-self-text);
+}
+
+.tiptap-content .mention.mention-other {
+  background-color: var(--color-mention-other-bg);
+  color: var(--color-mention-other-text);
 }
 
 /* ── Tiptap Placeholder ── */

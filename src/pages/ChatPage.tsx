@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, MessageCircle, ChevronDown, ChevronRight, SquarePen } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
@@ -30,7 +31,12 @@ export const ChatPage = () => {
   const currentUserId = getCurrentUserId(); // 컴포넌트 안에서 매번 최신값 계산
   const navigate = useNavigate();
   const location = useLocation();
-  const navState = location.state as { action?: string; userId?: string; roomId?: string; targetMessageId?: string } | null;
+  const navState = location.state as {
+    action?: string;
+    userId?: string;
+    roomId?: string;
+    targetMessageId?: string;
+  } | null;
 
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,12 +101,12 @@ export const ChatPage = () => {
         navigate('/app', { replace: true });
       } else {
         createRoom({ type: 'direct', memberIds: [navState.userId] })
-          .then(newRoom => {
-            setRooms(prev => [mapRoomFromApi(newRoom), ...prev]);
+          .then((newRoom) => {
+            setRooms((prev) => [mapRoomFromApi(newRoom), ...prev]);
             handleSelectRoom(newRoom.roomId);
             navigate('/app', { replace: true });
           })
-          .catch(err => alert(err.message ?? 'DM방을 여는 데 실패했어요.'));
+          .catch((err) => showAlert(err.message ?? 'DM방을 여는 데 실패했어요.'));
       }
     } else if (navState.roomId) {
       handleSelectRoom(navState.roomId);
@@ -155,6 +161,7 @@ export const ChatPage = () => {
   const handleRoomCreated = (newRoom: RoomApiResponse) => {
     setRooms((prev) => [mapRoomFromApi(newRoom), ...prev]);
     setIsModalOpen(false);
+    handleSelectRoom(newRoom.roomId);
   };
 
   const handleToggleFavorite = async (roomId: string, current: boolean) => {
@@ -172,7 +179,7 @@ export const ChatPage = () => {
       setRooms((prev) => prev.filter((r) => r.id !== roomId));
       if (selectedRoomId === roomId) setSelectedRoomId(null);
     } catch (err: any) {
-      alert(err.message);
+      showAlert(err.message);
     }
   };
 
@@ -197,7 +204,7 @@ export const ChatPage = () => {
       setRooms((prev) => [mapRoomFromApi(room), ...prev]);
       handleSelectRoom(room.roomId);
     } catch (err: any) {
-      alert(err.message ?? 'DM방을 여는 데 실패했어요.');
+      showAlert(err.message ?? 'DM방을 여는 데 실패했어요.');
     }
   };
 
@@ -209,8 +216,8 @@ export const ChatPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
-        <ListPanel className="w-80" headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
+      <div className="flex min-w-0 flex-1 overflow-hidden w-full h-full">
+        <ListPanel className="flex" headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
           <div className="flex flex-col gap-1 py-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <RoomListItemSkeleton key={i} />
@@ -218,7 +225,9 @@ export const ChatPage = () => {
           </div>
         </ListPanel>
 
-        <section className="flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default shadow-md">
+        <section
+          className="flex min-w-[480px] flex-1 flex-col overflow-hidden rounded-lg bg-bg-default"
+          style={{ boxShadow: '0 8px 24px -6px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)' }}>
           <div className="flex h-[63px] shrink-0 items-center gap-3 border-b border-border-default px-4">
             <Skeleton className="h-7 w-7 rounded-full" />
             <Skeleton className="h-4 w-24 rounded-full" />

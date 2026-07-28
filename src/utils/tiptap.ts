@@ -83,3 +83,12 @@ export function wrapAiMinutesContent(content: any, meta: AiMinutesMeta) {
     ],
   };
 }
+
+export function markSelfMentions(root: HTMLElement | null | undefined, currentUserId: string | null | undefined) {
+  if (!root) return;
+  root.querySelectorAll<HTMLElement>('[data-type="mention"]').forEach((el) => {
+    const isSelf = !!currentUserId && el.getAttribute('data-id') === currentUserId;
+    el.classList.toggle('mention-self', isSelf);
+    el.classList.toggle('mention-other', !isSelf);
+  });
+}

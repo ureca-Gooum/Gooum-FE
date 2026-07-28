@@ -137,7 +137,7 @@ export function Sidebar() {
               {({ isActive }) => (
                 <>
                   <span
-                    className={`absolute left-0 top-1/2 w-[4px] -translate-y-1/2 rounded-r-full bg-brand-primary transition-all duration-300 ease-out ${
+                    className={`absolute left-0 top-1/2 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-primary transition-all duration-300 ease-out ${
                       isActive ? 'h-9 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'
                     }`}
                   />
@@ -170,15 +170,23 @@ export function Sidebar() {
         </button>
 
         {isThemeMenuOpen && (
-          <div className="absolute left-14 bottom-0 w-32 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
+          <div className="absolute left-14 bottom-0 w-40 rounded-xl border border-border-default bg-bg-default p-2 shadow-lg z-50">
             <div className="mb-2 px-2 text-xs font-semibold text-fg-secondary">테마 선택</div>
             <div className="flex flex-col gap-1">
               {[
-                { id: 'light', label: 'light', color: '#ffffff' },
-                { id: 'dark', label: 'dark', color: '#1f2229' },
-                { id: 'pastel-brown', label: 'brown', color: '#fdf8f5' },
-                { id: 'pastel-pink', label: 'pink', color: '#fff0f5' },
-                { id: 'pastel-green', label: 'green', color: '#f0fff0' },
+                { id: 'light', label: 'light', gradient: '#ffffff' },
+                { id: 'dark', label: 'dark', gradient: '#1f2229' },
+                { id: 'pastel-brown', label: 'Caramel', gradient: 'linear-gradient(160deg, #f6d365 0%, #c68a4a 100%)' },
+                {
+                  id: 'pastel-pink',
+                  label: 'Cotton Candy',
+                  gradient: 'linear-gradient(160deg, #f6d5f7 0%, #ffb8de 100%)',
+                },
+                {
+                  id: 'pastel-green',
+                  label: 'Mint Chip',
+                  gradient: 'linear-gradient(160deg, #7bd7c4 0%, #a8e08f 100%)',
+                },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -192,8 +200,10 @@ export function Sidebar() {
                       : 'text-fg-primary hover:bg-bg-subtle'
                   }`}>
                   <div
-                    className="h-3.5 w-3.5 rounded-full border border-border-default shadow-sm"
-                    style={{ backgroundColor: t.color }}
+                    className="h-3.5 w-3.5 shrink-0 rounded-full border border-border-default shadow-sm"
+                    style={
+                      t.gradient.startsWith('#') ? { backgroundColor: t.gradient } : { backgroundImage: t.gradient }
+                    }
                   />
                   {t.label}
                 </button>

@@ -13,7 +13,7 @@ import { useRoomConversation } from '@/hooks/useRoomConversation';
 import { useMutedRooms } from '@/hooks/useMutedRooms';
 import { connectSocket, onNewNotification, offNewNotification } from '@/socket/socket';
 import { stripSenderPrefix } from '@/utils/notification';
-import { formatTime } from '@/utils/formatTime';
+import { formatTime, getDateGroupLabel } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
 import type { NewNotificationPayload } from '@/types/socket';
@@ -56,6 +56,7 @@ export const NotificationsPage = () => {
           title: payload.title,
           content: stripSenderPrefix(payload.body),
           time: formatTime(payload.createdAt),
+          createdAt: payload.createdAt,
           isRead: payload.isRead,
           roomId: payload.roomId,
         };
@@ -175,19 +176,21 @@ export const NotificationsPage = () => {
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         header={
-          <div className="flex flex-col gap-4">
+          <div
+            className="flex flex-col justify-between px-4 pt-2.5 border-b border-border-default"
+            style={{ height: 63 }}>
             <div className="flex items-center justify-between">
-              <h2 className="text-[20px] font-bold text-fg-primary">내 활동</h2>
+              <h2 className="text-[14px] font-semibold text-fg-primary">내 활동</h2>
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs text-fg-tertiary hover:text-fg-primary transition-colors">
+                className="text-[11px] text-fg-tertiary hover:text-fg-primary transition-colors">
                 모두 읽음
               </button>
             </div>
-            <div className="flex gap-5 -mb-4 border-b border-border-default pb-0">
+            <div className="flex gap-5 ">
               <button
                 onClick={() => setActiveTab('전체')}
-                className={`relative pb-3 text-[13px] font-bold transition-colors ${
+                className={`relative pb-2.5 text-[13px] font-bold transition-colors ${
                   activeTab === '전체' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 전체
@@ -202,7 +205,7 @@ export const NotificationsPage = () => {
               </button>
               <button
                 onClick={() => setActiveTab('DM')}
-                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
                   activeTab === 'DM' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <MessageCircle size={15} />
@@ -219,7 +222,7 @@ export const NotificationsPage = () => {
 
               <button
                 onClick={() => setActiveTab('멘션')}
-                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
                   activeTab === '멘션' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <AtSign size={15} />
@@ -235,7 +238,7 @@ export const NotificationsPage = () => {
               </button>
               <button
                 onClick={() => setActiveTab('문서')}
-                className={`relative pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
                   activeTab === '문서' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                 }`}>
                 <FileText size={15} />
@@ -254,19 +257,24 @@ export const NotificationsPage = () => {
         }>
         <div className="flex flex-col h-full overflow-y-auto px-2 py-2">
           {filteredNotifications.length > 0 ? (
-            <>
-              <DateDivider label="어제" />
-              <div className="flex flex-col gap-2">
-                {filteredNotifications.map((noti) => (
-                  <NotificationListItem
-                    key={noti.id}
-                    notification={noti}
-                    isSelected={selectedNotiId === noti.id}
-                    onSelect={() => handleSelectNoti(noti)}
-                  />
-                ))}
-              </div>
-            </>
+            <div className="flex flex-col gap-2">
+              {filteredNotifications.map((noti, index) => {
+                const prevNoti = filteredNotifications[index - 1];
+                const label = getDateGroupLabel(noti.createdAt);
+                const showDivider = !prevNoti || getDateGroupLabel(prevNoti.createdAt) !== label;
+
+                return (
+                  <div key={noti.id} className="flex flex-col gap-2">
+                    {showDivider && <DateDivider label={label} />}
+                    <NotificationListItem
+                      notification={noti}
+                      isSelected={selectedNotiId === noti.id}
+                      onSelect={() => handleSelectNoti(noti)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-fg-tertiary mt-10">
               {activeTab} 내역이 없습니다.

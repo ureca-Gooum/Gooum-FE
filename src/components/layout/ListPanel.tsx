@@ -3,6 +3,11 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type R
 interface ListPanelProps {
   header: ReactNode;
   children: ReactNode;
+  /**
+   * 헤더 높이(px)를 고정하고 싶을 때 지정한다. (예: 메인패널 헤더와 높이를 맞춰서
+   * 헤더 아래 보더가 정확히 같은 줄에서 이어지도록)
+   * 지정하면 ListPanel과 메인패널 사이 gap 구간까지 보더 선을 이어 그려준다.
+   */
   headerHeight?: number;
   isSidebarOpen?: boolean;
   onClose?: () => void;
@@ -58,6 +63,10 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
       {/* 모바일 환경: 사이드바 뒷 배경 오버레이 */}
       {isSidebarOpen && onClose && <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />}
 
+      {/* 
+        모바일(@md 미만): absolute로 띄우고 translate로 슬라이드 처리 
+        데스크탑(@md 이상): relative로 띄우고 항상 보임
+      */}
       <section
         className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
           isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
@@ -70,7 +79,7 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
             {header}
           </div>
         ) : (
-          <div className="border-b border-border-default p-4">{header}</div>
+          <div className="shrink-0">{header}</div>
         )}
         <div className="flex-1 overflow-y-auto">{children}</div>
 

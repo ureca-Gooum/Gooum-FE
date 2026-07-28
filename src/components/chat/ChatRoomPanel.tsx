@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect, type ReactNode, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef, useState, type ReactNode, type RefObject } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Pencil, Bell, BellOff, Menu } from 'lucide-react';
+import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -94,7 +93,6 @@ interface ChatRoomPanelProps {
   onDeleteMessage: (messageId: string) => void;
   onStartDirectMessage?: (userId: string) => void;
   targetMessageId?: string | null;
-  onSidebarToggle?: () => void;
 }
 
 /**
@@ -134,18 +132,12 @@ export function ChatRoomPanel({
   onDeleteMessage,
   onStartDirectMessage,
   targetMessageId,
-  onSidebarToggle,
 }: ChatRoomPanelProps) {
   const isChatTab = activeTab === chatTabKey;
 
   // 헤더의 상대 프로필(아바타+이름)에 호버했을 때 보여줄 프로필 카드 상태
   const [isHeaderProfileHovered, setIsHeaderProfileHovered] = useState(false);
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
-  useEffect(() => {
-    const container = document.getElementById('header-tabs-portal');
-    if (container) setPortalContainer(container);
-  }, []);
   const [headerProfileRect, setHeaderProfileRect] = useState<DOMRect | null>(null);
   const headerProfileHideTimeoutRef = useRef<number>();
 

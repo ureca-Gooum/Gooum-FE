@@ -307,7 +307,6 @@ export const NotificationsPage = () => {
 
       <div className={`flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
-        onBack={() => setSelectedNotiId(null)}
         target={
           room
             ? {
@@ -363,7 +362,6 @@ export const NotificationsPage = () => {
         onCreateDocument={conversation.createDocumentMessage}
         onDeleteMessage={conversation.deleteMessage}
         targetMessageId={selectedNoti?.messageId}
-        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
       </div>
     </div>

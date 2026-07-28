@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { OnboardingModal } from '@/components/OnboardingModal';
@@ -8,7 +8,6 @@ type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
 export const MainLayout = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   // 로그인 화면에서는 헤더(검색/창 컨트롤)와 사이드바(아이콘 레일)를 아예 안 보여준다.
   const isLoginPage = location.pathname === '/login';
 
@@ -33,7 +32,6 @@ export const MainLayout = () => {
   const [isResizing, setIsResizing] = useState<string | null>(null);
 
   const actionRef = useRef<{ startX: number; startY: number; startRect: typeof rect } | null>(null);
-  const rafRef = useRef<number | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

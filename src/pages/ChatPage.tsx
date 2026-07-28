@@ -319,7 +319,6 @@ export const ChatPage = () => {
 
       <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
-        onBack={() => setSelectedRoomId(null)}
         target={
           selectedRoom
             ? {
@@ -372,7 +371,6 @@ export const ChatPage = () => {
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={targetMessageId}
-        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
       </div>
     </div>

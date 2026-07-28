@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { OnboardingModal } from '@/components/OnboardingModal';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
 
@@ -13,8 +14,17 @@ export const MainLayout = () => {
 
   const [windowMode, setWindowMode] = useState<WindowMode>('maximized');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { startTour, hasSeenOnboarding } = useOnboardingTour();
 
-
+  // 로그인된 상태에서 온보딩 투어를 아직 본 적 없으면 최초 1회 자동으로 실행한다.
+  // (헤더의 물음말표 아이콘을 눌러 여는 OnboardingModal은 별개의 '앱 소개' 팝업이라 여기서 건드리지 않는다.)
+  useEffect(() => {
+    const isLoggedIn = !!localStorage.getItem('accessToken');
+    if (isLoggedIn && !isLoginPage && !hasSeenOnboarding()) {
+      startTour();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 창 모드 위치 및 크기 상태
   const [rect, setRect] = useState(() => {
@@ -165,8 +175,8 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container relative flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
-    : '@container relative flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
+    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
+    : '@container flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
 
   const canvasStyle = { backgroundImage: 'var(--gradient-canvas)' };
 
@@ -195,7 +205,8 @@ export const MainLayout = () => {
             onHelpClick={() => setShowOnboarding(true)}
           />
         )}
-        <div className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-1 @md:pb-2.5 @md:pr-2.5'}`}>
+        <div
+          className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-1 @md:pb-2.5 @md:pr-2.5'}`}>
           {!isLoginPage && (
             <div className="order-2 @md:order-1 shrink-0 z-50 border-t border-border-default @md:border-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] @md:shadow-none h-14 @md:h-full">
               <Sidebar />
@@ -205,9 +216,9 @@ export const MainLayout = () => {
             <Outlet />
           </div>
         </div>
-        {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
-        <div id="modal-root" className="absolute inset-0 z-[9999] pointer-events-none" />
       </div>
+      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} onStartTour={startTour} />}
+      <div id="modal-root" className="absolute inset-0 z-[9999] pointer-events-none" />
     </div>
   );
 };

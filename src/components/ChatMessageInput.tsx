@@ -489,6 +489,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={onOpenAiMinutes}
+            data-tour="ai-summary"
             className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="AI 회의록 생성">
             <Sparkles size={18} />

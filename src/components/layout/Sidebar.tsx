@@ -12,9 +12,9 @@ import { logout } from '@/api/users';
 import { ConfirmModal } from '@/components/ConfirmModal';
 
 const navItems = [
-  { icon: Bell, label: '알림', to: '/app/notifications' },
-  { icon: MessageCircle, label: 'DM', to: '/app' },
-  { icon: FileText, label: '문서', to: '/app/docs' },
+  { icon: Bell, label: '알림', to: '/app/notifications', tourId: 'nav-notifications' },
+  { icon: MessageCircle, label: 'DM', to: '/app', tourId: 'nav-dm' },
+  { icon: FileText, label: '문서', to: '/app/docs', tourId: 'nav-docs' },
 ];
 
 export function Sidebar() {
@@ -116,13 +116,14 @@ export function Sidebar() {
 
       {/* '채팅' 헤더 텍스트와 높이를 맞추기 위한 여백. 숫자만 조절하면 위/아래로 미세조정 가능. */}
       <div className="flex flex-1 @md:flex-none w-full flex-row @md:flex-col items-center justify-around @md:justify-start gap-0 @md:gap-4 pt-0 @md:pt-4 h-full @md:h-auto px-2 @md:px-0">
-        {navItems.map(({ icon: Icon, label, to }) => {
+        {navItems.map(({ icon: Icon, label, to, tourId }) => {
           const unreadCount = label === '알림' ? unreadNotiCount : label === 'DM' ? unreadDMCount : 0;
           return (
             <NavLink
               key={label}
               to={to}
               end={to === '/app'}
+              data-tour={tourId}
               onClick={(e) => {
                 if (!localStorage.getItem('accessToken')) {
                   e.preventDefault();

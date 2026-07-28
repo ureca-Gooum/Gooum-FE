@@ -2,6 +2,8 @@
 @import 'tailwindcss';
 @import './styles/vars.css';
 @import './styles/globals.css';
+@import 'driver.js/dist/driver.css';
+@import './styles/driver-overrides.css';
 
 /* ── Tiptap 에디터 본문 ── */
 .docs-editor-body {
@@ -16,10 +18,7 @@
   margin-bottom: 0.5em;
 }
 
-/* ── 채팅 입력창 / 말풍선 공용 Tiptap 콘텐츠 스타일 ──
-   채팅 입력창(ChatMessageInput)과 전송된 메시지 말풍선(MessageBubble)이
-   같은 클래스를 공유해서, 입력할 때 보이는 목록/코드블록 스타일이
-   전송 후에도 동일하게 적용되도록 한다. */
+/* ── 채팅 입력창 / 말풍선 공용 Tiptap 콘텐츠 스타일 ── */
 .tiptap-content p {
   margin: 0;
 }

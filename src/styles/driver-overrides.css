@@ -1,0 +1,86 @@
+/* ── driver.js 온보딩 툴팁 스타일 오버라이드 ──
+   기본 driver.css 위에 프로젝트 컬러 토큰을 덮어써서
+   라이트/다크/파스텔 테마 전환 시에도 자연스럽게 어울리도록 한다. */
+
+.driver-popover {
+  background-color: var(--color-bg-default);
+  color: var(--color-fg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+  padding: 20px;
+  max-width: 320px;
+}
+
+.driver-popover-title {
+  color: var(--color-fg-primary);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.driver-popover-description {
+  color: var(--color-fg-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.driver-popover-progress-text {
+  color: var(--color-fg-tertiary);
+  font-size: 12px;
+}
+
+.driver-popover-footer {
+  margin-top: 16px;
+}
+
+.driver-popover-footer button {
+  text-shadow: none;
+  background-color: var(--color-bg-canvas);
+  color: var(--color-fg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+}
+
+.driver-popover-footer button:hover {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-fg-primary);
+}
+
+.driver-popover-footer .driver-popover-next-btn,
+.driver-popover-footer .driver-popover-done-btn {
+  background-color: var(--color-brand-primary);
+  color: #ffffff;
+  border: none;
+}
+
+.driver-popover-footer .driver-popover-next-btn:hover,
+.driver-popover-footer .driver-popover-done-btn:hover {
+  background-color: var(--color-brand-secondary);
+  color: #ffffff;
+}
+
+.driver-popover-close-btn {
+  color: var(--color-fg-tertiary);
+}
+
+.driver-popover-close-btn:hover {
+  color: var(--color-fg-primary);
+}
+
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: var(--color-bg-default);
+}
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: var(--color-bg-default);
+}
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: var(--color-bg-default);
+}
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: var(--color-bg-default);
+}

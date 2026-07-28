@@ -76,6 +76,11 @@
   --color-avatar-5: #d99a5c;
   --color-avatar-6: #2563eb;
 
+  /* 그룹 채팅방 헤더의 "총인원 숫자" 아바타 배지 배경/글자색. 기본값은 fg-tertiary + 흰 글자이며,
+     테마별로 대비가 부족하면 아래에서 개별적으로 덮어쓴다(예: 다크 모드). */
+  --color-avatar-group-bg: var(--color-fg-tertiary);
+  --color-avatar-group-fg: #ffffff;
+
   /* =========================
      Scrollbar ("Lavender" 그라데이션: #a6c1ee → #fbc2eb)
   ========================= */
@@ -98,42 +103,46 @@
   --color-mention-other-text: #1d6fa5;
 }
 
-/* Midnight (다크)  */
+/* Midnight (다크) — 짙은 남색 대신 눈이 편한 뉴트럴 차콜 톤, 배경은 그라데이션 없이 단색 */
 [data-theme='dark'] {
-  --color-fg-primary: #f4f7fb;
-  --color-fg-secondary: #dce2ea;
-  --color-fg-tertiary: #a8afb9;
-  --color-fg-disabled: #69717e;
+  --color-fg-primary: #e8eaed;
+  --color-fg-secondary: #bcc0c9;
+  --color-fg-tertiary: #8b909b;
+  --color-fg-disabled: #5b6069;
 
-  --color-border-default: #3b414c;
-  --color-border-strong: #69717e;
-  --color-border-brand: #4a5a94;
+  --color-border-default: #34363d;
+  --color-border-strong: #46484f;
+  --color-border-brand: #4c5a86;
 
-  --color-bg-default: #1f2229;
-  --color-bg-canvas: #14161c;
-  --color-bg-subtle: #1e2333;
-  --color-bg-pressed: #2a3150;
+  --color-bg-default: #26272c;
+  --color-bg-canvas: #1c1d21;
+  --color-bg-subtle: #2f3036;
+  --color-bg-pressed: #383a42;
 
-  --color-brand-primary: #6f86d6;
-  --color-brand-secondary: #8fa0e0;
-  --color-brand-light: #b7c4ee;
-  --color-brand-soft: #232c4a;
+  --color-brand-primary: #8b9ae8;
+  --color-brand-secondary: #a3b0ee;
+  --color-brand-light: #c2cdf5;
+  --color-brand-soft: #2c2f42;
 
-  --gradient-brand-soft: linear-gradient(180deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
-  --gradient-brand-soft-diagonal: linear-gradient(135deg, #1b2138 0%, #1f2440 55%, #181c30 100%);
-  --gradient-canvas: linear-gradient(160deg, #1c2338 0%, #181b26 55%, #14161c 100%);
+  --gradient-brand-soft: linear-gradient(180deg, #1c1d21 0%, #1c1d21 100%);
+  --gradient-brand-soft-diagonal: linear-gradient(135deg, #1c1d21 0%, #1c1d21 100%);
+  --gradient-canvas: linear-gradient(180deg, #1c1d21 0%, #1c1d21 100%);
 
-  --color-scrollbar-thumb: #3f5d94;
-  --color-scrollbar-thumb-from: #4c6ea8;
-  --color-scrollbar-thumb-to: #33507f;
-  --color-scrollbar-thumb-hover: #5b81bd;
-  --color-scrollbar-thumb-hover-from: #6690c8;
-  --color-scrollbar-thumb-hover-to: #3f5d94;
+  --color-scrollbar-thumb: #45474f;
+  --color-scrollbar-thumb-from: #4c4f59;
+  --color-scrollbar-thumb-to: #3b3d44;
+  --color-scrollbar-thumb-hover: #585b66;
+  --color-scrollbar-thumb-hover-from: #5f6270;
+  --color-scrollbar-thumb-hover-to: #45474f;
 
-  --color-mention-self-bg: rgba(255, 200, 60, 0.24);
+  --color-mention-self-bg: rgba(255, 200, 60, 0.2);
   --color-mention-self-text: #ffd76b;
-  --color-mention-other-bg: rgba(96, 165, 250, 0.22);
-  --color-mention-other-text: #8fc4ff;
+  --color-mention-other-bg: rgba(139, 154, 232, 0.2);
+  --color-mention-other-text: #a3b0ee;
+
+  /* fg-tertiary(#8b909b)를 그대로 쓰면 흰 숫자와 대비가 약해 잘 안 보이지만, 너무 밝은 회색은
+     다크 테마 톤과 안 어울려서 기존 아바타 팔레트의 딥 블루를 가져와 어둡고 자연스럽게 처리 */
+  --color-avatar-group-bg: var(--color-avatar-6);
 }
 
 /* Caramel (브라운) — 오븐에 노릇하게 구운 캐러멜·토스트 톤: #f6d365 → #c68a4a */

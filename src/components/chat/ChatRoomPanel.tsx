@@ -8,6 +8,7 @@ import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { MessageBubble } from '@/components/MessageBubble';
 import { MentionHoverCard } from '@/components/MentionHoverCard';
 import { RoomMembersTooltip } from '@/components/RoomMembersTooltip';
+import { RoomNameTooltip } from '@/components/RoomNameTooltip';
 import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import type { Message, PresenceStatus, TiptapDoc } from '@/types/chat';
@@ -167,6 +168,23 @@ export function ChatRoomPanel({
     membersHideTimeoutRef.current = window.setTimeout(() => setIsMembersHovered(false), 150);
   };
 
+  // 헤더가 좁아져 방 제목(h2)이 숨겨졌을 때, 그룹 아바타에 호버하면 방 이름을 툴팁으로 보여준다
+  const [isGroupNameHovered, setIsGroupNameHovered] = useState(false);
+  const [groupNameRect, setGroupNameRect] = useState<DOMRect | null>(null);
+  const groupNameHideTimeoutRef = useRef<number>();
+
+  const clearGroupNameHideTimeout = () => {
+    if (groupNameHideTimeoutRef.current) {
+      window.clearTimeout(groupNameHideTimeoutRef.current);
+      groupNameHideTimeoutRef.current = undefined;
+    }
+  };
+
+  const scheduleHideGroupName = () => {
+    clearGroupNameHideTimeout();
+    groupNameHideTimeoutRef.current = window.setTimeout(() => setIsGroupNameHovered(false), 150);
+  };
+
   // 그룹방은 상대가 여러 명이라 헤더 프로필 카드 대상이 아니다. 1:1일 때만, userId가 있을 때만 호버 카드를 띄운다.
   const headerProfileMember: RoomMember | undefined =
     !target?.isGroup && target?.userId
@@ -203,16 +221,29 @@ export function ChatRoomPanel({
                 if (!headerProfileMember) return;
                 scheduleHideHeaderProfile();
               }}>
-              <Avatar
-                seed={target.id}
-                imageUrl={target.isGroup ? undefined : target.displayImage}
-                presence={target.isGroup ? undefined : target.presence}
-                memberCount={target.isGroup ? target.memberCount : undefined}
-                alt={target.displayName}
-                size={28}
-              />
+              <div
+                className="shrink-0"
+                onMouseEnter={(e) => {
+                  if (!target.isGroup) return;
+                  clearGroupNameHideTimeout();
+                  setGroupNameRect(e.currentTarget.getBoundingClientRect());
+                  setIsGroupNameHovered(true);
+                }}
+                onMouseLeave={() => {
+                  if (!target.isGroup) return;
+                  scheduleHideGroupName();
+                }}>
+                <Avatar
+                  seed={target.id}
+                  imageUrl={target.isGroup ? undefined : target.displayImage}
+                  presence={target.isGroup ? undefined : target.presence}
+                  memberCount={target.isGroup ? target.memberCount : undefined}
+                  alt={target.displayName}
+                  size={28}
+                />
+              </div>
 
-              <h2 className="truncate font-semibold text-fg-primary" title={target.displayName}>
+              <h2 className="hidden truncate font-semibold text-fg-primary @md:block" title={target.displayName}>
                 {target.displayName}
               </h2>
             </div>
@@ -226,6 +257,10 @@ export function ChatRoomPanel({
                 onMouseLeaveCard={scheduleHideHeaderProfile}
                 onStartDirectMessage={onStartDirectMessage}
               />
+            )}
+
+            {isGroupNameHovered && groupNameRect && (
+              <RoomNameTooltip anchorRect={groupNameRect} name={target.displayName} />
             )}
 
             {target.isGroup && onRenameGroup && (
@@ -277,7 +312,12 @@ export function ChatRoomPanel({
                     </div>
                   ))}
                   {roomMembers.length > 3 && (
-                    <div className="flex h-6 items-center justify-center rounded-full border-[3px] border-bg-default bg-bg-subtle px-1.5 text-[10px] font-medium text-fg-tertiary shadow-sm">
+                    <div
+                      className="flex h-6 items-center justify-center rounded-full border-[3px] border-bg-default px-1.5 text-[10px] font-medium shadow-sm"
+                      style={{
+                        backgroundColor: 'var(--color-avatar-group-bg)',
+                        color: 'var(--color-avatar-group-fg, #ffffff)',
+                      }}>
                       {roomMembers.length}
                     </div>
                   )}

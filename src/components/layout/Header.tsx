@@ -13,7 +13,7 @@ import {
   User,
   Hash,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { HeaderLogo } from './HeaderLogo';
 import { fetchSearch } from '@/api/search';
 import type { SearchApiResponse } from '@/types/search';
@@ -36,8 +36,23 @@ export function Header({
   onHelpClick,
 }: HeaderProps = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+
+  // 뒤로가기/앞으로가기 가능 여부 추적. react-router가 브라우저 history state에 넣어주는
+  // idx(현재 위치가 히스토리 스택에서 몇 번째인지)를 보고, 지금까지 도달했던 가장 깊은 idx와
+  // 비교해서 "더 갈 수 있는 곳이 있는지"를 판단한다.
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(false);
+  const maxIdxRef = useRef(0);
+
+  useEffect(() => {
+    const idx = (window.history.state && (window.history.state as { idx?: number }).idx) || 0;
+    if (idx > maxIdxRef.current) maxIdxRef.current = idx;
+    setCanGoBack(idx > 0);
+    setCanGoForward(idx < maxIdxRef.current);
+  }, [location]);
   const [searchResults, setSearchResults] = useState<SearchApiResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -120,7 +135,12 @@ export function Header({
       </div>
       <div className="flex @md:hidden w-10 shrink-0 items-center">
         <button
-          className="flex items-center justify-center p-1.5 -ml-1 rounded-md text-fg-tertiary hover:bg-bg-subtle"
+          disabled={!canGoBack}
+          className={`flex items-center justify-center p-1.5 -ml-1 rounded-md transition-colors ${
+            canGoBack
+              ? 'text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary'
+              : 'text-fg-disabled cursor-not-allowed'
+          }`}
           onClick={() => navigate(-1)}>
           <ChevronLeft size={24} />
         </button>
@@ -128,12 +148,22 @@ export function Header({
 
       <div className="flex flex-1 items-center justify-center gap-2 px-2 @md:px-0">
         <button
-          className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle"
+          disabled={!canGoBack}
+          className={`hidden @md:flex rounded-md p-1.5 transition-colors ${
+            canGoBack
+              ? 'text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary'
+              : 'text-fg-disabled cursor-not-allowed'
+          }`}
           onClick={() => navigate(-1)}>
           <ChevronLeft size={18} />
         </button>
         <button
-          className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle"
+          disabled={!canGoForward}
+          className={`hidden @md:flex rounded-md p-1.5 transition-colors ${
+            canGoForward
+              ? 'text-fg-tertiary hover:bg-bg-subtle hover:text-fg-primary'
+              : 'text-fg-disabled cursor-not-allowed'
+          }`}
           onClick={() => navigate(1)}>
           <ChevronRight size={18} />
         </button>

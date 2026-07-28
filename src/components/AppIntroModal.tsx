@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, MessageSquare, Sparkles, Users, ChevronRight, Check } from 'lucide-react';
 
-interface OnboardingModalProps {
+interface AppIntroModalProps {
   onClose: () => void;
   onStartTour?: () => void;
 }
@@ -30,7 +30,7 @@ const slides = [
   },
 ];
 
-export function OnboardingModal({ onClose }: OnboardingModalProps) {
+export function AppIntroModal({ onClose, onStartTour }: AppIntroModalProps) {
   const [step, setStep] = useState<'question' | 'intro'>('question');
   const [slide, setSlide] = useState(0);
 
@@ -50,7 +50,10 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
     if (slide < slides.length - 1) {
       setSlide((s) => s + 1);
     } else {
-      handleClose();
+      // 슬라이드 소개는 그대로 두고, 마지막 '시작하기'에서 실제 화면을 짚어주는
+      // driver.js 투어로 자연스럽게 이어준다.
+      onClose();
+      onStartTour?.();
     }
   };
 

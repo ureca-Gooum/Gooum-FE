@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type MouseEvent as ReactMouseEvent } from 
 import { Outlet, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { OnboardingModal } from '@/components/OnboardingModal';
+import { AppIntroModal } from '@/components/AppIntroModal';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 type WindowMode = 'maximized' | 'windowed' | 'minimized' | 'closed';
@@ -16,6 +16,8 @@ export const MainLayout = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { startTour, hasSeenOnboarding } = useOnboardingTour();
 
+  // 로그인된 상태에서 온보딩 투어를 아직 본 적 없으면 최초 1회 자동으로 실행한다.
+  // (헤더의 물음표 아이콘을 눌러 여는 AppIntroModal은 별개의 '앱 소개' 팝업이라 여기서 건드리지 않는다.)
   useEffect(() => {
     const isLoggedIn = !!localStorage.getItem('accessToken');
     if (isLoggedIn && !isLoginPage && !hasSeenOnboarding()) {
@@ -216,7 +218,7 @@ export const MainLayout = () => {
         </div>
       </div>
       {showOnboarding && (
-        <OnboardingModal
+        <AppIntroModal
           onClose={() => setShowOnboarding(false)}
           onStartTour={hasSeenOnboarding() ? undefined : startTour}
         />

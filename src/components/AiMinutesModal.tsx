@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, X, Loader2, FileText, ArrowRight } from 'lucide-react';
 import { createAiSummaryClientOnly } from '@/api/documents';
@@ -71,8 +72,8 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+  return createPortal(
+    <div className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/30 pointer-events-auto">
       <div className="w-[400px] rounded-2xl bg-white p-5 shadow-xl">
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -176,6 +177,7 @@ export function AiMinutesModal({ roomId, messages, onClose, onCreated, onGoToCha
           )}
         </button>
       </div>
-    </div>
+    </div>,
+    document.getElementById('modal-root') || document.body
   );
 }

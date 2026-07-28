@@ -11,6 +11,7 @@ interface ConfirmModalProps {
   isDestructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  hideCancel?: boolean;
 }
 
 export function ConfirmModal({
@@ -22,6 +23,7 @@ export function ConfirmModal({
   isDestructive = false,
   onConfirm,
   onCancel,
+  hideCancel = false,
 }: ConfirmModalProps) {
   const [render, setRender] = useState(isOpen);
   const [visible, setVisible] = useState(false);
@@ -43,7 +45,7 @@ export function ConfirmModal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 ${
+      className={`absolute inset-0 z-[9999] flex items-center justify-center bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={onCancel}
@@ -77,12 +79,14 @@ export function ConfirmModal({
           </div>
 
           <div className="flex w-full gap-3">
-            <button
-              onClick={onCancel}
-              className="flex-1 rounded-xl bg-bg-canvas py-3.5 text-[15px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95 border border-border-default"
-            >
-              {cancelText}
-            </button>
+            {!hideCancel && (
+              <button
+                onClick={onCancel}
+                className="flex-1 rounded-xl bg-bg-canvas py-3.5 text-[15px] font-semibold text-fg-secondary transition-all hover:bg-bg-subtle hover:text-fg-primary active:scale-95 border border-border-default"
+              >
+                {cancelText}
+              </button>
+            )}
             <button
               onClick={() => {
                 onConfirm();
@@ -100,6 +104,6 @@ export function ConfirmModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.getElementById('modal-root') || document.body
   );
 }

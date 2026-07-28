@@ -275,6 +275,7 @@ export const DocsPage = () => {
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   // 온라인 접속자 이름 목록 (Set)
@@ -451,6 +452,8 @@ export const DocsPage = () => {
     if (activeFileId === id) {
       setActiveFileId(next.length > 0 ? next[0].documentId : null);
     }
+    
+    setIsDeleteConfirmOpen(false);
 
     try {
       await deleteDocument(id);
@@ -460,9 +463,9 @@ export const DocsPage = () => {
       if (activeFileId === id) setActiveFileId(id);
 
       if (error.response?.status === 403) {
-        alert('문서 생성자만 삭제할 수 있습니다.');
+        setErrorModalMessage('문서 생성자만 삭제할 수 있습니다.');
       } else {
-        alert('문서 삭제 중 오류가 발생했습니다.');
+        setErrorModalMessage('문서 삭제 중 오류가 발생했습니다.');
       }
     }
   };
@@ -827,7 +830,7 @@ export const DocsPage = () => {
 
           {/* 토스트 알림 */}
           {toastMessage && (
-            <div className="pointer-events-none fixed top-5 left-1/2 z-50 -translate-x-1/2">
+            <div className="pointer-events-none absolute top-5 left-1/2 z-50 -translate-x-1/2">
               <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 shadow-lg">
                 {isSaving ? (
                   <svg className="h-4 w-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
@@ -871,6 +874,17 @@ export const DocsPage = () => {
         isDestructive={true}
         onConfirm={confirmDeleteFile}
         onCancel={() => setIsDeleteConfirmOpen(false)}
+      />
+
+      <ConfirmModal
+        isOpen={!!errorModalMessage}
+        title="삭제 실패"
+        message={errorModalMessage || ''}
+        confirmText="확인"
+        hideCancel={true}
+        isDestructive={true}
+        onConfirm={() => setErrorModalMessage(null)}
+        onCancel={() => setErrorModalMessage(null)}
       />
     </div>
   );

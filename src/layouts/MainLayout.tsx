@@ -48,7 +48,7 @@ export const MainLayout = () => {
 
       if (isDragging) {
         newX = startRect.x + dx;
-        newY = startRect.y + dy;
+        newY = Math.max(0, startRect.y + dy);
       } else if (isResizing) {
         if (isResizing.includes('r')) newW = Math.max(375, startRect.w + dx);
         if (isResizing.includes('l')) {
@@ -165,8 +165,8 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container flex flex-col bg-bg-canvas rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
-    : '@container flex h-screen w-screen flex-col overflow-hidden bg-bg-canvas transition-all duration-300';
+    ? '@container relative flex flex-col bg-bg-canvas rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
+    : '@container relative flex h-screen w-screen flex-col overflow-hidden bg-bg-canvas transition-all duration-300';
 
   return (
     <div
@@ -203,8 +203,9 @@ export const MainLayout = () => {
             <Outlet />
           </div>
         </div>
+        {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
+        <div id="modal-root" className="absolute inset-0 z-[9999] pointer-events-none" />
       </div>
-      {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} />}
     </div>
   );
 };

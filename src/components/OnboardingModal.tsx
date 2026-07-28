@@ -54,7 +54,7 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-md transition-opacity">
+    <div className="fixed @md:absolute inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-md transition-opacity">
       <div className="relative w-[480px] overflow-hidden rounded-[2rem] bg-bg-default p-8 shadow-2xl transition-all duration-500">
         <div className="absolute right-6 top-6 z-10">
           <button

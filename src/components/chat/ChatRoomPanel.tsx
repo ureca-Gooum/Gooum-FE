@@ -7,6 +7,7 @@ import { ChatMessageInput } from '@/components/ChatMessageInput';
 import { ChatDateDivider } from '@/components/ChatDateDivider';
 import { MessageBubble } from '@/components/MessageBubble';
 import { MentionHoverCard } from '@/components/MentionHoverCard';
+import { RoomMembersTooltip } from '@/components/RoomMembersTooltip';
 import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
 import { EmptyState } from '@/components/EmptyState';
 import type { Message, PresenceStatus, TiptapDoc } from '@/types/chat';
@@ -95,11 +96,6 @@ interface ChatRoomPanelProps {
   targetMessageId?: string | null;
 }
 
-/**
- * 채팅 메인패널: 상단 헤더(아바타/이름/탭/알림·즐겨찾기) + 메시지 목록 + 하단 입력창.
- * ChatPage(채팅 탭)와 NotificationsPage(알림 상세)가 동일하게 사용하도록 프레젠테이셔널로 분리했다.
- * 실제 데이터/소켓/전송 로직은 `useRoomConversation` 훅에서 가져와 그대로 props로 내려주면 된다.
- */
 export function ChatRoomPanel({
   target,
   emptyHeaderLabel = '채팅방을 선택해주세요',
@@ -153,6 +149,23 @@ export function ChatRoomPanel({
     headerProfileHideTimeoutRef.current = window.setTimeout(() => setIsHeaderProfileHovered(false), 150);
   };
 
+  // 헤더 우측 "멤버 아바타 뭉치"에 호버했을 때 보여줄 전체 멤버 목록 툴팁 상태
+  const [isMembersHovered, setIsMembersHovered] = useState(false);
+  const [membersRect, setMembersRect] = useState<DOMRect | null>(null);
+  const membersHideTimeoutRef = useRef<number>();
+
+  const clearMembersHideTimeout = () => {
+    if (membersHideTimeoutRef.current) {
+      window.clearTimeout(membersHideTimeoutRef.current);
+      membersHideTimeoutRef.current = undefined;
+    }
+  };
+
+  const scheduleHideMembers = () => {
+    clearMembersHideTimeout();
+    membersHideTimeoutRef.current = window.setTimeout(() => setIsMembersHovered(false), 150);
+  };
+
   // 그룹방은 상대가 여러 명이라 헤더 프로필 카드 대상이 아니다. 1:1일 때만, userId가 있을 때만 호버 카드를 띄운다.
   const headerProfileMember: RoomMember | undefined =
     !target?.isGroup && target?.userId
@@ -172,7 +185,7 @@ export function ChatRoomPanel({
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
 
             <div
-              className={`flex items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
+              className={`flex min-w-0 flex-1 items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
               onMouseEnter={(e) => {
                 if (!headerProfileMember) return;
                 clearHeaderProfileHideTimeout();
@@ -192,7 +205,9 @@ export function ChatRoomPanel({
                 size={28}
               />
 
-              <h2 className="shrink-0 font-semibold text-fg-primary">{target.displayName}</h2>
+              <h2 className="truncate font-semibold text-fg-primary" title={target.displayName}>
+                {target.displayName}
+              </h2>
             </div>
 
             {isHeaderProfileHovered && headerProfileMember && headerProfileRect && (
@@ -236,8 +251,15 @@ export function ChatRoomPanel({
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
               {target.isGroup && roomMembers.length > 0 && (
-                <div className="flex shrink-0 items-center -space-x-2">
-                  {roomMembers.slice(0, 5).map((member) => (
+                <div
+                  className="relative flex shrink-0 items-center -space-x-2"
+                  onMouseEnter={(e) => {
+                    clearMembersHideTimeout();
+                    setMembersRect(e.currentTarget.getBoundingClientRect());
+                    setIsMembersHovered(true);
+                  }}
+                  onMouseLeave={scheduleHideMembers}>
+                  {roomMembers.slice(0, 3).map((member) => (
                     <div key={member.userId} className="rounded-full border-[3px] border-bg-default shadow-sm">
                       <Avatar
                         seed={member.userId}
@@ -248,10 +270,19 @@ export function ChatRoomPanel({
                       />
                     </div>
                   ))}
-                  {roomMembers.length > 5 && (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-[3px] border-bg-default bg-bg-subtle text-[10px] font-medium text-fg-tertiary shadow-sm">
-                      +{roomMembers.length - 5}
+                  {roomMembers.length > 3 && (
+                    <div
+                      className="flex h-6 items-center justify-center rounded-full border-[3px] border-bg-default px-1.5 text-[10px] font-medium shadow-sm"
+                      style={{
+                        backgroundColor: 'var(--color-avatar-group-bg)',
+                        color: 'var(--color-avatar-group-fg, #ffffff)',
+                      }}>
+                      {roomMembers.length}
                     </div>
+                  )}
+
+                  {isMembersHovered && membersRect && (
+                    <RoomMembersTooltip anchorRect={membersRect} members={roomMembers} />
                   )}
                 </div>
               )}
@@ -290,7 +321,6 @@ export function ChatRoomPanel({
           </div>
         ) : (
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4 text-sm text-fg-tertiary">
-
             {emptyHeaderLabel}
           </div>
         )

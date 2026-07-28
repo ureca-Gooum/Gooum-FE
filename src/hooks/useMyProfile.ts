@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import axios from 'axios';
 import api from '@/api/axiosInstance';
 import { getSocket } from '@/socket/socket';
@@ -101,14 +102,14 @@ export function useMyProfile(enabled: boolean = true) {
       setStatusMessage(newMessage);
     } catch (error) {
       console.error('상태 메시지 수정 실패:', error);
-      alert('상태 메시지 수정에 실패했습니다.');
+      showAlert('상태 메시지 수정에 실패했습니다.');
       throw error;
     }
   };
 
   const uploadImage = async (file: File) => {
     if (file.size > 5 * 1024 * 1024) {
-      alert('이미지 용량은 5MB 이하만 업로드 가능합니다.');
+      showAlert('이미지 용량은 5MB 이하만 업로드 가능합니다.');
       return;
     }
 
@@ -132,11 +133,11 @@ export function useMyProfile(enabled: boolean = true) {
       if (axios.isAxiosError(error)) {
         const httpStatus = error.response?.status;
         const serverMessage = error.response?.data?.message;
-        if (httpStatus === 400) alert(serverMessage || '파일 업로드 실패 (400)');
-        else if (httpStatus === 401) alert('인증이 필요합니다. 다시 로그인해 주세요.');
-        else alert('프로필 사진 변경에 실패했습니다.');
+        if (httpStatus === 400) showAlert(serverMessage || '파일 업로드 실패 (400)');
+        else if (httpStatus === 401) showAlert('인증이 필요합니다. 다시 로그인해 주세요.');
+        else showAlert('프로필 사진 변경에 실패했습니다.');
       } else {
-        alert('알 수 없는 오류가 발생했습니다.');
+        showAlert('알 수 없는 오류가 발생했습니다.');
       }
     }
   };

@@ -30,9 +30,9 @@ export function Avatar({
     return (
       <div
         className="flex shrink-0 items-center justify-center rounded-full"
-        style={{ width: size, height: size, backgroundColor: 'var(--color-fg-tertiary)' }}
+        style={{ width: size, height: size, backgroundColor: 'var(--color-avatar-group-bg)' }}
         title={`${memberCount}명`}>
-        <span className="font-semibold text-white" style={{ fontSize: size * 0.38 }}>
+        <span className="font-semibold" style={{ fontSize: size * 0.38, color: 'var(--color-avatar-group-fg)' }}>
           {memberCount}
         </span>
       </div>

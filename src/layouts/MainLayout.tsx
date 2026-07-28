@@ -165,13 +165,15 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container flex flex-col bg-bg-canvas rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
-    : '@container flex h-screen w-screen flex-col overflow-hidden bg-bg-canvas transition-all duration-300';
+    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
+    : '@container flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
+
+  const canvasStyle = { backgroundImage: 'var(--gradient-canvas)' };
 
   return (
     <div
       className={`transition-colors duration-300 ${isWindowed ? 'min-h-screen bg-gray-200/60 p-4 flex items-center justify-center' : ''}`}>
-      <div ref={windowRef} className={layoutClasses} style={windowedStyle}>
+      <div ref={windowRef} className={layoutClasses} style={{ ...windowedStyle, ...canvasStyle }}>
         {/* 리사이즈 핸들 */}
         <ResizeHandle edge="t" className="top-0 left-0 right-0 h-1.5 cursor-n-resize -mt-0.5" />
         <ResizeHandle edge="b" className="bottom-0 left-0 right-0 h-1.5 cursor-s-resize -mb-0.5" />

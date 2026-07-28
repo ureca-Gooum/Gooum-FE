@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import {
   getSocket,
   joinRoom,
@@ -260,7 +261,7 @@ export function useRoomConversation(
     if (isMessagesLoading) return;
 
     const behavior: ScrollBehavior = justEnteredRoom || roomChanged || targetChanged ? 'auto' : 'smooth';
-    
+
     const scroll = () => {
       if (options.targetMessageId) {
         const el = document.getElementById(`message-${options.targetMessageId}`);
@@ -359,7 +360,7 @@ export function useRoomConversation(
       );
     } catch (err) {
       console.error('문서 생성 실패:', err);
-      alert('문서를 만들지 못했어요. 다시 시도해주세요.');
+      showAlert('문서를 만들지 못했어요. 다시 시도해주세요.');
     }
   };
 
@@ -371,7 +372,7 @@ export function useRoomConversation(
       await deleteMessageApi(messageId);
       applyMessageDeleted(roomId, messageId);
     } catch (err: any) {
-      alert(err.message);
+      showAlert(err.message);
     }
   };
 

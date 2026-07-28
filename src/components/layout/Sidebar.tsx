@@ -139,9 +139,14 @@ export function Sidebar() {
               {({ isActive }) => (
                 <>
                   <span
-                    className={`absolute left-0 top-1/2 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-primary transition-all duration-300 ease-out ${
-                      isActive ? 'h-9 opacity-100' : 'h-0 opacity-0 group-hover:h-5 group-hover:opacity-100'
-                    }`}
+                    className={`absolute bg-brand-primary transition-all duration-300 ease-out
+                      bottom-0 left-1/2 -translate-x-1/2 rounded-t-full
+                      @md:bottom-auto @md:left-0 @md:top-1/2 @md:translate-x-0 @md:-translate-y-1/2 @md:rounded-none @md:rounded-r-full
+                      ${
+                        isActive
+                          ? 'h-[3px] w-9 opacity-100 @md:w-[3px] @md:h-9'
+                          : 'h-[3px] w-0 opacity-0 group-hover:w-5 group-hover:opacity-100 @md:w-[3px] @md:h-0 @md:group-hover:h-5'
+                      }`}
                   />
                   <div className="relative">
                     <Icon size={20} fill={isActive ? 'currentColor' : 'none'} />

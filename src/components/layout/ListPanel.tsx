@@ -11,13 +11,14 @@ interface ListPanelProps {
   headerHeight?: number;
   isSidebarOpen?: boolean;
   onClose?: () => void;
+  className?: string;
 }
 
 const MIN_WIDTH = 260;
 const MAX_WIDTH = 480;
 const DEFAULT_WIDTH = 320;
 
-export function ListPanel({ header, children, headerHeight, isSidebarOpen = false, onClose }: ListPanelProps) {
+export function ListPanel({ header, children, headerHeight, isSidebarOpen = false, onClose, className = '' }: ListPanelProps) {
   // 오른쪽 가장자리를 드래그해서 너비를 조절할 수 있게 한다. (MIN_WIDTH ~ MAX_WIDTH 사이로 제한)
   const [width, setWidth] = useState(DEFAULT_WIDTH);
   const [isDragging, setIsDragging] = useState(false);
@@ -60,20 +61,18 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
 
   return (
     <>
-      {/* 모바일 환경: 사이드바 뒷 배경 오버레이 */}
+      {/* 모바일 환경: 사이드바 뒷 배경 오버레이 (drawer 모드일 때만) */}
       {isSidebarOpen && onClose && (
         <div className="absolute inset-0 bg-black/20 z-30 @md:hidden" onClick={onClose} />
       )}
       
       {/* 
-        모바일(@md 미만): absolute로 띄우고 translate로 슬라이드 처리 
-        데스크탑(@md 이상): relative로 띄우고 항상 보임
+        모바일/데스크탑 모두 일반적인 flex 레이아웃으로 동작하도록 수정 
+        (ChatPage, NotificationsPage에서 className을 통해 hidden/flex 처리함)
       */}
       <section 
-        className={`absolute z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default shadow-lg transition-transform duration-300 @md:relative @md:flex @md:translate-x-0 @md:shadow-none ${
-          isSidebarOpen ? 'translate-x-0 flex' : '-translate-x-full flex'
-        }`}
-        style={{ width: `${width}px` }}
+        className={`relative z-40 h-full shrink-0 flex-col bg-bg-canvas border-r border-border-default transition-transform duration-300 w-full @md:w-[var(--panel-width)] ${className}`}
+        style={{ '--panel-width': `${width}px` } as React.CSSProperties}
       >
         {headerHeight ? (
           <div
@@ -84,6 +83,7 @@ export function ListPanel({ header, children, headerHeight, isSidebarOpen = fals
         ) : (
           <div className="border-b border-border-default p-4">{header}</div>
         )}
+
         <div className="flex-1 overflow-y-auto">{children}</div>
 
         {/* 헤더 높이가 고정된 경우, 그 보더가 gap 너머 메인패널까지 끊기지 않고 이어지도록 다리를 놓는다. */}

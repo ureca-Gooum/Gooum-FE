@@ -210,7 +210,7 @@ export const ChatPage = () => {
   if (isLoading) {
     return (
       <div className="flex min-w-0 flex-1 gap-3 overflow-hidden">
-        <ListPanel headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
+        <ListPanel className="w-80" headerHeight={63} header={<Skeleton className="h-5 w-14 rounded-full" />}>
           <div className="flex flex-col gap-1 py-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <RoomListItemSkeleton key={i} />
@@ -246,8 +246,9 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 gap-3 overflow-hidden relative">
+    <div className="flex min-w-0 flex-1 overflow-hidden relative w-full h-full">
       <ListPanel
+        className={selectedRoomId ? 'hidden @md:flex' : 'flex'}
         headerHeight={63}
         isSidebarOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
@@ -316,6 +317,7 @@ export const ChatPage = () => {
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
+      <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
       <ChatRoomPanel
         target={
           selectedRoom
@@ -369,8 +371,8 @@ export const ChatPage = () => {
         onDeleteMessage={conversation.deleteMessage}
         onStartDirectMessage={handleStartDirectMessage}
         targetMessageId={targetMessageId}
-        onSidebarToggle={() => setIsSidebarOpen(true)}
       />
+      </div>
     </div>
   );
 };

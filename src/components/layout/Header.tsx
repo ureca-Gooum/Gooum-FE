@@ -11,9 +11,10 @@ interface HeaderProps {
   onClose?: () => void;
   isMaximized?: boolean;
   onMouseDown?: (e: React.MouseEvent) => void;
+  onHelpClick?: () => void;
 }
 
-export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, onMouseDown }: HeaderProps = {}) {
+export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, onMouseDown, onHelpClick }: HeaderProps = {}) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -93,18 +94,27 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
     <header
       className={`flex h-14 shrink-0 items-center bg-bg-canvas px-3 ${!isMaximized ? 'cursor-move' : ''}`}
       onMouseDown={onMouseDown}>
-      {/* 왼쪽: 로고 */}
-      <HeaderLogo />
+      {/* 왼쪽: 로고 (PC) / 뒤로가기 (모바일) */}
+      <div className="hidden @md:block">
+        <HeaderLogo />
+      </div>
+      <div className="flex @md:hidden w-10 shrink-0 items-center">
+        <button 
+          className="flex items-center justify-center p-1.5 -ml-1 rounded-md text-fg-tertiary hover:bg-bg-subtle" 
+          onClick={() => navigate(-1)}>
+          <ChevronLeft size={24} />
+        </button>
+      </div>
 
-      <div className="flex flex-1 items-center justify-center gap-2">
-        <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
+      <div className="flex flex-1 items-center justify-center gap-2 px-2 @md:px-0">
+        <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(-1)}>
           <ChevronLeft size={18} />
         </button>
-        <button className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(1)}>
+        <button className="hidden @md:flex rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle" onClick={() => navigate(1)}>
           <ChevronRight size={18} />
         </button>
 
-        <div className="relative w-full max-w-md" ref={dropdownRef}>
+        <div className="relative w-full max-w-[400px] @md:max-w-md" ref={dropdownRef}>
           <div
             className={`flex w-full items-center gap-2 rounded-lg border bg-bg-default px-3 py-1.5 transition-colors ${
               isFocused ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-border-default'
@@ -210,8 +220,11 @@ export function Header({ onMinimize, onMaximize, onClose, isMaximized = true, on
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div id="header-tabs-portal" className="flex @md:hidden w-10 shrink-0 items-center justify-end min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden pr-1" />
+
+      <div className="hidden @md:flex items-center gap-1 ml-auto">
         <button
+          onClick={onHelpClick}
           className="flex h-7 w-7 items-center justify-center rounded hover:bg-bg-subtle text-fg-tertiary"
           title="도움말">
           <HelpCircle size={16} />

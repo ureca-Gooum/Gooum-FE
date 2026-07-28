@@ -32,12 +32,8 @@ const slides = [
 export function OnboardingModal({ onClose }: OnboardingModalProps) {
   const [step, setStep] = useState<'question' | 'intro'>('question');
   const [slide, setSlide] = useState(0);
-  const [hideNextTime, setHideNextTime] = useState(false);
 
   const handleClose = () => {
-    if (hideNextTime) {
-      localStorage.setItem('gooum_hide_onboarding', 'true');
-    }
     onClose();
   };
 
@@ -150,24 +146,7 @@ export function OnboardingModal({ onClose }: OnboardingModalProps) {
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-center border-t border-border-default pt-6">
-          <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-fg-tertiary transition-colors hover:text-fg-secondary">
-            <div className="relative flex items-center justify-center">
-              <input
-                type="checkbox"
-                checked={hideNextTime}
-                onChange={(e) => setHideNextTime(e.target.checked)}
-                className="peer h-4 w-4 appearance-none rounded border border-border-default bg-bg-canvas checked:border-brand-primary checked:bg-brand-primary transition-all cursor-pointer"
-              />
-              <Check
-                size={12}
-                className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none"
-                strokeWidth={3}
-              />
-            </div>
-            다시 표시하지 않음
-          </label>
-        </div>
+
       </div>
     </div>
   );

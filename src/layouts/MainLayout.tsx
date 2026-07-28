@@ -207,7 +207,7 @@ export const MainLayout = () => {
           />
         )}
         <div
-          className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-1 @md:pb-2.5 @md:pr-2.5'}`}>
+          className={`flex flex-col @md:flex-row flex-1 overflow-hidden @md:gap-4 ${isLoginPage ? '' : '@md:pt-2 @md:pb-6 @md:pr-5'}`}>
           {!isLoginPage && (
             <div className="order-2 @md:order-1 shrink-0 z-50 border-t border-border-default @md:border-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] @md:shadow-none h-14 @md:h-full">
               <Sidebar />

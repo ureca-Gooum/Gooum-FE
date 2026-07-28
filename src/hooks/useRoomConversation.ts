@@ -35,16 +35,6 @@ interface UseRoomConversationOptions {
   targetMessageId?: string | null;
 }
 
-/**
- * 특정 채팅방(roomId) 하나에 대한 대화 상태를 전부 관리하는 훅.
- * - 과거 메시지 로딩 + 실시간 수신/삭제 소켓
- * - 방 멤버 목록(멘션용)
- * - 메시지 전송(텍스트/파일/문서카드), 삭제
- * - 타이핑 인디케이터
- * - AI 회의록용 "카톡 캡쳐처럼 메시지 범위 선택" 모드
- *
- * roomId만 다르면 채팅 페이지, 알림 페이지 등 어디서든 동일하게 동작한다.
- */
 export function useRoomConversation(
   roomId: string | null,
   currentUserId: string | null,
@@ -103,7 +93,6 @@ export function useRoomConversation(
     };
   }, []);
 
-  // 방 멤버 목록 (멘션 자동완성용)
   useEffect(() => {
     if (!roomId) {
       setRoomMembers([]);
@@ -138,25 +127,20 @@ export function useRoomConversation(
 
     if (socket?.connected) {
       doJoin();
-    } else {
-      socket?.once('connect', doJoin);
     }
+    // 재연결/탭 전환 시 서버 쪽 room 멤버십이 사라지므로, 'connect'와 visibilitychange(visible) 모두에서 재입장한다.
+    socket?.on('connect', doJoin);
 
-    // 새로고침(하드 리로드)은 React 언마운트 클린업이 안정적으로 실행되지 않는다.
-    // usePresence의 beforeunload 처리와 동일한 이유로, 여기서도 leaveRoom을 명시적으로 한 번 더 보내야
-    // 서버가 "읽음" 처리를 확정한다. 이게 없으면 방을 나가지 않고 새로고침했을 때 방금 내가 보낸
-    // 메시지까지 안읽음으로 남는다.
-    //
-    // 주의: beforeunload 시점의 소켓(WebSocket) emit은 전송이 보장되지 않는다 - 브라우저가 페이지를
-    // 정리하면서 emit이 실제로 서버까지 도달하기 전에 연결을 끊어버릴 수 있다 (fetch의 keepalive나
-    // navigator.sendBeacon과 달리 WebSocket엔 그런 보장이 없다). 그래서 beforeunload 하나만 믿지 않고,
-    // 그보다 먼저 발생하고(소켓이 아직 완전히 살아있는 시점) 새로고침/탭 닫기 모두에서 안정적으로 발생하는
-    // visibilitychange('hidden')·pagehide 시점에도 같은 이벤트를 보내서 실제로 도달할 확률을 높인다.
+    // beforeunload emit은 전송이 보장되지 않아 pagehide·visibilitychange(hidden)에도 leaveRoom을 보낸다.
     const confirmLeaveOnUnload = () => {
       leaveSocketRoom(roomId);
     };
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') confirmLeaveOnUnload();
+      if (document.visibilityState === 'hidden') {
+        confirmLeaveOnUnload();
+      } else if (document.visibilityState === 'visible') {
+        doJoin();
+      }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pagehide', confirmLeaveOnUnload);
@@ -175,6 +159,7 @@ export function useRoomConversation(
       .finally(() => setIsMessagesLoading(false));
 
     return () => {
+      socket?.off('connect', doJoin);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', confirmLeaveOnUnload);
       window.removeEventListener('beforeunload', confirmLeaveOnUnload);

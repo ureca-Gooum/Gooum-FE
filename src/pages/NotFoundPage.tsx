@@ -55,7 +55,7 @@ export const NotFoundPage = () => {
           style={{
             fontSize: 'clamp(140px, 28vw, 260px)',
             transform: 'rotate(-6deg) translate(2%, 6%)',
-            zIndex: -1,
+            zIndex: 0,
           }}>
           404
         </span>
@@ -71,16 +71,16 @@ export const NotFoundPage = () => {
         </div>
       </div>
 
-      <h1 className="mb-3 text-[24px] font-bold tracking-tight text-[#1f2937] sm:text-[28px]">
+      <h1 className="relative z-10 mb-3 text-[24px] font-bold tracking-tight text-[#1f2937] sm:text-[28px]">
         페이지를 찾을 수 없어요
       </h1>
-      <p className="mb-8 max-w-[360px] text-[13.5px] font-medium leading-relaxed text-gray-500 sm:text-[14.5px]">
+      <p className="relative z-10 mb-8 max-w-[360px] text-[13.5px] font-medium leading-relaxed text-gray-500 sm:text-[14.5px]">
         요청하신 페이지가 삭제되었거나
         <br />
         주소가 변경되었을 수 있어요.
       </p>
 
-      <div className="flex items-center gap-4 text-[14px] font-semibold">
+      <div className="relative z-10 flex items-center gap-4 text-[14px] font-semibold">
         <button
           onClick={handleGoHome}
           className="text-brand-primary transition-colors hover:text-brand-secondary cursor-pointer">

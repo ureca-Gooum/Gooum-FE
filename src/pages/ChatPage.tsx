@@ -272,6 +272,7 @@ export const ChatPage = () => {
             <h2 className="font-semibold text-fg-primary">채팅</h2>
             <button
               onClick={() => setIsModalOpen(true)}
+              data-tour="new-chat"
               className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle">
               <SquarePen size={18} />
             </button>
@@ -333,60 +334,60 @@ export const ChatPage = () => {
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
       <div className={`flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
-      <ChatRoomPanel
-        target={
-          selectedRoom
-            ? {
-                id: selectedRoom.id,
-                displayName: selectedRoom.displayName,
-                displayImage: selectedRoom.displayImage,
-                presence: selectedRoom.presence,
-                isGroup: selectedRoom.type === 'group',
-                isFavorite: selectedRoom.isFavorite,
-                userId: selectedRoom.otherUserId,
-                memberCount: selectedRoom.memberCount,
-              }
-            : null
-        }
-        emptyHeaderLabel="채팅방을 선택해주세요"
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={(key) => setActiveTab(key as PanelTab)}
-        chatTabKey="chat"
-        renderOtherTab={(tabKey) =>
-          tabKey === 'file' ? (
-            <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
-          ) : selectedRoomId ? (
-            <RoomDocumentsTab roomId={selectedRoomId} />
-          ) : null
-        }
-        isMuted={selectedRoom ? mutedRoomIds.includes(selectedRoom.id) : false}
-        onToggleMute={selectedRoom ? () => toggleMute(selectedRoom.id) : undefined}
-        onToggleFavorite={
-          selectedRoom ? () => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite) : undefined
-        }
-        messages={conversation.messages}
-        isMessagesLoading={conversation.isMessagesLoading}
-        roomMembers={conversation.roomMembers}
-        mentionCandidates={conversation.allMembers}
-        messagesEndRef={conversation.messagesEndRef}
-        isSelectingMessages={conversation.isSelectingMessages}
-        selectedMessageIds={conversation.selectedMessageIds}
-        onToggleMessageSelect={conversation.toggleMessageSelect}
-        onStartSelecting={conversation.startSelecting}
-        onCancelSelecting={conversation.cancelSelecting}
-        onResetSelection={conversation.resetSelection}
-        onConfirmSelection={handleConfirmSelection}
-        typingLabel={conversation.typingLabel ?? undefined}
-        onSend={conversation.sendMessage}
-        onSendFile={conversation.sendFile}
-        onTyping={conversation.notifyTyping}
-        onOpenAiMinutes={conversation.startSelecting}
-        onCreateDocument={conversation.createDocumentMessage}
-        onDeleteMessage={conversation.deleteMessage}
-        onStartDirectMessage={handleStartDirectMessage}
-        targetMessageId={targetMessageId}
-      />
+        <ChatRoomPanel
+          target={
+            selectedRoom
+              ? {
+                  id: selectedRoom.id,
+                  displayName: selectedRoom.displayName,
+                  displayImage: selectedRoom.displayImage,
+                  presence: selectedRoom.presence,
+                  isGroup: selectedRoom.type === 'group',
+                  isFavorite: selectedRoom.isFavorite,
+                  userId: selectedRoom.otherUserId,
+                  memberCount: selectedRoom.memberCount,
+                }
+              : null
+          }
+          emptyHeaderLabel="채팅방을 선택해주세요"
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(key) => setActiveTab(key as PanelTab)}
+          chatTabKey="chat"
+          renderOtherTab={(tabKey) =>
+            tabKey === 'file' ? (
+              <RoomFilesTab messages={conversation.messages} isLoading={conversation.isMessagesLoading} />
+            ) : selectedRoomId ? (
+              <RoomDocumentsTab roomId={selectedRoomId} />
+            ) : null
+          }
+          isMuted={selectedRoom ? mutedRoomIds.includes(selectedRoom.id) : false}
+          onToggleMute={selectedRoom ? () => toggleMute(selectedRoom.id) : undefined}
+          onToggleFavorite={
+            selectedRoom ? () => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite) : undefined
+          }
+          messages={conversation.messages}
+          isMessagesLoading={conversation.isMessagesLoading}
+          roomMembers={conversation.roomMembers}
+          mentionCandidates={conversation.allMembers}
+          messagesEndRef={conversation.messagesEndRef}
+          isSelectingMessages={conversation.isSelectingMessages}
+          selectedMessageIds={conversation.selectedMessageIds}
+          onToggleMessageSelect={conversation.toggleMessageSelect}
+          onStartSelecting={conversation.startSelecting}
+          onCancelSelecting={conversation.cancelSelecting}
+          onResetSelection={conversation.resetSelection}
+          onConfirmSelection={handleConfirmSelection}
+          typingLabel={conversation.typingLabel ?? undefined}
+          onSend={conversation.sendMessage}
+          onSendFile={conversation.sendFile}
+          onTyping={conversation.notifyTyping}
+          onOpenAiMinutes={conversation.startSelecting}
+          onCreateDocument={conversation.createDocumentMessage}
+          onDeleteMessage={conversation.deleteMessage}
+          onStartDirectMessage={handleStartDirectMessage}
+          targetMessageId={targetMessageId}
+        />
       </div>
     </div>
   );

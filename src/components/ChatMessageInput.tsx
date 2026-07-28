@@ -57,19 +57,6 @@ const Toolbar = ({
   onAttachClick?: () => void;
   isAttachDisabled?: boolean;
 }) => {
-  const [, forceUpdate] = useState(0);
-
-  useEffect(() => {
-    if (!editor) return;
-    const rerender = () => forceUpdate((n) => n + 1);
-    editor.on('transaction', rerender);
-    editor.on('selectionUpdate', rerender);
-    return () => {
-      editor.off('transaction', rerender);
-      editor.off('selectionUpdate', rerender);
-    };
-  }, [editor]);
-
   if (!editor) return null;
 
   const handleToggleLink = () => {
@@ -299,6 +286,20 @@ export const ChatMessageInput = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docEditor]);
 
+  // 커서 위치나 선택 영역이 바뀔 때마다 툴바를 다시 그려서 "굵게/기울임/링크 등이 지금 켜져 있는지"가
+  // 실시간으로 반영되도록 한다. (isActive()는 스냅샷이라 별도로 리렌더를 걸어줘야 함)
+  const [, forceToolbarUpdate] = useState(0);
+  useEffect(() => {
+    if (!editor) return;
+    const rerender = () => forceToolbarUpdate((n) => n + 1);
+    editor.on('transaction', rerender);
+    editor.on('selectionUpdate', rerender);
+    return () => {
+      editor.off('transaction', rerender);
+      editor.off('selectionUpdate', rerender);
+    };
+  }, [editor]);
+
   const handleSend = () => {
     // 업로드가 아직 끝나지 않았으면 전송을 막는다 (fileUrl이 아직 없음)
     if (isUploading) return;
@@ -488,6 +489,7 @@ export const ChatMessageInput = ({
           <button
             type="button"
             onClick={onOpenAiMinutes}
+            data-tour="ai-summary"
             className="rounded-md p-1.5 text-fg-tertiary hover:bg-bg-subtle hover:text-brand-primary"
             title="AI 회의록 생성">
             <Sparkles size={18} />

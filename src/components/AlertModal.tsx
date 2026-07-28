@@ -1,58 +1,54 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Info, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { subscribeAlert, type AlertOptions } from '@/utils/alert';
 
+/**
+ * 앱 전역에서 window.alert() 대신 쓰는 알림 모달.
+ * 캐릭터 없이 텍스트 + 버튼 하나로 심플하게, ConfirmModal과 같은 톤으로 맞췄다.
+ * main.tsx 루트에 한 번만 마운트해두면, 어디서든 showAlert()로 띄울 수 있다.
+ */
 export function AlertModal() {
   const [options, setOptions] = useState<AlertOptions | null>(null);
-  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    return subscribeAlert((opts) => {
-      setOptions(opts);
-      requestAnimationFrame(() => setVisible(true));
-    });
+    return subscribeAlert((opts) => setOptions(opts));
   }, []);
 
-  const handleClose = () => {
-    setVisible(false);
-    setTimeout(() => setOptions(null), 200);
-  };
-
-  if (!options) return null;
+  const handleClose = () => setOptions(null);
 
   return createPortal(
-    <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity duration-200 ${
-        visible ? 'opacity-100' : 'opacity-0'
-      }`}
-      onClick={handleClose}>
-      <div
-        className={`w-[340px] rounded-2xl bg-bg-default p-5 shadow-xl transition-all duration-200 ${
-          visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        }`}
-        onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-              options.isDestructive ? 'bg-error/10 text-error' : 'bg-brand-soft text-brand-primary'
-            }`}>
-            {options.isDestructive ? <AlertTriangle size={18} /> : <Info size={18} />}
-          </div>
-          <div className="flex-1 pt-1">
-            {options.title && <p className="mb-1 text-[15px] font-semibold text-fg-primary">{options.title}</p>}
-            <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg-secondary">{options.message}</p>
-          </div>
-        </div>
+    <AnimatePresence>
+      {options && (
+        <motion.div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          onClick={handleClose}>
+          <motion.div
+            className="w-[320px] rounded-lg bg-bg-default p-6 pt-7 shadow-2xl"
+            initial={{ opacity: 0, scale: 0.9, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}>
+            {options.title && <h2 className="mb-2 text-lg font-bold text-fg-primary">{options.title}</h2>}
+            <p className="mb-6 text-[13px] leading-relaxed whitespace-pre-wrap text-fg-secondary">{options.message}</p>
 
-        <button
-          onClick={handleClose}
-          autoFocus
-          className="mt-4 w-full rounded-lg bg-brand-primary py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-brand-primary/90 active:scale-[0.98]">
-          확인
-        </button>
-      </div>
-    </div>,
+            <button
+              onClick={handleClose}
+              autoFocus
+              className={`w-full rounded-lg py-2 text-[13px] font-semibold text-white shadow-sm transition-all active:scale-95 ${
+                options.isDestructive ? 'bg-error hover:bg-error/90' : 'bg-brand-primary hover:bg-brand-primary/90'
+              }`}>
+              확인
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body,
   );
 }

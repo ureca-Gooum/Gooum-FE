@@ -400,7 +400,7 @@ export const ChatPage = () => {
           emptyHeaderLabel="채팅방을 선택해주세요"
           tabs={tabs}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={(key) => setActiveTab(key as PanelTab)}
           chatTabKey="chat"
           renderOtherTab={(tabKey) =>
             tabKey === 'file' ? (

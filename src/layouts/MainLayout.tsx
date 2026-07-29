@@ -173,8 +173,8 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden min-w-[840px] min-h-[911px]'
-    : '@container flex h-screen w-full min-w-[840px] min-h-[911px] flex-col overflow-hidden transition-all duration-300';
+    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
+    : '@container flex h-full w-full flex-col overflow-hidden transition-all duration-300 [@media(pointer:fine)]:min-w-[840px] [@media(pointer:fine)]:min-h-[911px]';
 
   // Header/Sidebar/ListPanel은 전부 단색 bg-bg-canvas를 쓰기 때문에, 창 배경을 그라데이션으로
   // 두면 그 지점의 색이 미묘하게 달라져 패널 경계가 선처럼 보이는 문제가 있었다.
@@ -183,7 +183,7 @@ export const MainLayout = () => {
 
   return (
     <div
-      className={`transition-colors duration-300 ${isWindowed ? 'min-h-screen bg-gray-200/60 p-4 flex items-center justify-center' : ''}`}>
+      className={`transition-colors duration-300 ${isWindowed ? 'min-h-screen bg-gray-200/60 p-4 flex items-center justify-center' : 'h-screen w-screen overflow-auto'}`}>
       <div ref={windowRef} className={layoutClasses} style={{ ...windowedStyle, ...canvasStyle }}>
         {/* 리사이즈 핸들 */}
         <ResizeHandle edge="t" className="top-0 left-0 right-0 h-1.5 cursor-n-resize -mt-0.5" />

@@ -8,6 +8,7 @@ import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
 import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 import { NewChatModal } from '@/components/NewChatModal';
 import { InviteMemberModal } from '@/components/chat/InviteMemberModal';
+import { RenameRoomModal } from '@/components/chat/RenameRoomModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { RoomListItemSkeleton } from '@/components/RoomListItemSkeleton';
 import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
@@ -44,6 +45,7 @@ export const ChatPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
@@ -232,12 +234,15 @@ export const ChatPage = () => {
 
   const handleMembersInvited = (addedMembers: RoomMember[]) => {
     conversation.addRoomMembers(addedMembers);
-    if (selectedRoomId) {
-      setRooms((prev) =>
-        prev.map((r) => (r.id === selectedRoomId ? { ...r, memberCount: r.memberCount + addedMembers.length } : r))
-      );
-    }
+    setRooms((prev) =>
+      prev.map((r) => (r.id === selectedRoomId ? { ...r, memberCount: r.memberCount + addedMembers.length } : r))
+    );
     setIsInviteModalOpen(false);
+  };
+
+  const handleRoomRenamed = (newName: string) => {
+    setRooms((prev) => prev.map((r) => (r.id === selectedRoomId ? { ...r, displayName: newName } : r)));
+    setIsRenameModalOpen(false);
   };
 
   const handleConfirmSelection = () => {
@@ -369,6 +374,14 @@ export const ChatPage = () => {
       )}
 
       <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
+        {isRenameModalOpen && selectedRoomId && selectedRoom && (
+          <RenameRoomModal
+            roomId={selectedRoomId}
+            currentName={selectedRoom.displayName}
+            onClose={() => setIsRenameModalOpen(false)}
+            onRenamed={handleRoomRenamed}
+          />
+        )}
         <ChatRoomPanel
           target={
             selectedRoom
@@ -387,7 +400,7 @@ export const ChatPage = () => {
           emptyHeaderLabel="채팅방을 선택해주세요"
           tabs={tabs}
           activeTab={activeTab}
-          onTabChange={(key) => setActiveTab(key as PanelTab)}
+          onTabChange={setActiveTab}
           chatTabKey="chat"
           renderOtherTab={(tabKey) =>
             tabKey === 'file' ? (
@@ -404,6 +417,7 @@ export const ChatPage = () => {
           onInviteMembers={
             selectedRoom?.type === 'group' ? () => setIsInviteModalOpen(true) : undefined
           }
+          onRenameGroup={selectedRoom?.type === 'group' ? () => setIsRenameModalOpen(true) : undefined}
           messages={conversation.messages}
           isMessagesLoading={conversation.isMessagesLoading}
           roomMembers={conversation.roomMembers}

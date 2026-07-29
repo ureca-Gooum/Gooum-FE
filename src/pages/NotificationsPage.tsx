@@ -21,6 +21,7 @@ import type { RoomMember } from '@/types/room';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
+import { RenameRoomModal } from '@/components/chat/RenameRoomModal';
 import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 
 type NotificationMainTab = 'chat' | 'file' | 'aiMinutes';
@@ -46,6 +47,7 @@ export const NotificationsPage = () => {
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
 
   // 알림에 연결된 채팅방 상세 (아바타/이름/즐겨찾기 등 헤더 표시용) - ChatPage의 rooms 리스트 대신
   // 선택된 알림 하나에 대해서만 fetchRoomDetail로 가져온다. mapRoomFromApi를 그대로 재사용해서
@@ -141,6 +143,11 @@ export const NotificationsPage = () => {
     conversation.addRoomMembers(addedMembers);
     setRoom((prev) => (prev ? { ...prev, memberCount: prev.memberCount + addedMembers.length } : prev));
     setIsInviteModalOpen(false);
+  };
+
+  const handleRoomRenamed = (newName: string) => {
+    setRoom((prev) => (prev ? { ...prev, displayName: newName } : prev));
+    setIsRenameModalOpen(false);
   };
 
   const filteredNotifications = notifications.filter((noti) => {
@@ -429,6 +436,14 @@ export const NotificationsPage = () => {
       )}
 
       <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
+        {isRenameModalOpen && room && roomId && (
+          <RenameRoomModal
+            roomId={roomId}
+            currentName={room.displayName}
+            onClose={() => setIsRenameModalOpen(false)}
+            onRenamed={handleRoomRenamed}
+          />
+        )}
         <ChatRoomPanel
           target={
             room
@@ -484,6 +499,7 @@ export const NotificationsPage = () => {
           onTyping={conversation.notifyTyping}
           onOpenAiMinutes={conversation.startSelecting}
           onCreateDocument={conversation.createDocumentMessage}
+          onRenameGroup={room?.type === 'group' ? () => setIsRenameModalOpen(true) : undefined}
           onDeleteMessage={conversation.deleteMessage}
           onStartDirectMessage={handleStartDirectMessage}
           targetMessageId={selectedNoti?.messageId}

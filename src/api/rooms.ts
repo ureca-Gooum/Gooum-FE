@@ -82,3 +82,12 @@ export async function updateRoomNotificationSettings(
     handleApiError(err, '채팅방 알림 설정에 실패했어요.');
   }
 }
+
+export async function updateRoomName(roomId: string, name: string): Promise<RoomApiResponse> {
+  try {
+    const res = await axios.patch<RoomApiResponse>(`/api/rooms/${roomId}`, { name });
+    return res.data;
+  } catch (err: any) {
+    handleApiError(err, '채팅방 이름을 변경하지 못했어요.');
+  }
+}

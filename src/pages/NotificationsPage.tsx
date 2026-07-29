@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { MessageCircle, FileText, AtSign } from 'lucide-react';
 import { ListPanel } from '@/components/layout/ListPanel';
 import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
+import { InviteMemberModal } from '@/components/chat/InviteMemberModal';
 import { NotificationListItem } from '@/components/NotificationListItem';
 import { DateDivider } from '@/components/DateDivider';
 import { fetchRoomDetail, toggleFavorite } from '@/api/rooms';
@@ -16,6 +17,7 @@ import { stripSenderPrefix } from '@/utils/notification';
 import { formatTime, getDateGroupLabel } from '@/utils/formatTime';
 import type { NotificationItem } from '@/types/notification';
 import type { Room } from '@/types/chat';
+import type { RoomMember } from '@/types/room';
 import type { NewNotificationPayload } from '@/types/socket';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/api/notifications';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
@@ -43,6 +45,7 @@ export const NotificationsPage = () => {
 
   const [activeMainTab, setActiveMainTab] = useState<NotificationMainTab>('chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // 알림에 연결된 채팅방 상세 (아바타/이름/즐겨찾기 등 헤더 표시용) - ChatPage의 rooms 리스트 대신
   // 선택된 알림 하나에 대해서만 fetchRoomDetail로 가져온다. mapRoomFromApi를 그대로 재사용해서
@@ -132,6 +135,12 @@ export const NotificationsPage = () => {
     } catch {
       setRoom((prev) => (prev ? { ...prev, isFavorite: current } : prev));
     }
+  };
+
+  const handleMembersInvited = (addedMembers: RoomMember[]) => {
+    conversation.addRoomMembers(addedMembers);
+    setRoom((prev) => (prev ? { ...prev, memberCount: prev.memberCount + addedMembers.length } : prev));
+    setIsInviteModalOpen(false);
   };
 
   const filteredNotifications = notifications.filter((noti) => {
@@ -410,6 +419,15 @@ export const NotificationsPage = () => {
         </div>
       </ListPanel>
 
+      {isInviteModalOpen && roomId && (
+        <InviteMemberModal
+          roomId={roomId}
+          existingMemberIds={conversation.roomMembers.map((m) => m.userId)}
+          onClose={() => setIsInviteModalOpen(false)}
+          onInvited={handleMembersInvited}
+        />
+      )}
+
       <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedNotiId ? 'flex' : 'hidden @md:flex'}`}>
         <ChatRoomPanel
           target={
@@ -447,6 +465,7 @@ export const NotificationsPage = () => {
           isMuted={room ? mutedRoomIds.includes(room.id) : false}
           onToggleMute={room ? () => toggleMute(room.id) : undefined}
           onToggleFavorite={room ? handleToggleFavorite : undefined}
+          onInviteMembers={room?.type === 'group' ? () => setIsInviteModalOpen(true) : undefined}
           messages={conversation.messages}
           isMessagesLoading={conversation.isMessagesLoading}
           roomMembers={conversation.roomMembers}

@@ -59,6 +59,18 @@ export async function toggleFavorite(roomId: string, isFavorite: boolean): Promi
   }
 }
 
+export async function inviteRoomMembers(
+  roomId: string,
+  memberIds: string[]
+): Promise<{ message: string; addedCount: number }> {
+  try {
+    const res = await axios.post(`/api/rooms/${roomId}/members`, { memberIds });
+    return res.data;
+  } catch (err: any) {
+    handleApiError(err, '멤버를 초대하지 못했어요.');
+  }
+}
+
 export async function updateRoomNotificationSettings(
   roomId: string,
   settings: { message: boolean; mention: boolean }

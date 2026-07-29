@@ -7,6 +7,7 @@ import { ChatRoomPanel } from '@/components/chat/ChatRoomPanel';
 import { RoomFilesTab } from '@/components/chat/RoomFilesTab';
 import { RoomDocumentsTab } from '@/components/chat/RoomDocumentsTab';
 import { NewChatModal } from '@/components/NewChatModal';
+import { InviteMemberModal } from '@/components/chat/InviteMemberModal';
 import { RoomListItem } from '@/components/RoomListItem';
 import { RoomListItemSkeleton } from '@/components/RoomListItemSkeleton';
 import { MessageAreaSkeleton } from '@/components/MessageAreaSkeleton';
@@ -22,7 +23,7 @@ import { formatTime } from '@/utils/formatTime';
 import { stripSenderPrefix } from '@/utils/notification';
 import { buildLastMessagePreview } from '@/utils/tiptap';
 import type { Room } from '@/types/chat';
-import type { RoomApiResponse } from '@/types/room';
+import type { RoomApiResponse, RoomMember } from '@/types/room';
 import type { NewNotificationPayload } from '@/types/socket';
 
 type PanelTab = 'chat' | 'file' | 'docs';
@@ -42,6 +43,7 @@ export const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [openMenuRoomId, setOpenMenuRoomId] = useState<string | null>(null);
@@ -228,6 +230,16 @@ export const ChatPage = () => {
     }
   };
 
+  const handleMembersInvited = (addedMembers: RoomMember[]) => {
+    conversation.addRoomMembers(addedMembers);
+    if (selectedRoomId) {
+      setRooms((prev) =>
+        prev.map((r) => (r.id === selectedRoomId ? { ...r, memberCount: r.memberCount + addedMembers.length } : r))
+      );
+    }
+    setIsInviteModalOpen(false);
+  };
+
   const handleConfirmSelection = () => {
     conversation.confirmSelection((selectedMessages) => {
       navigate('/app/docs', { state: { roomId: selectedRoomId, messages: selectedMessages } });
@@ -347,6 +359,15 @@ export const ChatPage = () => {
 
       {isModalOpen && <NewChatModal onClose={() => setIsModalOpen(false)} onCreated={handleRoomCreated} />}
 
+      {isInviteModalOpen && selectedRoomId && (
+        <InviteMemberModal
+          roomId={selectedRoomId}
+          existingMemberIds={conversation.roomMembers.map((m) => m.userId)}
+          onClose={() => setIsInviteModalOpen(false)}
+          onInvited={handleMembersInvited}
+        />
+      )}
+
       <div className={`relative z-10 flex-1 min-w-0 h-full ${selectedRoomId ? 'flex' : 'hidden @md:flex'}`}>
         <ChatRoomPanel
           target={
@@ -379,6 +400,9 @@ export const ChatPage = () => {
           onToggleMute={selectedRoom ? () => toggleMute(selectedRoom.id) : undefined}
           onToggleFavorite={
             selectedRoom ? () => handleToggleFavorite(selectedRoom.id, selectedRoom.isFavorite) : undefined
+          }
+          onInviteMembers={
+            selectedRoom?.type === 'group' ? () => setIsInviteModalOpen(true) : undefined
           }
           messages={conversation.messages}
           isMessagesLoading={conversation.isMessagesLoading}

@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode, type RefObject } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Pencil, Bell, BellOff } from 'lucide-react';
+import { Heart, Pencil, Bell, BellOff, UserPlus } from 'lucide-react';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { Avatar } from '@/components/Avatar';
 import { ChatMessageInput } from '@/components/ChatMessageInput';
@@ -69,6 +69,7 @@ interface ChatRoomPanelProps {
   onToggleMute?: () => void;
   onToggleFavorite?: () => void;
   onRenameGroup?: () => void;
+  onInviteMembers?: () => void;
 
   messages: Message[];
   isMessagesLoading: boolean;
@@ -108,6 +109,7 @@ export function ChatRoomPanel({
   onToggleMute,
   onToggleFavorite,
   onRenameGroup,
+  onInviteMembers,
   messages,
   isMessagesLoading,
   roomMembers,
@@ -313,6 +315,17 @@ export function ChatRoomPanel({
                     <RoomMembersTooltip anchorRect={membersRect} members={roomMembers} />
                   )}
                 </div>
+              )}
+
+              {target.isGroup && onInviteMembers && (
+                <button
+                  type="button"
+                  onClick={onInviteMembers}
+                  title="멤버 초대"
+                  aria-label="멤버 초대"
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-fg-tertiary transition-colors hover:bg-bg-subtle hover:text-brand-primary">
+                  <UserPlus size={18} />
+                </button>
               )}
 
               {onToggleMute && (

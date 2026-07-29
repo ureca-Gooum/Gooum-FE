@@ -349,6 +349,10 @@ export function useRoomConversation(
     }
   };
 
+  const addRoomMembers = (newMembers: RoomMember[]) => {
+    setRoomMembers((prev) => [...prev, ...newMembers.filter((m) => !prev.some((p) => p.userId === m.userId))]);
+  };
+
   const deleteMessage = async (messageId: string) => {
     // 이제 UI 쪽(DeleteMessageModal)에서 삭제 확인을 받기 때문에, 여기서 또 confirm()으로
     // 이중 확인시키지 않는다.
@@ -424,6 +428,7 @@ export function useRoomConversation(
     messages,
     isMessagesLoading,
     roomMembers,
+    addRoomMembers,
     allMembers,
     messagesEndRef,
     typingLabel,

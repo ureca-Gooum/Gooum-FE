@@ -43,7 +43,7 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
     // 실시간 마우스 포인터 상태
     const [pointers, setPointers] = useState<Record<string, any>>({});
 
-    // 1. Yjs 초기화
+    // 1. Yjs 및 Websocket 초기화
     useEffect(() => {
       const doc = new Y.Doc();
       const prov = new WebsocketProvider(wsUrl, `doc-${activeFile.documentId}`, doc);
@@ -91,12 +91,12 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
           AiMinutesBlock,
           ...(docState
             ? [
-                Collaboration.configure({ document: docState.ydoc }),
-                CollaborationCaret.configure({
-                  provider: docState.provider,
-                  user: currentUser,
-                }),
-              ]
+              Collaboration.configure({ document: docState.ydoc }),
+              CollaborationCaret.configure({
+                provider: docState.provider,
+                user: currentUser,
+              }),
+            ]
             : []),
           Placeholder.configure({
             placeholder: '입력하기 시작하세요...',
@@ -115,6 +115,7 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
 
     // 핵심: Tiptap Collaboration 확장은 초기 마운트 시의 content 속성을 무시합니다!
     // 따라서 Yjs 웹소켓 동기화가 완료된 시점에, 방이 비어있다면 강제로 주입해야 합니다.
+    // 3번
     useEffect(() => {
       if (!editor || !docState?.provider || !initialContent) return;
 
@@ -241,23 +242,23 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       docState.provider.awareness.setLocalStateField('pointer', { x, y });
     };
-    
+
     const handleMouseLeave = () => {
       if (!docState?.provider) return;
       docState.provider.awareness.setLocalStateField('pointer', null);
     };
 
     return (
-      <div 
-        className="relative min-h-[500px]" 
-        onMouseMove={handleMouseMove} 
+      <div
+        className="relative min-h-[500px]"
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
         <EditorContent editor={editor} />
-        
+
         {/* 상대방 마우스 커서 렌더링 */}
         {Object.entries(pointers).map(([clientId, data]) => (
           <div
@@ -280,7 +281,7 @@ export const DocsEditor = forwardRef<DocsEditorRef, DocsEditorProps>(
             >
               <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
             </svg>
-            <span 
+            <span
               className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white shadow-sm whitespace-nowrap"
               style={{ backgroundColor: data.user.color }}
             >

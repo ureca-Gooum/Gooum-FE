@@ -101,9 +101,8 @@ function AiMinutesBlockView({ node, editor, getPos, updateAttributes }: NodeView
             <button
               type="button"
               onClick={() => setShowPromptInput((prev) => !prev)}
-              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium hover:bg-white hover:text-blue-600 ${
-                showPromptInput ? 'bg-white text-blue-600' : 'text-slate-500'
-              }`}
+              className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium hover:bg-white hover:text-blue-600 ${showPromptInput ? 'bg-white text-blue-600' : 'text-slate-500'
+                }`}
               title="다시 생성할 때 반영할 요청사항 입력">
               <Sparkles size={11} />
               요청사항
@@ -191,35 +190,35 @@ export const AiMinutesBlock = Node.create({
     return {
       insertAiMinutesBlock:
         (content, attrs) =>
-        ({ chain }) => {
-          return chain()
-            .insertContent({
-              type: this.name,
-              attrs: { status: 'done', generatedAt: new Date().toISOString(), ...attrs },
-              content: content && content.length > 0 ? content : [{ type: 'paragraph' }],
-            })
-            .run();
-        },
+          ({ chain }) => {
+            return chain()
+              .insertContent({
+                type: this.name,
+                attrs: { status: 'done', generatedAt: new Date().toISOString(), ...attrs },
+                content: content && content.length > 0 ? content : [{ type: 'paragraph' }],
+              })
+              .run();
+          },
       unwrapAiMinutesBlock:
         (pos) =>
-        ({ tr, dispatch }) => {
-          const node = tr.doc.nodeAt(pos);
-          if (!node || node.type.name !== this.name) return false;
-          if (dispatch) {
-            tr.replaceWith(pos, pos + node.nodeSize, node.content);
-          }
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            const node = tr.doc.nodeAt(pos);
+            if (!node || node.type.name !== this.name) return false;
+            if (dispatch) {
+              tr.replaceWith(pos, pos + node.nodeSize, node.content);
+            }
+            return true;
+          },
       setAiMinutesBlockStatus:
         (pos, status) =>
-        ({ tr, dispatch }) => {
-          const node = tr.doc.nodeAt(pos);
-          if (!node || node.type.name !== this.name) return false;
-          if (dispatch) {
-            tr.setNodeMarkup(pos, undefined, { ...node.attrs, status });
-          }
-          return true;
-        },
+          ({ tr, dispatch }) => {
+            const node = tr.doc.nodeAt(pos);
+            if (!node || node.type.name !== this.name) return false;
+            if (dispatch) {
+              tr.setNodeMarkup(pos, undefined, { ...node.attrs, status });
+            }
+            return true;
+          },
     };
   },
 });

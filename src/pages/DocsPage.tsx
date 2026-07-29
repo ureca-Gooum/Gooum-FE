@@ -109,7 +109,7 @@ export const DocsPage = () => {
   // 채팅 페이지에서 메시지를 선택하고 "다음"을 눌러 넘어온 경우, 모달을 자동으로 열어줌
   useEffect(() => {
     if (navState?.messages && navState.messages.length > 0) {
-      setIsAiMinutesOpen(true);
+      setTimeout(() => setIsAiMinutesOpen(true), 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -117,7 +117,7 @@ export const DocsPage = () => {
   // 채팅 카드를 눌러 documentId가 바뀌어 들어온 경우 (이미 Docs 페이지에 있던 상태에서도 반영)
   useEffect(() => {
     if (documentIdParam && files.some((f) => f.documentId === documentIdParam)) {
-      setActiveFileId(documentIdParam);
+      setTimeout(() => setActiveFileId(documentIdParam), 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentIdParam, files]);
@@ -139,8 +139,7 @@ export const DocsPage = () => {
     // 못 받으므로, sendMessage 전에 반드시 joinRoom을 다시 해줘야 한다.
     try {
       connectSocket();
-      joinRoom(meta.roomId, (joinResponse: any) => {
-        console.log('AI 회의록 카드 전송 전 joinRoom 응답:', joinResponse);
+      joinRoom(meta.roomId, () => {
         sendMessage(
           {
             roomId: meta.roomId,
@@ -160,9 +159,7 @@ export const DocsPage = () => {
               ],
             },
           },
-          (response: any) => {
-            console.log('AI 회의록 카드 메시지 전송 응답:', response);
-          },
+          () => {}
         );
       });
     } catch (err) {
@@ -243,9 +240,7 @@ export const DocsPage = () => {
     const fetchContent = async () => {
       try {
         setIsContentLoading(true);
-        console.log('📡 [API] 문서 상세 조회 (getDocumentById) 호출 시작:', activeFileId);
         const res = await getDocumentById(activeFileId);
-        console.log('📡 [API] 문서 상세 조회 완료:', res);
         if (isMounted) {
           setInitialContent(res.content || '');
         }
@@ -342,32 +337,93 @@ export const DocsPage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     setShowExportMenu(false);
     if (!activeFile) return;
 
-    try {
-      // 동적 임포트
-      const html2pdf = (await import('html2pdf.js')).default;
-      const element = document.querySelector('.ProseMirror');
-      if (!element) return;
+    setTimeout(async () => {
+      try {
+        const html2pdf = (await import('html2pdf.js')).default;
+        const element = document.querySelector('.ProseMirror');
+        if (!element) return;
 
-      const opt = {
-        margin: 10,
-        filename: `${activeFile.title || '새 문서'}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
-      };
+        // 1. 현재 문서의 모든 스타일(CSS) 수집
+        let safeCss = '';
+        const styleTags = document.querySelectorAll('style');
+        styleTags.forEach(tag => { safeCss += tag.innerHTML + '\n'; });
 
-      html2pdf()
-        .set(opt)
-        .from(element as HTMLElement)
-        .save();
-    } catch (error) {
-      console.error('PDF 변환 실패:', error);
-      showAlert('PDF 변환 중 오류가 발생했습니다.');
-    }
+        const linkTags = document.querySelectorAll('link[rel="stylesheet"]');
+        for (const link of Array.from(linkTags)) {
+          try {
+            const res = await fetch((link as HTMLLinkElement).href);
+            const text = await res.text();
+            safeCss += text + '\n';
+          } catch {
+            console.warn('CSS fetch failed for', link.href);
+          }
+        }
+
+        // 2. html2canvas를 터뜨리는 범인(oklch 등) 원천 차단
+        safeCss = safeCss
+          .replace(/oklch/g, 'invalidcolor')
+          .replace(/oklab/g, 'invalidcolor')
+          .replace(/color\(/g, 'invalidcolor(')
+          .replace(/lch\(/g, 'invalidcolor(')
+          .replace(/lab\(/g, 'invalidcolor(');
+
+        // PDF 렌더링 시 oklch가 무효화되면서 잃어버린 주요 색상을 안전한 RGB로 수동 복구
+        const fallbackStyles = `
+          .bg-slate-100 { background-color: rgb(241, 245, 249) !important; }
+          .border-slate-200 { border-color: rgb(226, 232, 240) !important; }
+          .text-blue-600 { color: rgb(37, 99, 235) !important; }
+          .text-slate-700 { color: rgb(51, 65, 85) !important; }
+          .text-slate-500 { color: rgb(100, 116, 139) !important; }
+          .text-slate-400 { color: rgb(148, 163, 184) !important; }
+          .text-red-500 { color: rgb(239, 68, 68) !important; }
+          .bg-white { background-color: rgb(255, 255, 255) !important; }
+        `;
+        safeCss += '\\n' + fallbackStyles;
+
+        const opt = {
+          margin: 10,
+          filename: `${activeFile.title || '새 문서'}.pdf`,
+          image: { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            allowTaint: true,
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight,
+            // 메인 문서의 원본 스타일(oklch 포함)을 html2canvas가 복제하지 못하도록 차단
+            ignoreElements: (node: Element) => {
+              if (node.tagName === 'STYLE' || node.tagName === 'LINK') return true;
+              return false;
+            },
+            // 복제된 문서에 oklch가 제거된 안전한 CSS(safeCss)만 주입
+            onclone: (clonedDoc: Document) => {
+              const style = clonedDoc.createElement('style');
+              style.innerHTML = safeCss;
+              clonedDoc.head.appendChild(style);
+              
+              // 인라인 스타일 처리
+              const elements = clonedDoc.querySelectorAll('*');
+              elements.forEach((el) => {
+                const styleAttr = el.getAttribute('style');
+                if (styleAttr && (styleAttr.includes('oklch') || styleAttr.includes('color('))) {
+                  el.setAttribute('style', styleAttr.replace(/oklch/g, 'invalidcolor').replace(/color\(/g, 'invalidcolor('));
+                }
+              });
+            }
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        };
+
+        await html2pdf().set(opt).from(element as HTMLElement).save();
+
+      } catch (error) {
+        console.error('PDF 변환 실패:', error);
+      }
+    }, 100);
   };
 
   /* ── 파일 추가 (낙관적 업데이트 및 강제 저장) ── */

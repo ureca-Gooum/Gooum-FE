@@ -58,14 +58,14 @@ export const MainLayout = () => {
         newX = startRect.x + dx;
         newY = Math.max(0, startRect.y + dy);
       } else if (isResizing) {
-        if (isResizing.includes('r')) newW = Math.max(375, startRect.w + dx);
+        if (isResizing.includes('r')) newW = Math.max(840, startRect.w + dx);
         if (isResizing.includes('l')) {
-          newW = Math.max(375, startRect.w - dx);
+          newW = Math.max(840, startRect.w - dx);
           newX = startRect.x + (startRect.w - newW);
         }
-        if (isResizing.includes('b')) newH = Math.max(667, startRect.h + dy);
+        if (isResizing.includes('b')) newH = Math.max(911, startRect.h + dy);
         if (isResizing.includes('t')) {
-          newH = Math.max(667, startRect.h - dy);
+          newH = Math.max(911, startRect.h - dy);
           newY = startRect.y + (startRect.h - newH);
         }
       }
@@ -173,8 +173,8 @@ export const MainLayout = () => {
     : {};
 
   const layoutClasses = isWindowed
-    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden'
-    : '@container flex h-screen w-screen flex-col overflow-hidden transition-all duration-300';
+    ? '@container flex flex-col rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.15)] border border-border-default overflow-hidden min-w-[840px] min-h-[911px]'
+    : '@container flex h-screen w-full min-w-[840px] min-h-[911px] flex-col overflow-hidden transition-all duration-300';
 
   // Header/Sidebar/ListPanel은 전부 단색 bg-bg-canvas를 쓰기 때문에, 창 배경을 그라데이션으로
   // 두면 그 지점의 색이 미묘하게 달라져 패널 경계가 선처럼 보이는 문제가 있었다.

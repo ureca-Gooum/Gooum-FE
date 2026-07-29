@@ -4,7 +4,6 @@ import type { Document } from '@/types/document';
 
 interface DocsHeaderProps {
   activeFile: Document;
-  isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
   editingTitleId: string | null;
   startEditing: (id: string) => void;
@@ -19,7 +18,6 @@ interface DocsHeaderProps {
 
 export const DocsHeader = ({
   activeFile,
-  isSidebarOpen,
   setIsSidebarOpen,
   editingTitleId,
   startEditing,

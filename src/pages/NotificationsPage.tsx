@@ -243,158 +243,65 @@ export const NotificationsPage = () => {
                 모두 읽음
               </button>
             </div>
-            {/* PC 전용 기존 탭 (모바일에서는 숨김) */}
+            {/* 탭 공통 렌더링 (PC & 모바일) */}
             <div className="hidden @md:flex gap-5">
-              <button
-                onClick={() => setActiveTab('전체')}
-                className={`relative pb-2.5 text-[13px] font-bold transition-colors ${activeTab === '전체' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
+              {[
+                { id: '전체', icon: null },
+                { id: 'DM', icon: MessageCircle },
+                { id: '멘션', icon: AtSign },
+                { id: '문서', icon: FileText },
+              ].map(({ id, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id as any)}
+                  className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${
+                    activeTab === id ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                   }`}>
-                전체
-                {activeTab === '전체' && (
-                  <motion.span
-                    layoutId="activity-tab-underline"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('DM')}
-                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === 'DM' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-                <MessageCircle size={15} />
-                DM
-                {activeTab === 'DM' && (
-                  <motion.span
-                    layoutId="activity-tab-underline"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('멘션')}
-                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === '멘션' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-                <AtSign size={15} />
-                멘션
-                {activeTab === '멘션' && (
-                  <motion.span
-                    layoutId="activity-tab-underline"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('문서')}
-                className={`relative pb-2.5 flex items-center gap-1.5 text-[13px] font-bold transition-colors ${activeTab === '문서' ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-                <FileText size={15} />
-                문서
-                {activeTab === '문서' && (
-                  <motion.span
-                    layoutId="activity-tab-underline"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
+                  {Icon && <Icon size={15} />}
+                  {id}
+                  {activeTab === id && (
+                    <motion.span
+                      layoutId="activity-tab-underline"
+                      className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                      style={{ bottom: '-1px', height: '3px' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                </button>
+              ))}
             </div>
 
             {/* 모바일 전용 새 탭 (PC에서는 숨김) */}
             <div className="flex @md:hidden gap-5 ml-2 pb-0">
-              <button
-                onClick={() => setActiveTab('전체')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ${activeTab === '전체'
-                  ? 'text-fg-primary'
-                  : 'text-fg-tertiary hover:text-fg-primary'
+              {[
+                { id: '전체', icon: null, badge: 0 },
+                { id: 'DM', icon: MessageCircle, badge: unreadChatCount },
+                { id: '멘션', icon: AtSign, badge: unreadFileCount },
+                { id: '문서', icon: FileText, badge: unreadDocCount },
+              ].map(({ id, icon: Icon, badge }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id as any)}
+                  className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ${
+                    activeTab === id ? 'text-fg-primary' : 'text-fg-tertiary hover:text-fg-primary'
                   }`}>
-                전체
-                {activeTab === '전체' && (
-                  <motion.span
-                    layoutId="activity-tab-underline-mobile"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('DM')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ${activeTab === 'DM'
-                  ? 'text-fg-primary'
-                  : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-
-                <MessageCircle size={15} />
-                DM
-                {unreadChatCount > 0 && (
-                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
-                    {unreadChatCount > 99 ? '99+' : unreadChatCount}
-                  </span>
-                )}
-                {activeTab === 'DM' && (
-                  <motion.span
-                    layoutId="activity-tab-underline-mobile"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('멘션')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${activeTab === '멘션'
-                  ? 'text-fg-primary'
-                  : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-                <AtSign size={15} />
-                멘션
-                {unreadFileCount > 0 && (
-                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
-                    {unreadFileCount > 99 ? '99+' : unreadFileCount}
-                  </span>
-                )}
-                {activeTab === '멘션' && (
-                  <motion.span
-                    layoutId="activity-tab-underline-mobile"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
-
-              <button
-                onClick={() => setActiveTab('문서')}
-                className={`pb-3 flex items-center gap-1.5 text-[13px] font-bold transition-colors relative ml-3 ${activeTab === '문서'
-                  ? 'text-fg-primary'
-                  : 'text-fg-tertiary hover:text-fg-primary'
-                  }`}>
-                <FileText size={15} />
-                문서
-                {unreadDocCount > 0 && (
-                  <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
-                    {unreadDocCount > 99 ? '99+' : unreadDocCount}
-                  </span>
-                )}
-                {activeTab === '문서' && (
-                  <motion.span
-                    layoutId="activity-tab-underline-mobile"
-                    className="absolute left-0 right-0 rounded-full bg-brand-primary"
-                    style={{ bottom: '-1px', height: '3px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                  />
-                )}
-              </button>
+                  {Icon && <Icon size={15} />}
+                  {id}
+                  {badge > 0 && (
+                    <span className="absolute -top-2 -right-3 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  )}
+                  {activeTab === id && (
+                    <motion.span
+                      layoutId="activity-tab-underline-mobile"
+                      className="absolute left-0 right-0 rounded-full bg-brand-primary"
+                      style={{ bottom: '-1px', height: '3px' }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         }>
@@ -432,6 +339,7 @@ export const NotificationsPage = () => {
           existingMemberIds={conversation.roomMembers.map((m) => m.userId)}
           onClose={() => setIsInviteModalOpen(false)}
           onInvited={handleMembersInvited}
+          usePortal={false}
         />
       )}
 

@@ -12,9 +12,10 @@ interface InviteMemberModalProps {
   existingMemberIds: string[];
   onClose: () => void;
   onInvited: (addedMembers: RoomMember[]) => void;
+  usePortal?: boolean;
 }
 
-export function InviteMemberModal({ roomId, existingMemberIds, onClose, onInvited }: InviteMemberModalProps) {
+export function InviteMemberModal({ roomId, existingMemberIds, onClose, onInvited, usePortal = true }: InviteMemberModalProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,7 +71,7 @@ export function InviteMemberModal({ roomId, existingMemberIds, onClose, onInvite
     [inviteCandidates, selectedIds]
   );
 
-  return createPortal(
+  const content = (
     <div
       onClick={onClose}
       className="absolute inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-[2px] pointer-events-auto">
@@ -176,7 +177,15 @@ export function InviteMemberModal({ roomId, existingMemberIds, onClose, onInvite
           </button>
         </div>
       </div>
-    </div>,
+    </div>
+  );
+
+  if (!usePortal) {
+    return content;
+  }
+
+  return createPortal(
+    content,
     document.getElementById('modal-root') || document.body
   );
 }

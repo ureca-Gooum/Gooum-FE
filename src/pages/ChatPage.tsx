@@ -370,6 +370,7 @@ export const ChatPage = () => {
           existingMemberIds={conversation.roomMembers.map((m) => m.userId)}
           onClose={() => setIsInviteModalOpen(false)}
           onInvited={handleMembersInvited}
+          usePortal={false}
         />
       )}
 

@@ -12,6 +12,7 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   hideCancel?: boolean;
+  usePortal?: boolean;
 }
 
 export function ConfirmModal({
@@ -24,8 +25,9 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
   hideCancel = false,
+  usePortal = true,
 }: ConfirmModalProps) {
-  return createPortal(
+  const content = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -73,7 +75,15 @@ export function ConfirmModal({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>,
+    </AnimatePresence>
+  );
+
+  if (!usePortal) {
+    return content;
+  }
+
+  return createPortal(
+    content,
     document.getElementById('modal-root') || document.body,
   );
 }

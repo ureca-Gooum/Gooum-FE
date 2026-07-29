@@ -435,6 +435,7 @@ export const DocsPage = () => {
   /* ── 파일 삭제 (낙관적 업데이트) ── */
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [docToDeleteId, setDocToDeleteId] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const handleDeleteFileClick = (id: string) => {
     setDocToDeleteId(id);
@@ -463,9 +464,9 @@ export const DocsPage = () => {
       if (activeFileId === id) setActiveFileId(id);
 
       if (error.response?.status === 403) {
-        showAlert('문서 생성자만 삭제할 수 있습니다.');
+        setAlertMessage('문서 생성자만 삭제할 수 있습니다.');
       } else {
-        showAlert('문서 삭제 중 오류가 발생했습니다.');
+        setAlertMessage('문서 삭제 중 오류가 발생했습니다.');
       }
     }
   };
@@ -881,6 +882,18 @@ export const DocsPage = () => {
         isDestructive={true}
         onConfirm={confirmDeleteFile}
         onCancel={() => setIsDeleteConfirmOpen(false)}
+        usePortal={false}
+      />
+
+      <ConfirmModal
+        isOpen={alertMessage !== null}
+        title="알림"
+        message={alertMessage || ''}
+        confirmText="확인"
+        onConfirm={() => setAlertMessage(null)}
+        onCancel={() => setAlertMessage(null)}
+        hideCancel={true}
+        usePortal={false}
       />
     </div>
   );

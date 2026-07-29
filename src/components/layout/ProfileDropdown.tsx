@@ -164,7 +164,7 @@ export function ProfileDropdown({
 
       {/* 3. 하단 상태 메시지 박스 */}
       <div
-        onDoubleClick={() => isSelf && setIsEditing(true)}
+        onClick={() => isSelf && setIsEditing(true)}
         className={`relative group mt-2 bg-gray-50 rounded-xl p-3 pb-5 min-h-[52px] flex items-start border border-transparent overflow-hidden ${
           isSelf ? 'hover:bg-gray-100/80 cursor-pointer hover:border-gray-200' : ''
         }`}>
@@ -187,7 +187,7 @@ export function ProfileDropdown({
 
         {isSelf && !isEditing && (
           <span className="absolute bottom-1 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] text-gray-400 font-medium pointer-events-none select-none">
-            더블 클릭하여 수정
+            클릭하여 수정
           </span>
         )}
       </div>

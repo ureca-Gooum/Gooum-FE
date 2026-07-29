@@ -18,7 +18,7 @@ export function RoomMembersTooltip({ anchorRect, members }: RoomMembersTooltipPr
 
   return createPortal(
     <div
-      style={{ position: 'fixed', top, left, width: TOOLTIP_WIDTH, zIndex: 60 }}
+      style={{ position: 'fixed', top, left, width: TOOLTIP_WIDTH, zIndex: 9999 }}
       className="rounded-xl border border-border-default bg-bg-default p-3 text-center shadow-lg">
       <p className="mb-1 text-[12px] font-semibold text-fg-primary">이 채팅방의 모든 멤버 보기</p>
       <p className="text-[12px] leading-relaxed text-fg-tertiary">{members.map((m) => m.name).join(', ')}</p>

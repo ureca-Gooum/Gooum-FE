@@ -47,7 +47,7 @@ export function MentionHoverCard({
     <div
       onMouseEnter={onMouseEnterCard}
       onMouseLeave={onMouseLeaveCard}
-      style={{ position: 'fixed', top, left, zIndex: 60 }}>
+      style={{ position: 'fixed', top, left, zIndex: 9999 }}>
       {isSelf ? (
         // 본인 멘션: 사이드바에서 보는 프로필창 그대로. 단, 로그아웃 버튼만 빠진다 (onLogout 미전달 시 자동으로 숨겨짐).
         <ProfileDropdown

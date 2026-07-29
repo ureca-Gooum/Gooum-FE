@@ -56,7 +56,7 @@ export const MainLayout = () => {
 
       if (isDragging) {
         newX = startRect.x + dx;
-        newY = startRect.y + dy;
+        newY = Math.max(0, startRect.y + dy);
       } else if (isResizing) {
         if (isResizing.includes('r')) newW = Math.max(375, startRect.w + dx);
         if (isResizing.includes('l')) {
@@ -213,7 +213,7 @@ export const MainLayout = () => {
               <Sidebar />
             </div>
           )}
-          <div className="flex flex-1 order-1 @md:order-2 w-full">
+          <div className="flex flex-1 min-h-0 order-1 @md:order-2 w-full">
             <Outlet />
           </div>
         </div>

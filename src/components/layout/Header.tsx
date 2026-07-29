@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { HeaderLogo } from './HeaderLogo';
+import { MobileHeaderMenu } from './MobileHeaderMenu';
 import { fetchSearch } from '@/api/search';
 import type { SearchApiResponse } from '@/types/search';
 
@@ -307,6 +308,10 @@ export function Header({
         id="header-tabs-portal"
         className="flex @md:hidden w-10 shrink-0 items-center justify-end min-w-0 overflow-x-auto [&::-webkit-scrollbar]:hidden pr-1"
       />
+
+      <div className="flex @md:hidden items-center ml-1">
+        <MobileHeaderMenu />
+      </div>
 
       <div className="hidden @md:flex items-center gap-1 ml-auto">
         <button

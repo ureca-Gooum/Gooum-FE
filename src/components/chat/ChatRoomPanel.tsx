@@ -145,6 +145,7 @@ export function ChatRoomPanel({
   };
 
   const scheduleHideHeaderProfile = () => {
+    if (window.innerWidth < 768) return; // 모바일에서는 클릭으로만 닫도록
     clearHeaderProfileHideTimeout();
     headerProfileHideTimeoutRef.current = window.setTimeout(() => setIsHeaderProfileHovered(false), 150);
   };
@@ -162,6 +163,7 @@ export function ChatRoomPanel({
   };
 
   const scheduleHideMembers = () => {
+    if (window.innerWidth < 768) return; // 모바일에서는 클릭으로만 닫도록
     clearMembersHideTimeout();
     membersHideTimeoutRef.current = window.setTimeout(() => setIsMembersHovered(false), 150);
   };
@@ -185,14 +187,26 @@ export function ChatRoomPanel({
           <div className="flex h-[63px] items-center gap-3 border-b border-border-default px-4">
             <div
               className={`flex min-w-0 max-w-[45%] shrink items-center gap-3 ${headerProfileMember ? 'cursor-pointer' : ''}`}
-              onMouseEnter={(e) => {
+              onClick={(e) => {
                 if (!headerProfileMember) return;
+                if (window.innerWidth < 768) {
+                  if (isHeaderProfileHovered) {
+                    setIsHeaderProfileHovered(false);
+                  } else {
+                    clearHeaderProfileHideTimeout();
+                    setHeaderProfileRect(e.currentTarget.getBoundingClientRect());
+                    setIsHeaderProfileHovered(true);
+                  }
+                }
+              }}
+              onMouseEnter={(e) => {
+                if (!headerProfileMember || window.innerWidth < 768) return;
                 clearHeaderProfileHideTimeout();
                 setHeaderProfileRect(e.currentTarget.getBoundingClientRect());
                 setIsHeaderProfileHovered(true);
               }}
               onMouseLeave={() => {
-                if (!headerProfileMember) return;
+                if (!headerProfileMember || window.innerWidth < 768) return;
                 scheduleHideHeaderProfile();
               }}>
               <Avatar
@@ -252,12 +266,27 @@ export function ChatRoomPanel({
               {target.isGroup && roomMembers.length > 0 && (
                 <div
                   className="relative flex shrink-0 items-center -space-x-2"
+                  onClick={(e) => {
+                    if (window.innerWidth < 768) {
+                      if (isMembersHovered) {
+                        setIsMembersHovered(false);
+                      } else {
+                        clearMembersHideTimeout();
+                        setMembersRect(e.currentTarget.getBoundingClientRect());
+                        setIsMembersHovered(true);
+                      }
+                    }
+                  }}
                   onMouseEnter={(e) => {
+                    if (window.innerWidth < 768) return;
                     clearMembersHideTimeout();
                     setMembersRect(e.currentTarget.getBoundingClientRect());
                     setIsMembersHovered(true);
                   }}
-                  onMouseLeave={scheduleHideMembers}>
+                  onMouseLeave={() => {
+                    if (window.innerWidth < 768) return;
+                    scheduleHideMembers();
+                  }}>
                   {roomMembers.slice(0, 3).map((member) => (
                     <div key={member.userId} className="rounded-full border-[3px] border-bg-default shadow-sm">
                       <Avatar

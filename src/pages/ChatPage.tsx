@@ -191,7 +191,21 @@ export const ChatPage = () => {
     setActiveTab('chat');
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, unreadCount: 0 } : r)));
     setIsSidebarOpen(false);
+
+    if (window.innerWidth < 768) {
+      navigate('#panel');
+    }
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedRoomId) {
+        setSelectedRoomId(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedRoomId]);
 
   const handleStartDirectMessage = async (userId: string) => {
     if (!userId || userId === currentUserId) return;
@@ -261,7 +275,7 @@ export const ChatPage = () => {
   ];
 
   return (
-    <div className="flex min-w-0 flex-1 relative w-full h-full">
+    <div className="flex min-w-0 min-h-0 flex-1 relative w-full h-full">
       <ListPanel
         className={selectedRoomId ? 'hidden @md:flex' : 'flex'}
         headerHeight={63}

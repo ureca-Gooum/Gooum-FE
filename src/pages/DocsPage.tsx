@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2, MoreVertical } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sparkles, Menu, Loader2, ChevronDown, FileText, FileCode, Trash2, Download } from 'lucide-react';
 import { DocsEditor } from '@/components/DocsEditor';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { DocsEditorSkeleton } from '@/components/DocsEditorSkeleton';
@@ -471,7 +472,7 @@ export const DocsPage = () => {
 
   return (
     /* ── 최외곽: Docs.png 연회색 배경 ── */
-    <div className="relative flex h-full w-full flex-col bg-bg-canvas p-3 pb-4 font-sans">
+    <div className="relative flex flex-1 min-w-0 min-h-0 h-full w-full flex-col bg-bg-canvas p-3 pb-4 font-sans">
       {/* ── 메인 카드 ── */}
       <div className="relative flex flex-1 overflow-hidden rounded-2xl bg-bg-default shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)]">
         {/* ── 모바일 사이드바 오버레이 ── */}
@@ -560,12 +561,13 @@ export const DocsPage = () => {
                       setIsSidebarOpen(false); // 모바일에서 선택 시 닫기
                     }
                   }}>
-                  {/* 왼쪽 테마 바 (활성 시, 텍스트 높이 정도의 둥근 선) */}
-                  <div
-                    className={`absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full transition-colors ${
-                      isActive ? 'bg-[var(--color-brand-primary)]' : 'bg-transparent'
-                    }`}
-                  />
+                  {isActive && (
+                    <motion.div
+                      layoutId="docsSidebarIndicator"
+                      transition={{ type: 'spring', bounce: 0, duration: 0.15 }}
+                      className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full bg-[var(--color-brand-primary)]"
+                    />
+                  )}
 
                   {/* 제목 영역 */}
                   {isEditing ? (
@@ -736,13 +738,13 @@ export const DocsPage = () => {
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
 
-                    {/* 모바일 옵션(3점 메뉴) 버튼 */}
+                    {/* 모바일 다운로드(내보내기) 버튼 */}
                     <button
                       onClick={() => setShowExportMenu(!showExportMenu)}
                       disabled={isSaving}
                       className="flex @md:hidden items-center justify-center h-8 w-8 rounded-md text-fg-secondary hover:bg-bg-subtle transition-colors active:scale-95 disabled:opacity-60"
-                      title="옵션">
-                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                      title="내보내기">
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                     </button>
 
                     {/* 슬림해진 내보내기 드롭다운 메뉴 (w-32 적용) */}

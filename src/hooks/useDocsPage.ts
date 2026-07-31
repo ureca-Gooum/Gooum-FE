@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect, useMemo, RefObject } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import type { DocsEditorRef } from '@/components/DocsEditor';
 import { wrapAiMinutesContent } from '@/utils/tiptap';
 
 import { getDocuments, getDocumentById, createDocument, saveDocument, deleteDocument } from '@/api/documents';
-import type { Document } from '@/types/document';
+import type { Document as DocumentModel } from '@/types/document';
 import type { Message } from '@/types/chat';
 import { connectSocket, joinRoom, sendMessage } from '@/socket/socket';
 import api from '@/api/axiosInstance';
@@ -82,7 +82,7 @@ export const useDocsPage = () => {
   const aiSummaryMessages = navState?.messages || [];
 
   /* ── 파일 목록 상태 ── */
-  const [files, setFiles] = useState<Document[]>(() => {
+  const [files, setFiles] = useState<DocumentModel[]>(() => {
     const cached = localStorage.getItem('gooum_cached_documents');
     return cached ? JSON.parse(cached) : [];
   });
@@ -108,7 +108,7 @@ export const useDocsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentIdParam, files]);
 
-  const handleMinutesCreated = (doc: Document, meta: { roomId: string; title: string; transcript: string }) => {
+  const handleMinutesCreated = (doc: DocumentModel, meta: { roomId: string; title: string; transcript: string }) => {
     const wrappedContent = wrapAiMinutesContent(doc.content, meta);
     pendingContentRef.current[doc.documentId] = wrappedContent;
 
@@ -308,7 +308,9 @@ export const useDocsPage = () => {
         // 1. 현재 문서의 모든 스타일(CSS) 수집
         let safeCss = '';
         const styleTags = document.querySelectorAll('style');
-        styleTags.forEach(tag => { safeCss += tag.innerHTML + '\n'; });
+        styleTags.forEach((tag) => {
+          safeCss += tag.innerHTML + '\n';
+        });
 
         const linkTags = document.querySelectorAll('link[rel="stylesheet"]');
         for (const link of Array.from(linkTags)) {
@@ -317,7 +319,7 @@ export const useDocsPage = () => {
             const text = await res.text();
             safeCss += text + '\n';
           } catch {
-            console.warn('CSS fetch failed for', link.href);
+            console.warn('CSS fetch failed for', (link as HTMLLinkElement).href);
           }
         }
 
@@ -346,9 +348,9 @@ export const useDocsPage = () => {
           margin: 10,
           filename: `${activeFile.title || '새 문서'}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { 
-            scale: 2, 
-            useCORS: true, 
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
             allowTaint: true,
             windowWidth: element.scrollWidth,
             windowHeight: element.scrollHeight,
@@ -362,22 +364,27 @@ export const useDocsPage = () => {
               const style = clonedDoc.createElement('style');
               style.innerHTML = safeCss;
               clonedDoc.head.appendChild(style);
-              
+
               // 인라인 스타일 처리
               const elements = clonedDoc.querySelectorAll('*');
               elements.forEach((el) => {
                 const styleAttr = el.getAttribute('style');
                 if (styleAttr && (styleAttr.includes('oklch') || styleAttr.includes('color('))) {
-                  el.setAttribute('style', styleAttr.replace(/oklch/g, 'invalidcolor').replace(/color\(/g, 'invalidcolor('));
+                  el.setAttribute(
+                    'style',
+                    styleAttr.replace(/oklch/g, 'invalidcolor').replace(/color\(/g, 'invalidcolor('),
+                  );
                 }
               });
-            }
+            },
           },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
         };
 
-        await html2pdf().set(opt).from(element as HTMLElement).save();
-
+        await html2pdf()
+          .set(opt)
+          .from(element as HTMLElement)
+          .save();
       } catch (error) {
         console.error('PDF 변환 실패:', error);
       }
@@ -391,7 +398,7 @@ export const useDocsPage = () => {
     }
 
     const tempId = `temp-${crypto.randomUUID()}`;
-    const tempDoc: Document = {
+    const tempDoc: DocumentModel = {
       documentId: tempId,
       title: '새 문서',
       type: 'document',

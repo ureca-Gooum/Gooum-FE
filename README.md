@@ -1,135 +1,215 @@
-<p align="center">
-  <img src="./public/GOOUM.png" width="180"/>
-</p>
+# 🥔 Gooum (구움)
 
-<h1 align="center">GOOUM (구움)</h1>
+> 매일 갓 구운 이야기가 있는 곳
+> 대화를 나누고, 협업하며, 결과물을 함께 구워내는 공간
 
-<p align="center">
-AI 기반 협업 메신저
-</p>
+![Gooum 서비스 소개](/public/img/Gooum-banner.png)
+
+---
+
+## 📌 목차
+
+- [프로젝트 소개](#-프로젝트-소개)
+- [팀원 소개 및 역할 분배](#-팀원-소개-및-역할-분배)
+- [기획 배경 및 해결책](#-기획-배경-및-해결책)
+- [핵심 기능](#-핵심-기능)
+- [기술 아키텍처](#️-기술-아키텍처)
+- [기술적 핵심 구현 사항](#-기술적-핵심-구현-사항)
+- [트러블슈팅](#-트러블슈팅)
+- [폴더 구조](#-폴더-구조)
+- [향후 계획](#-향후-계획)
+- [포팅 매뉴얼](#-포팅-매뉴얼)
+
+---
 
 ## 📖 프로젝트 소개
 
-**GOOUM**은 팀명인 **구운감자**의 '구움'과 사람들이 함께 모이는 공간을 의미하는 **Room**을 결합한 이름입니다.
+**구움(Gooum)**은 팀명인 구운감자의 '구움'과, 사람들이 모여 대화하고 협업하는 공간을 뜻하는 **Room**을 결합한 이름입니다.
 
-실시간 채팅, AI 회의록 생성, 동시 문서 편집을 하나의 서비스에서 제공하는 AI 기반 협업 메신저입니다.
+실시간 채팅, 문서 공동 편집, AI 회의록 자동 생성을 하나로 결합한 **통합 AI 협업 메신저**로, 소속이나 조직에 관계없이 누구와도 워크스페이스 가입 절차 없이 바로 생산성 높은 협업을 시작할 수 있는 것을 목표로 합니다.
 
-> **대화 → 협업 → 기록**
-
-단순히 대화를 주고받는 것을 넘어, 회의 내용을 기록하고 함께 문서를 편집하는 협업 경험을 제공합니다.
+> 단순한 메신저를 넘어 **'대화 → 협업 → 기록'**의 흐름을 하나의 서비스로 연결합니다.
 
 ---
 
-## 👥 팀원 소개
+## 👥 팀원 소개 및 역할 분배
 
-<table>
-  <tr>
-    <td align="center" width="33%">
-      <img src="https://github.com/junhwan0697.png" width="120px" alt="장준환 프로필"/>
-      <br />
-      <b>장준환</b>
-      <br />
-      Frontend
-      <br /><br />
-      <a href="https://github.com/junhwan0697">
-        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="장준환 GitHub"/>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <img src="https://github.com/Ppakso.png" width="120px" alt="박소연 프로필"/>
-      <br />
-      <b>박소연</b>
-      <br />
-      Frontend
-      <br /><br />
-      <a href="박소연_GITHUB_URL">
-        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="박소연 GitHub"/>
-      </a>
-    </td>
-    <td align="center" width="33%">
-      <img src="https://github.com/jhwest-dev.png" width="120px" alt="서지현 프로필"/>
-      <br />
-      <b>서지현</b>
-      <br />
-      Backend
-      <br /><br />
-      <a href="서지현_GITHUB_URL">
-        <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="서지현 GitHub"/>
-      </a>
-    </td>
-  </tr>
-</table>
-
-### 역할 분담
-
-| 이름            | 담당 영역  | 주요 역할                                                              |
-| --------------- | ---------- | ---------------------------------------------------------------------- |
-| 장준환 (팀장님) | 프론트엔드 | 동시 편집 에디터, 문서 페이지, 알림 센터, 카카오 로그인                |
-| 박소연          | 프론트엔드 | 피그마, 환경 세팅, 실시간 채팅, 대화방 목록, 파일 첨부, AI 회의록 생성 |
-| 서지현          | 백엔드     | REST API, Socket.io 서버, MongoDB, 인증 및 권한, 파일 저장, Azure 배포 |
+|                                                     장준환 (FE) - 팀장                                                     |                                                    박소연 (FE)                                                    |                                                        서지현 (BE)                                                        |
+| :------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------: |
+| <a href="https://github.com/junhwan0697"><img src="https://github.com/junhwan0697.png?s=200" width="120" height="120"></a> | <a href="https://github.com/Ppakso"><img src="https://github.com/Ppakso.png?s=200" width="120" height="120" ></a> | <a href="https://github.com/jhwest-dev"><img src="https://github.com/jhwest-dev.png?s=200" width="120" height="120" ></a> |
+|                                       [@junhwan0697](https://github.com/junhwan0697)                                       |                                       [@Ppakso](https://github.com/Ppakso)                                        |                                       [@jhwest-dev](https://github.com/jhwest-dev)                                        |
+|                                      동시 편집 · 문서 · 반응형 · 알림 · 카카오 로그인                                      |                                   AI 회의록 · 채팅 · 환경 세팅 및 배포 · Figma                                    |                                     API/Socket.io 설계 및 개발 · DB 설계 · Azure 배포                                     |
 
 ---
 
-## 🖥️ 서비스 화면
+## 💡 기획 배경 및 해결책
 
-(추후 스크린샷 or GIF 삽입)
+- **Pain Point 1 — 협업 도구의 파편화**
+  대화는 메신저(슬랙·카카오톡), 문서 작성은 외부 툴(노션·구글독스)로 이원화되어 있어 잦은 화면 전환과 정보 유실이 발생합니다.
+- **Pain Point 2 — 기록의 비효율**
+  회의가 끝난 후 누군가 별도의 시간을 들여 회의록을 정리해야 하는 번거로움이 있습니다.
+- **Pain Point 3 — 높은 도입 장벽**
+  Slack/Teams류는 '같은 조직'을 전제로 하여 해커톤, 프리랜서, 사이드 프로젝트, 대학 팀플처럼 소속이 다른 팀은 도입이 어렵습니다.
 
-| 로그인                   | 채팅                     |
-| ------------------------ | ------------------------ |
-| <img width="400" src=""> | <img width="400" src=""> |
+**Our Solution**
 
-| AI 회의록                | 동시 편집                |
-| ------------------------ | ------------------------ |
-| <img width="400" src=""> | <img width="400" src=""> |
-
----
-
-## ✨ 주요 기능
-
-### 💬 실시간 채팅
-
-- 1:1 및 그룹 채팅
-- 파일 첨부
-- 알림 및 검색 기능
-
-### 🤖 AI 회의록
-
-- 선택한 채팅 메시지 기반 AI 요약
-- 회의록 생성
-- 문서로 변환
-
-### 📝 동시 문서 편집
-
-- 실시간 공동 편집
-- 자동 저장
-- 변경 사항 동기화
+소통(채팅) · 작업(문서) · 기록(AI 회의록)의 흐름을 하나의 스페이스에 연결하고, 워크스페이스 없이 가입만으로 누구와든 바로 협업할 수 있도록 설계했습니다.
 
 ---
 
-## 🛠 Tech Stack
+## 🌟 핵심 기능
 
-### Frontend
-
-<img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/> <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/> <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/> <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.io"/>
-
-### Backend
-
-<img src="https://img.shields.io/badge/Node.js-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js"/> <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express"/> <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/> <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.io"/>
-
-### AI
-
-<img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Google Gemini"/>
-
-### Deployment
-
-<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel"/> <img src="https://img.shields.io/badge/Microsoft_Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Microsoft Azure"/>
-
-### Design
-
-<img src="https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white" alt="Figma"/>
+|                      스크린샷                      | 설명                                                                                                                                                                                                                                                    |
+| :------------------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  ![실시간 채팅](/public/img/screenshot-chat.png)   | **01. 실시간 채팅**<br>· WebSocket 기반 실시간 송수신 — 새로고침 없이 즉시 메시지 반영<br>· Tiptap 마크다운 에디터 — 코드 블록·굵게 등 서식 지원<br>· 멘션 + 실시간 접속 상태 — 태그 알림과 온라인 여부 동시 표시<br>· 1:1 · 그룹 채팅 + 안 읽음 카운트 |
+| ![동시 문서 편집](/public/img/screenshot-docs.png) | **02. 동시 문서 편집**<br>· 마크다운 기반의 편리한 문서 생성 및 수정<br>· 여러 사용자의 동시 편집 (CRDT 기반 Yjs)<br>· 변경 사항 실시간 반영, 작성자별 커서 위치 표시                                                                                   |
+|    ![AI 회의록](/public/img/screenshot-ai.png)     | **03. AI 회의록 생성**<br>· 채팅 내용을 기반으로 회의록 자동 생성 (Gemini API)<br>· 원하는 형식·요청사항을 반영한 회의 내용 요약<br>· 생성된 회의록을 동시 편집 가능한 문서로 즉시 저장                                                                 |
 
 ---
 
-## 🏗️ 시스템 아키텍처
+## 🛠️ 기술 아키텍처
 
-<img src="./public/img/System Architecture.png">
+### 기술 스택
+
+| 구분         | 스택                                                 |
+| ------------ | ---------------------------------------------------- |
+| Frontend     | React, TypeScript, Vite, Tailwind CSS, Axios, Tiptap |
+| Real-time    | Socket.io, Yjs, WebSocket                            |
+| Backend      | Node.js, Express                                     |
+| Database     | Azure Cosmos DB                                      |
+| External API | Kakao OAuth, Gemini API                              |
+| Deployment   | Vercel, Azure App Service                            |
+
+### 시스템 구조
+
+![](/public/img/SystemArchitecture.png)
+
+- **모듈 기반 디렉터리 구조**: `api` / `components` / `pages` / `routes` / `socket` / `hooks·utils·types`
+- **듀얼 통신 아키텍처**
+  - REST API (Axios Client) — 일반 CRUD, 인증
+  - Socket.IO — 채팅 · 알림 실시간 이벤트
+  - Tiptap / Yjs (WebSocket) — 문서 동시 편집 동기화
+
+### ERD / DB 설계
+
+| 컬렉션        | 용도                       |
+| ------------- | -------------------------- |
+| users         | 사용자 정보                |
+| rooms         | 채팅방 (1:1 / 그룹)        |
+| roommembers   | 채팅방별 유저 정보         |
+| messages      | 채팅 메시지                |
+| documents     | 동시 편집 문서 + AI 회의록 |
+| notifications | 알림                       |
+
+> 상세 ERD 다이어그램은 `docs/` 폴더 또는 발표자료를 참고하세요.
+
+---
+
+## 🧩 기술적 핵심 구현 사항
+
+- **Yjs + WebSocket 동시 편집**: 문서별 `Y.Doc`을 생성하고 WebsocketProvider로 문서 ID와 바인딩하여 실시간 동기화
+- **Tiptap 협업 모듈 주입**: `Collaboration`, `CollaborationCaret` 확장으로 Yjs 문서 및 다른 사용자의 커서 위치 연동
+- **AI 회의록 노드 렌더링**: Gemini API 응답을 Tiptap이 인식하는 `aiMinutesBlock` 커스텀 노드로 변환해 `NodeViewWrapper`로 에디터 안에 직접 삽입
+- **실시간 채팅 상태 관리**: 과거 내역(REST)과 실시간 수신(Socket)을 분리 관리하다가 하나의 타임라인으로 병합 렌더링
+- **전역 소켓 인스턴스 관리**: `src/socket/socket.ts`에서 연결·송수신 함수를 캡슐화해 컴포넌트 어디서든 재사용
+
+---
+
+## 🚀 트러블슈팅
+
+| 이슈                                                             | 원인                                                         | 해결                                                      |
+| ---------------------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| **DB 리전 이슈** - API 응답 3~6초 지연                           | App Service(Korea Central)와 DB(Brazil South) 간 물리적 거리 | DB 리전을 Japan East로 이전 → 응답 시간 0.5초 이내로 단축 |
+| **브라우저 캐시 이슈** - 코드 수정이 화면에 반영되지 않음        | 브라우저가 이전 응답을 캐시에서 재사용                       | `Ctrl+Shift+R` 하드 리프레시                              |
+| **로컬 환경 실시간 테스트 이슈** - 로컬에서 실시간 메시지 미반영 | 각자 다른 localhost 소켓 서버에 연결되어 있음                | 배포된 서버에 함께 접속해 테스트                          |
+
+---
+
+## 📂 폴더 구조
+
+```
+src/
+├── api/            # Axios 인스턴스 및 도메인별 API 함수
+├── components/     # 재사용 가능한 UI 컴포넌트 (채팅, 문서, 모달 등)
+│   ├── chat/
+│   └── docs/
+├── constants/       # 인증 등 상수 정의
+├── data/            # 목업 데이터
+├── hooks/           # 커스텀 훅 (프레즌스, 다크모드, 카카오 인증 등)
+├── layouts/         # 공통 레이아웃
+├── pages/           # 라우트별 페이지 View
+├── routes/          # react-router-dom 라우팅 설정
+├── socket/          # Socket.IO 전역 연결 설정
+├── styles/          # 전역 스타일 및 CSS 변수
+├── types/           # 도메인별 타입 정의
+└── utils/           # 유틸리티 함수 (AI 요약, 알림, 아바타 등)
+```
+
+---
+
+## 🔭 향후 계획
+
+| 항목                         | 현재                                          | 확장 방향                                                 | 효과                                                 |
+| ---------------------------- | --------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| API 키 서버 사이드 전환      | 프론트엔드에서 Gemini API 직접 호출로 키 노출 | 백엔드 프록시 서버를 통해 호출, 키는 서버 환경변수로 관리 | API 키 탈취 방지, 요금 폭탄·호출 한도 초과 위험 제거 |
+| 마크다운 기반 리치 문서 편집 | 동시 편집은 되나 순수 텍스트만 지원           | 제목·볼드·리스트·코드블록·테이블 등 실시간 렌더링 지원    | 회의록·기획서 등 실무 문서를 플랫폼 안에서 완결      |
+| 리액션 기능                  | 메시지 피드백이 텍스트 답장뿐                 | 이모지 리액션으로 간편 응답                               | 불필요한 답장 감소, 빠른 의사 표현                   |
+
+---
+
+## 📄 포팅 매뉴얼
+
+Gooum 프론트엔드를 로컬 또는 새 환경에 옮겨 실행하는 방법입니다.
+
+### 1. 사전 준비
+
+- Node.js 18 이상
+- 실행 중인 백엔드 서버 (REST API + Socket.io)
+- 카카오 디벨로퍼스에 등록된 REST API 키
+- Google Gemini API 키
+
+### 2. 클론 및 설치
+
+```bash
+git clone <repo-url>
+cd gooum-frontend
+npm install
+```
+
+### 3. 환경 변수 설정
+
+프로젝트 루트에 `.env` 파일을 생성하고 아래 값을 채웁니다.
+
+```env
+VITE_BACKEND_URL=http://localhost:8000
+VITE_KAKAO_REST_API_KEY=your-kakao-rest-api-key
+VITE_KAKAO_REDIRECT_URI=http://localhost:5173/auth/kakao/callback
+VITE_GEMINI_API_KEY=your-gemini-api-key
+```
+
+> 카카오 로그인을 사용하려면 카카오 디벨로퍼스 콘솔의 **Redirect URI**에 `VITE_KAKAO_REDIRECT_URI` 값을 동일하게 등록해야 합니다.
+
+### 4. 로컬 실행
+
+```bash
+npm run dev
+```
+
+기본적으로 `http://localhost:5173`에서 실행됩니다.
+
+### 5. 빌드 및 배포
+
+```bash
+npm run build
+```
+
+- 빌드 결과물은 `dist/` 폴더에 생성됩니다.
+- 배포는 Vercel 기준으로 진행했으며, 프로젝트 연결 후 위 환경 변수 4개를 Vercel 대시보드의 **Environment Variables**에 동일하게 등록하면 됩니다.
+- 백엔드는 Azure App Service, DB는 Azure Cosmos DB에 배포되어 있으므로 `VITE_BACKEND_URL`은 배포된 백엔드 주소로 지정합니다.
+
+### 6. 확인 체크리스트
+
+- [ ] `/login`에서 카카오 로그인 정상 동작
+- [ ] `/app`에서 채팅 실시간 송수신 확인 (같은 서버에 접속한 상태에서 테스트할 것 — 로컬끼리는 소켓 서버가 달라 반영되지 않음)
+- [ ] `/app/docs`에서 문서 동시 편집 및 커서 동기화 확인
+- [ ] AI 회의록 생성 시 Gemini API 정상 응답 확인

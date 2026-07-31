@@ -1,4 +1,4 @@
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/Skeleton';
@@ -133,7 +133,7 @@ export const DocsSidebar = ({
               {/* 제목 영역 */}
               {isEditing ? (
                 <input
-                  ref={titleInputRef}
+                  ref={titleInputRef as React.RefObject<HTMLInputElement>}
                   type="text"
                   value={file.title}
                   onChange={(e) => handleTitleChange(file.documentId, e.target.value)}

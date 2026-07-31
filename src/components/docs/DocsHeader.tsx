@@ -1,4 +1,4 @@
-import { useState, useEffect, RefObject } from 'react';
+import type { RefObject } from 'react';
 import { Menu, ChevronDown, Download, FileText, FileCode, Loader2 } from 'lucide-react';
 import type { Document } from '@/types/document';
 
@@ -46,7 +46,7 @@ export const DocsHeader = ({
         </button>
         {editingTitleId === `header-${activeFile.documentId}` ? (
           <input
-            ref={titleInputRef}
+            ref={titleInputRef as React.RefObject<HTMLInputElement>}
             type="text"
             value={activeFile.title}
             onChange={(e) => handleTitleChange(activeFile.documentId, e.target.value)}
